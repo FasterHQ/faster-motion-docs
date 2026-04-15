@@ -19,6 +19,6 @@ _No outputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `""` | CSS Selector |
-| `properties` | string | `{}` | Properties |
+| `selector` | elementSelector | `""` | CSS Selector |
+| `properties` | domPoseProperties | `{}` | Properties |
 

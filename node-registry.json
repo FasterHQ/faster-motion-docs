@@ -587,8 +587,14 @@
       "displayName": "Drag Input",
       "category": "inputs",
       "context": "dom",
-      "description": "Drag progress (0-1) on selected axis",
-      "inputs": [],
+      "description": "Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw.",
+      "inputs": [
+        {
+          "name": "externalProgress",
+          "type": "float",
+          "label": "External Progress"
+        }
+      ],
       "outputs": [
         {
           "name": "progress",
@@ -597,6 +603,11 @@
         }
       ],
       "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "string"
+        },
         {
           "key": "axis",
           "label": "Axis",
@@ -607,16 +618,25 @@
           ]
         },
         {
-          "key": "range",
-          "label": "Range (px)",
-          "type": "float",
-          "min": 1,
-          "step": 10
+          "key": "bounds",
+          "label": "Bounds",
+          "type": "enum",
+          "options": [
+            "",
+            "parent",
+            "window"
+          ]
+        },
+        {
+          "key": "inertia",
+          "label": "Inertia",
+          "type": "bool"
         }
       ],
       "defaults": {
+        "selector": "",
         "axis": "x",
-        "range": 200
+        "bounds": "parent"
       },
       "dynamicPorts": false
     },
@@ -8397,7 +8417,7 @@
         {
           "key": "channels",
           "label": "Channels",
-          "type": "string"
+          "type": "multiKeyframeChannels"
         }
       ],
       "defaults": {
@@ -8416,12 +8436,12 @@
         {
           "key": "selector",
           "label": "CSS Selector",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "properties",
           "label": "Properties",
-          "type": "string"
+          "type": "domPoseProperties"
         }
       ],
       "defaults": {

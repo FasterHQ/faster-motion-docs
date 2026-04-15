@@ -9,7 +9,7 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Mouse Input](mouseInput.md) | `mouseInput` | dom | Pointer position (0-1) on selected axis |
 | [Mouse Velocity](mouseVelocity.md) | `mouseVelocity` | dom | Pointer velocity magnitude (-1 to 1) |
 | [Distance Input](distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
-| [Drag Input](dragInput.md) | `dragInput` | dom | Drag progress (0-1) on selected axis |
+| [Drag Input](dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
 | [Scroll Trigger](scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, and isInView |
 | [Scroll Pin](scrollPin.md) | `scrollPin` | dom | Pin a DOM element to fixed position while scroll progress is within range |
 | [Pointer](pointer.md) | `pointer` | dom | Track pointer position — outputs x, y, normalized, isInside |

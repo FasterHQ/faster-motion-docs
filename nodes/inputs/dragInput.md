@@ -4,11 +4,14 @@
 **Category:** inputs  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Drag progress (0-1) on selected axis
+Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw.
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `externalProgress` | `float` | External Progress |
+
 
 ## Outputs
 
@@ -21,6 +24,8 @@ _No inputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `selector` | string | `""` | CSS Selector |
 | `axis` | enum | `"x"` | Axis. Options: `x`, `y` |
-| `range` | float | `200` | Range (px) (min: 1) |
+| `bounds` | enum | `"parent"` | Bounds. Options: ``, `parent`, `window` |
+| `inertia` | bool | `—` | Inertia |
 

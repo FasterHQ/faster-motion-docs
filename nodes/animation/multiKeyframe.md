@@ -22,5 +22,5 @@ _No outputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `channels` | string | `{}` | Channels |
+| `channels` | multiKeyframeChannels | `{}` | Channels |
 
