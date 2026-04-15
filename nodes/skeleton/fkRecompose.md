@@ -17,7 +17,10 @@ Reads a post-IK/physics bone pose bundle and outputs per-bone world matrices via
 
 ## Outputs
 
-_No outputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `poseReady` | `float` | Pose Ready |
+
 
 ## Parameters
 

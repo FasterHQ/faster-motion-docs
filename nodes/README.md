@@ -1,6 +1,6 @@
 # Node Reference
 
-All 207 graph node types available in Faster Motion.
+All 206 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -112,7 +112,6 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Observer](inputs/observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
 | [Event Listener](inputs/eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |
 | [Keyboard Listener](inputs/keyboardListener.md) | `keyboardListener` | dom | Keyboard key press/release to graph signal |
-| [Input Source](inputs/inputSource.md) | `inputSource` | dom | Per-scene browser input (mouse, scroll, time, keyboard). One per scene. |
 | [Text Input](inputs/textInput.md) | `textInput` | canvas | Interactive text field with cursor and selection |
 | [Hover](inputs/hover.md) | `hover` | shared | mouseenter/mouseleave with smooth 0→1 transition over duration. |
 | [Distance](inputs/distance.md) | `distance` | shared | Mouse-to-element-rect proximity. Outputs 0 (far) to 1 (touching) with falloff. |
@@ -132,7 +131,7 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Text Wave Compute](text/textWaveCompute.md) | `textWaveCompute` | shared | F256: Pure per-character wave sweep. Takes progress + upstream Mat4 bundle. schedulerPhase=pure, zero this.context access. |
 | [Coverage Range](text/coverageRange.md) | `coverageRange` | shared | Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes. |
 | [Coverage Group](text/coverageGroup.md) | `coverageGroup` | shared | F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle. |
-| [Text Apply](text/textApply.md) | `textApply` | canvas | F256: Write per-character Mat4 transforms to GlyphPieces (boundary node). Single code path, no format branching. |
+| [Text Apply](text/textApply.md) | `textApply` | canvas | Pure passthrough: forwards per-character Mat4 transforms to output port for SRN consumption. Follows SkinnedPathDeformNode pattern (F264). |
 | [Split Text](text/splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — splits target element into spans (words/chars/lines). |
 | [Counter](text/counter.md) | `counter` | shared | Animated number counter — interpolates min→max with formatting (decimals, separator, template). |
 | [Text Sequence](text/textSequence.md) | `textSequence` | canvas | Cycles through a string array based on progress — outputs current text and index. |

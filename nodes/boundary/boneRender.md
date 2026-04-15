@@ -8,7 +8,10 @@ Editor-mode bone debug rendering — draws skeleton overlays in viewport.
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `poseReady` | `any` | Pose Ready |
+
 
 ## Outputs
 

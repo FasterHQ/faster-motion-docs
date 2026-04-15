@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-15",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 207,
+  "_nodeCount": 206,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -64,7 +64,6 @@
         "observer",
         "eventListener",
         "keyboardListener",
-        "inputSource",
         "textInput",
         "hover",
         "distance",
@@ -3747,78 +3746,6 @@
       },
       "dynamicPorts": false
     },
-    "inputSource": {
-      "displayName": "Input Source",
-      "category": "inputs",
-      "context": "dom",
-      "description": "Per-scene browser input (mouse, scroll, time, keyboard). One per scene.",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "mouseX",
-          "type": "float",
-          "label": "Mouse X (0-1)"
-        },
-        {
-          "name": "mouseY",
-          "type": "float",
-          "label": "Mouse Y (0-1)"
-        },
-        {
-          "name": "mouseClientX",
-          "type": "float",
-          "label": "Mouse Client X"
-        },
-        {
-          "name": "mouseClientY",
-          "type": "float",
-          "label": "Mouse Client Y"
-        },
-        {
-          "name": "scrollX",
-          "type": "float",
-          "label": "Scroll X (0-1)"
-        },
-        {
-          "name": "scrollY",
-          "type": "float",
-          "label": "Scroll Y (0-1)"
-        },
-        {
-          "name": "deltaTime",
-          "type": "float",
-          "label": "Delta Time (s)"
-        },
-        {
-          "name": "elapsed",
-          "type": "float",
-          "label": "Elapsed (s)"
-        },
-        {
-          "name": "viewportWidth",
-          "type": "float",
-          "label": "Viewport Width"
-        },
-        {
-          "name": "viewportHeight",
-          "type": "float",
-          "label": "Viewport Height"
-        },
-        {
-          "name": "keysPressed",
-          "type": "any",
-          "label": "Keys Pressed"
-        },
-        {
-          "name": "keysReleased",
-          "type": "any",
-          "label": "Keys Released"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
     "attributeRead": {
       "displayName": "Attribute Read",
       "category": "attributes",
@@ -6702,7 +6629,13 @@
           "label": "Skeleton Root Parent"
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "poseReady",
+          "type": "float",
+          "label": "Pose Ready"
+        }
+      ],
       "parameters": [
         {
           "key": "skeletonId",
@@ -7936,7 +7869,7 @@
       "displayName": "Text Apply",
       "category": "text",
       "context": "canvas",
-      "description": "F256: Write per-character Mat4 transforms to GlyphPieces (boundary node). Single code path, no format branching.",
+      "description": "Pure passthrough: forwards per-character Mat4 transforms to output port for SRN consumption. Follows SkinnedPathDeformNode pattern (F264).",
       "inputs": [
         {
           "name": "charTransforms",
@@ -7944,7 +7877,13 @@
           "label": "Char Transforms"
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "charTransforms",
+          "type": "mat4Bundle",
+          "label": "Char Transforms"
+        }
+      ],
       "parameters": [
         {
           "key": "textId",
@@ -7962,7 +7901,13 @@
       "category": "deformers",
       "context": "canvas",
       "description": "Per-mesh LBS/DQS/morph/lattice deformation. Dynamic morph weight ports.",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "fkDep",
+          "type": "any",
+          "label": "FK Dep"
+        }
+      ],
       "outputs": [],
       "parameters": [
         {
@@ -7987,7 +7932,13 @@
       "category": "deformers",
       "context": "canvas",
       "description": "Per-path skinned bezier deformation with per-vertex bone weights.",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "fkDep",
+          "type": "any",
+          "label": "FK Dep"
+        }
+      ],
       "outputs": [],
       "parameters": [
         {
@@ -8806,7 +8757,13 @@
       "category": "boundary",
       "context": "canvas",
       "description": "Editor-mode bone debug rendering — draws skeleton overlays in viewport.",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "poseReady",
+          "type": "any",
+          "label": "Pose Ready"
+        }
+      ],
       "outputs": [],
       "parameters": [],
       "defaults": {},

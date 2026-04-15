@@ -16,7 +16,6 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Observer](observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
 | [Event Listener](eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |
 | [Keyboard Listener](keyboardListener.md) | `keyboardListener` | dom | Keyboard key press/release to graph signal |
-| [Input Source](inputSource.md) | `inputSource` | dom | Per-scene browser input (mouse, scroll, time, keyboard). One per scene. |
 | [Text Input](textInput.md) | `textInput` | canvas | Interactive text field with cursor and selection |
 | [Hover](hover.md) | `hover` | shared | mouseenter/mouseleave with smooth 0→1 transition over duration. |
 | [Distance](distance.md) | `distance` | shared | Mouse-to-element-rect proximity. Outputs 0 (far) to 1 (touching) with falloff. |

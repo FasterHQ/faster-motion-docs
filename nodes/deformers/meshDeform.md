@@ -9,7 +9,10 @@ Per-mesh LBS/DQS/morph/lattice deformation. Dynamic morph weight ports.
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `fkDep` | `any` | FK Dep |
+
 
 ## Outputs
 

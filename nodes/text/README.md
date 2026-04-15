@@ -9,7 +9,7 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Text Wave Compute](textWaveCompute.md) | `textWaveCompute` | shared | F256: Pure per-character wave sweep. Takes progress + upstream Mat4 bundle. schedulerPhase=pure, zero this.context access. |
 | [Coverage Range](coverageRange.md) | `coverageRange` | shared | Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes. |
 | [Coverage Group](coverageGroup.md) | `coverageGroup` | shared | F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle. |
-| [Text Apply](textApply.md) | `textApply` | canvas | F256: Write per-character Mat4 transforms to GlyphPieces (boundary node). Single code path, no format branching. |
+| [Text Apply](textApply.md) | `textApply` | canvas | Pure passthrough: forwards per-character Mat4 transforms to output port for SRN consumption. Follows SkinnedPathDeformNode pattern (F264). |
 | [Split Text](splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — splits target element into spans (words/chars/lines). |
 | [Counter](counter.md) | `counter` | shared | Animated number counter — interpolates min→max with formatting (decimals, separator, template). |
 | [Text Sequence](textSequence.md) | `textSequence` | canvas | Cycles through a string array based on progress — outputs current text and index. |

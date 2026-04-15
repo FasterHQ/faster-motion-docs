@@ -8,7 +8,10 @@ Per-path skinned bezier deformation with per-vertex bone weights.
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `fkDep` | `any` | FK Dep |
+
 
 ## Outputs
 
