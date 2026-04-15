@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-15",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 205,
+  "_nodeCount": 207,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -122,6 +122,7 @@
         "maskSync",
         "camera",
         "clipPathWrite",
+        "domPoseWrite",
         "domAttributeRead",
         "sceneRender",
         "boneRender",
@@ -224,7 +225,8 @@
         "colorTween",
         "colorKeyframe",
         "stringKeyframe",
-        "clipPath"
+        "clipPath",
+        "multiKeyframe"
       ]
     },
     "state-machine": {
@@ -8426,6 +8428,56 @@
         "selector": ""
       },
       "dynamicPorts": false
+    },
+    "multiKeyframe": {
+      "displayName": "Multi Keyframe",
+      "category": "animation",
+      "context": "shared",
+      "description": "Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "channels": {}
+      },
+      "dynamicPorts": true
+    },
+    "domPoseWrite": {
+      "displayName": "DOM Pose Write",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Write multiple float values to CSS properties on a single DOM element. Transform components route through the accumulator, other properties go through DOMBatcher.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "string"
+        },
+        {
+          "key": "properties",
+          "label": "Properties",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "properties": {}
+      },
+      "dynamicPorts": true
     },
     "domAttributeRead": {
       "displayName": "DOM Attribute Read",
