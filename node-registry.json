@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-15",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 204,
+  "_nodeCount": 205,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -122,6 +122,7 @@
         "maskSync",
         "camera",
         "clipPathWrite",
+        "domAttributeRead",
         "sceneRender",
         "boneRender",
         "additivePropertyWrite"
@@ -2158,8 +2159,18 @@
       "displayName": "Morph Compute",
       "category": "paths",
       "context": "dom",
-      "description": "Interpolate between two SVG paths — outputs path string",
+      "description": "Pure SVG path interpolation — takes fromPath and toPath as string inputs, outputs interpolated path string. Zero DOM awareness.",
       "inputs": [
+        {
+          "name": "fromPath",
+          "type": "string",
+          "label": "From Path"
+        },
+        {
+          "name": "toPath",
+          "type": "string",
+          "label": "To Path"
+        },
         {
           "name": "progress",
           "type": "float",
@@ -2175,18 +2186,12 @@
       ],
       "parameters": [
         {
-          "key": "fromPath",
-          "label": "From Path (d)",
-          "type": "string"
-        },
-        {
           "key": "toPath",
           "label": "To Path (d)",
           "type": "string"
         }
       ],
       "defaults": {
-        "fromPath": "",
         "toPath": ""
       },
       "dynamicPorts": false
@@ -8419,6 +8424,37 @@
       ],
       "defaults": {
         "selector": ""
+      },
+      "dynamicPorts": false
+    },
+    "domAttributeRead": {
+      "displayName": "DOM Attribute Read",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Reads a DOM/SVG attribute (e.g., d, viewBox, points) from an element at bind time and outputs it as a string. Static read — the boundary counterpart to DOMStringWriteNode.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "string",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "string"
+        },
+        {
+          "key": "attribute",
+          "label": "Attribute",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "attribute": "d"
       },
       "dynamicPorts": false
     },

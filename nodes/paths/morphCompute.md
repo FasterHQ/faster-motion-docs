@@ -4,12 +4,14 @@
 **Category:** paths  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Interpolate between two SVG paths — outputs path string
+Pure SVG path interpolation — takes fromPath and toPath as string inputs, outputs interpolated path string. Zero DOM awareness.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
+| `fromPath` | `string` | From Path |
+| `toPath` | `string` | To Path |
 | `progress` | `float` | Progress |
 
 
@@ -24,6 +26,5 @@ Interpolate between two SVG paths — outputs path string
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `fromPath` | string | `""` | From Path (d) |
 | `toPath` | string | `""` | To Path (d) |
 

@@ -4,7 +4,7 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
-| [Morph Compute](morphCompute.md) | `morphCompute` | dom | Interpolate between two SVG paths — outputs path string |
+| [Morph Compute](morphCompute.md) | `morphCompute` | dom | Pure SVG path interpolation — takes fromPath and toPath as string inputs, outputs interpolated path string. Zero DOM awareness. |
 | [Along Path](alongPathCompute.md) | `alongPathCompute` | dom | Follow an SVG path — outputs x, y, angle from pre-sampled LUT |
 | [Path Read](pathRead.md) | `pathRead` | canvas | Read path geometry from a scene object. |
 | [Path Write](pathWrite.md) | `pathWrite` | canvas | Write path geometry back to a scene object. |

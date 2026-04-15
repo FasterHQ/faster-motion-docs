@@ -20,6 +20,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [Mask Sync](maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
 | [Camera](camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
 | [Clip Path Write](clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
+| [DOM Attribute Read](domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM/SVG attribute (e.g., d, viewBox, points) from an element at bind time and outputs it as a string. Static read — the boundary counterpart to DOMStringWriteNode. |
 | [Scene Render](sceneRender.md) | `sceneRender` | canvas | F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2. |
 | [Bone Render](boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
 | [Additive Property Write](additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |

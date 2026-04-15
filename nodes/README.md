@@ -1,6 +1,6 @@
 # Node Reference
 
-All 204 graph node types available in Faster Motion.
+All 205 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -42,7 +42,7 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
-| [Morph Compute](paths/morphCompute.md) | `morphCompute` | dom | Interpolate between two SVG paths — outputs path string |
+| [Morph Compute](paths/morphCompute.md) | `morphCompute` | dom | Pure SVG path interpolation — takes fromPath and toPath as string inputs, outputs interpolated path string. Zero DOM awareness. |
 | [Along Path](paths/alongPathCompute.md) | `alongPathCompute` | dom | Follow an SVG path — outputs x, y, angle from pre-sampled LUT |
 | [Path Read](paths/pathRead.md) | `pathRead` | canvas | Read path geometry from a scene object. |
 | [Path Write](paths/pathWrite.md) | `pathWrite` | canvas | Write path geometry back to a scene object. |
@@ -115,6 +115,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [Mask Sync](boundary/maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
 | [Camera](boundary/camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
 | [Clip Path Write](boundary/clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
+| [DOM Attribute Read](boundary/domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM/SVG attribute (e.g., d, viewBox, points) from an element at bind time and outputs it as a string. Static read — the boundary counterpart to DOMStringWriteNode. |
 | [Scene Render](boundary/sceneRender.md) | `sceneRender` | canvas | F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2. |
 | [Bone Render](boundary/boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
 | [Additive Property Write](boundary/additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |
