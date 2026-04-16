@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-16",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 208,
+  "_nodeCount": 209,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -115,6 +115,7 @@
         "domPropertyWrite",
         "staggerWrite",
         "domDockTo",
+        "domIndexedDock",
         "domStringWrite",
         "domColorWrite",
         "sceneTransform",
@@ -2045,6 +2046,43 @@
         "targetSelector": "",
         "sourceAnchor": "center",
         "targetAnchor": "center"
+      },
+      "dynamicPorts": false
+    },
+    "domIndexedDock": {
+      "displayName": "DOM Indexed Dock",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. Sibling to domDockTo (which docks onto a static target). Used for typewriter cursors, scanning highlights, focus rings, and any \"park X on the active item in a sequence\" effect.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "offsetX",
+          "type": "float",
+          "label": "Offset X (px)"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "sourceSelector",
+          "label": "Source Element",
+          "type": "string"
+        },
+        {
+          "key": "childSelector",
+          "label": "Indexed Children",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "sourceSelector": "",
+        "childSelector": ""
       },
       "dynamicPorts": false
     },
