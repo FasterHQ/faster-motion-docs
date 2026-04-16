@@ -2028,11 +2028,23 @@
           "key": "targetSelector",
           "label": "Target Element",
           "type": "string"
+        },
+        {
+          "key": "sourceAnchor",
+          "label": "Source Anchor (Y)",
+          "type": "string"
+        },
+        {
+          "key": "targetAnchor",
+          "label": "Target Anchor (Y)",
+          "type": "string"
         }
       ],
       "defaults": {
         "sourceSelector": "",
-        "targetSelector": ""
+        "targetSelector": "",
+        "sourceAnchor": "center",
+        "targetAnchor": "center"
       },
       "dynamicPorts": false
     },

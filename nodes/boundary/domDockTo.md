@@ -27,4 +27,6 @@ Compute additive translate that centers a source DOM element over a target eleme
 |-----------|------|---------|-------------|
 | `sourceSelector` | string | `""` | Source Element |
 | `targetSelector` | string | `""` | Target Element |
+| `sourceAnchor` | string | `"center"` | Source Anchor (Y) |
+| `targetAnchor` | string | `"center"` | Target Anchor (Y) |
 
