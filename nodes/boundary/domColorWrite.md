@@ -4,15 +4,13 @@
 **Category:** boundary  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Write rgb() color to a DOM element CSS property
+Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `r` | `float` | R |
-| `g` | `float` | G |
-| `b` | `float` | B |
+| `color` | `color` | Color |
 
 
 ## Outputs

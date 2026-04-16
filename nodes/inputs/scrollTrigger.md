@@ -28,4 +28,5 @@ _No inputs._
 | `startEdge` | string | `"top bottom"` | Start Edge |
 | `endEdge` | string | `"bottom top"` | End Edge |
 | `scroller` | string | `—` | Scroll Container |
+| `invert` | bool | `false` | Invert Progress |
 

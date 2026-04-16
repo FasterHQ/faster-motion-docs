@@ -14,6 +14,7 @@ Playback sequencer — self-advancing or externally driven (scroll, parameter)
 | `play` | `float` | Play |
 | `pause` | `float` | Pause |
 | `seek` | `float` | Seek |
+| `gate` | `float` | Gate |
 
 
 ## Outputs

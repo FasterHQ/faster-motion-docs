@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-15",
+  "_generatedAt": "2026-04-16",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 206,
+  "_nodeCount": 207,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -96,6 +96,7 @@
         "expression",
         "converter",
         "smoothing",
+        "gate",
         "parallax",
         "velocity",
         "mathUtil",
@@ -1892,12 +1893,18 @@
           "key": "scroller",
           "label": "Scroll Container",
           "type": "string"
+        },
+        {
+          "key": "invert",
+          "label": "Invert Progress",
+          "type": "bool"
         }
       ],
       "defaults": {
         "selector": "",
         "startEdge": "top bottom",
-        "endEdge": "bottom top"
+        "endEdge": "bottom top",
+        "invert": false
       },
       "dynamicPorts": false
     },
@@ -1932,6 +1939,57 @@
       ],
       "defaults": {
         "smooth": 1
+      },
+      "dynamicPorts": false
+    },
+    "gate": {
+      "displayName": "Gate",
+      "category": "math",
+      "context": "shared",
+      "description": "Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "gate",
+          "type": "float",
+          "label": "Gate"
+        },
+        {
+          "name": "rest",
+          "type": "float",
+          "label": "Rest"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "halflife",
+          "label": "Halflife (s)",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.01
+        },
+        {
+          "key": "rest",
+          "label": "Rest Value",
+          "type": "float",
+          "step": 0.01
+        }
+      ],
+      "defaults": {
+        "halflife": 0,
+        "rest": 0
       },
       "dynamicPorts": false
     },
@@ -2725,6 +2783,11 @@
           "name": "seek",
           "type": "float",
           "label": "Seek"
+        },
+        {
+          "name": "gate",
+          "type": "float",
+          "label": "Gate"
         }
       ],
       "outputs": [
@@ -2984,22 +3047,12 @@
       "displayName": "DOM Color Write",
       "category": "boundary",
       "context": "dom",
-      "description": "Write rgb() color to a DOM element CSS property",
+      "description": "Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input.",
       "inputs": [
         {
-          "name": "r",
-          "type": "float",
-          "label": "R"
-        },
-        {
-          "name": "g",
-          "type": "float",
-          "label": "G"
-        },
-        {
-          "name": "b",
-          "type": "float",
-          "label": "B"
+          "name": "color",
+          "type": "color",
+          "label": "Color"
         }
       ],
       "outputs": [],

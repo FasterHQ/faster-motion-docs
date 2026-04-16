@@ -13,7 +13,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [DOM Property Write](domPropertyWrite.md) | `domPropertyWrite` | dom | Write a float value to a CSS property, transform, attribute, or textContent on a DOM element |
 | [Stagger Write](staggerWrite.md) | `staggerWrite` | dom | Batched stagger animation — one node handles all elements matching a selector with per-element timing offset |
 | [DOM String Write](domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
-| [DOM Color Write](domColorWrite.md) | `domColorWrite` | dom | Write rgb() color to a DOM element CSS property |
+| [DOM Color Write](domColorWrite.md) | `domColorWrite` | dom | Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input. |
 | [Scene Transform](sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
 | [Object Property Read](objectPropertyRead.md) | `objectPropertyRead` | canvas | Read a runtime object property (bidirectional binding read side). |
 | [Layout Compute](layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
