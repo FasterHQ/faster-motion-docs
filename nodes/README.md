@@ -1,6 +1,6 @@
 # Node Reference
 
-All 207 graph node types available in Faster Motion.
+All 208 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -80,6 +80,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [Data Write](boundary/dataWrite.md) | `dataWrite` | canvas | Write any-typed value to a canvas object property |
 | [DOM Property Write](boundary/domPropertyWrite.md) | `domPropertyWrite` | dom | Write a float value to a CSS property, transform, attribute, or textContent on a DOM element |
 | [Stagger Write](boundary/staggerWrite.md) | `staggerWrite` | dom | Batched stagger animation — one node handles all elements matching a selector with per-element timing offset |
+| [DOM Dock To](boundary/domDockTo.md) | `domDockTo` | shared | Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY. |
 | [DOM String Write](boundary/domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
 | [DOM Color Write](boundary/domColorWrite.md) | `domColorWrite` | dom | Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input. |
 | [Scene Transform](boundary/sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |

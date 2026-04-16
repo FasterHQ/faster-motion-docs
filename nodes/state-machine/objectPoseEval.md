@@ -11,6 +11,7 @@ Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX
 | Port | Type | Description |
 |------|------|-------------|
 | `progress` | `float` | Progress |
+| `layerRef` | `any` | Layer Ref |
 
 
 ## Outputs
@@ -18,6 +19,7 @@ Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX
 | Port | Type | Description |
 |------|------|-------------|
 | `objectPose` | `attributes` | Object Pose |
+| `transforms` | `any` | Transforms |
 
 
 ## Parameters

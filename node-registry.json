@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-16",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 207,
+  "_nodeCount": 208,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -114,6 +114,7 @@
         "dataWrite",
         "domPropertyWrite",
         "staggerWrite",
+        "domDockTo",
         "domStringWrite",
         "domColorWrite",
         "sceneTransform",
@@ -1993,6 +1994,48 @@
       },
       "dynamicPorts": false
     },
+    "domDockTo": {
+      "displayName": "DOM Dock To",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY.",
+      "inputs": [
+        {
+          "name": "blend",
+          "type": "float",
+          "label": "Blend"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "offsetX",
+          "type": "float",
+          "label": "Offset X (px)"
+        },
+        {
+          "name": "offsetY",
+          "type": "float",
+          "label": "Offset Y (px)"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "sourceSelector",
+          "label": "Source Element",
+          "type": "string"
+        },
+        {
+          "key": "targetSelector",
+          "label": "Target Element",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "sourceSelector": "",
+        "targetSelector": ""
+      },
+      "dynamicPorts": false
+    },
     "scrollPin": {
       "displayName": "Scroll Pin",
       "category": "inputs",
@@ -3286,6 +3329,11 @@
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "layerRef",
+          "type": "any",
+          "label": "Layer Ref"
         }
       ],
       "outputs": [
@@ -3293,6 +3341,11 @@
           "name": "objectPose",
           "type": "attributes",
           "label": "Object Pose"
+        },
+        {
+          "name": "transforms",
+          "type": "any",
+          "label": "Transforms"
         }
       ],
       "parameters": [],
@@ -3443,6 +3496,16 @@
           "label": "Parent World Matrix"
         },
         {
+          "name": "parentOpacity",
+          "type": "float",
+          "label": "Parent Opacity"
+        },
+        {
+          "name": "parentVisible",
+          "type": "bool",
+          "label": "Parent Visible"
+        },
+        {
           "name": "smWritesDone",
           "type": "any",
           "label": "SM Writes Done"
@@ -3486,6 +3549,56 @@
           "name": "opacity",
           "type": "float",
           "label": "Opacity"
+        },
+        {
+          "name": "visible",
+          "type": "bool",
+          "label": "Visible"
+        },
+        {
+          "name": "constraintX",
+          "type": "float",
+          "label": "Constraint X"
+        },
+        {
+          "name": "constraintY",
+          "type": "float",
+          "label": "Constraint Y"
+        },
+        {
+          "name": "constraintRotation",
+          "type": "float",
+          "label": "Constraint Rotation"
+        },
+        {
+          "name": "constraintScaleX",
+          "type": "float",
+          "label": "Constraint Scale X"
+        },
+        {
+          "name": "constraintScaleY",
+          "type": "float",
+          "label": "Constraint Scale Y"
+        },
+        {
+          "name": "constraintWorldX",
+          "type": "float",
+          "label": "Constraint World X"
+        },
+        {
+          "name": "constraintWorldY",
+          "type": "float",
+          "label": "Constraint World Y"
+        },
+        {
+          "name": "pathInput",
+          "type": "path",
+          "label": "Path Input"
+        },
+        {
+          "name": "textContent",
+          "type": "any",
+          "label": "Text Content"
         }
       ],
       "outputs": [
@@ -3493,6 +3606,11 @@
           "name": "worldMatrix",
           "type": "any",
           "label": "World Matrix"
+        },
+        {
+          "name": "restWorldMatrix",
+          "type": "any",
+          "label": "Rest World Matrix"
         },
         {
           "name": "x",
@@ -3523,6 +3641,21 @@
           "name": "opacity",
           "type": "float",
           "label": "Opacity"
+        },
+        {
+          "name": "visible",
+          "type": "bool",
+          "label": "Visible"
+        },
+        {
+          "name": "path",
+          "type": "path",
+          "label": "Path"
+        },
+        {
+          "name": "textContent",
+          "type": "any",
+          "label": "Text Content"
         }
       ],
       "parameters": [
