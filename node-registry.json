@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-17",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 210,
+  "_nodeCount": 211,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -135,6 +135,7 @@
       "description": "Graph composition and data flow: ForEach stamping, scene composition, parameter store read/write, float/value sources.",
       "nodes": [
         "dataRead",
+        "parameterWrite",
         "floatSource",
         "valueSource",
         "parameterStoreRead",
@@ -2047,6 +2048,37 @@
         "targetSelector": "",
         "sourceAnchor": "center",
         "targetAnchor": "center"
+      },
+      "dynamicPorts": false
+    },
+    "parameterWrite": {
+      "displayName": "Parameter Write",
+      "category": "integration",
+      "context": "shared",
+      "description": "Write a constant value to a parameter on a rising-edge trigger. Wire an eventListener.fired output into this node to express \"event → set parameter\" entirely on the graph canvas.",
+      "inputs": [
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "parameterId",
+          "label": "Parameter Id",
+          "type": "string"
+        },
+        {
+          "key": "value",
+          "label": "Value",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "parameterId": "",
+        "value": false
       },
       "dynamicPorts": false
     },

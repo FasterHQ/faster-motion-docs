@@ -5,6 +5,7 @@ Graph composition and data flow: ForEach stamping, scene composition, parameter 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
 | [Data Read](dataRead.md) | `dataRead` | shared | Read any-typed value from ParameterStore |
+| [Parameter Write](parameterWrite.md) | `parameterWrite` | shared | Write a constant value to a parameter on a rising-edge trigger. Wire an eventListener.fired output into this node to express "event → set parameter" entirely on the graph canvas. |
 | [Float Source](floatSource.md) | `floatSource` | shared | Float value source — reads from connected input or set externally |
 | [Value Source](valueSource.md) | `valueSource` | shared | Externally-set Vec2 value |
 | [Parameter Read](parameterStoreRead.md) | `parameterStoreRead` | shared | Read a float parameter from ParameterStore |

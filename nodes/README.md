@@ -1,6 +1,6 @@
 # Node Reference
 
-All 210 graph node types available in Faster Motion.
+All 211 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -241,6 +241,7 @@ Graph composition and data flow: ForEach stamping, scene composition, parameter 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
 | [Data Read](integration/dataRead.md) | `dataRead` | shared | Read any-typed value from ParameterStore |
+| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Write a constant value to a parameter on a rising-edge trigger. Wire an eventListener.fired output into this node to express "event → set parameter" entirely on the graph canvas. |
 | [Float Source](integration/floatSource.md) | `floatSource` | shared | Float value source — reads from connected input or set externally |
 | [Value Source](integration/valueSource.md) | `valueSource` | shared | Externally-set Vec2 value |
 | [Parameter Read](integration/parameterStoreRead.md) | `parameterStoreRead` | shared | Read a float parameter from ParameterStore |
