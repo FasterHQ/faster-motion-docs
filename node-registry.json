@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-16",
+  "_generatedAt": "2026-04-17",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 209,
+  "_nodeCount": 210,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -144,6 +144,21 @@
         "dirtyTrigger"
       ]
     },
+    "animation": {
+      "description": "Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.",
+      "nodes": [
+        "boolTween",
+        "timeline",
+        "tween",
+        "keyframe",
+        "stagger",
+        "colorTween",
+        "colorKeyframe",
+        "stringKeyframe",
+        "clipPath",
+        "multiKeyframe"
+      ]
+    },
     "text": {
       "description": "Text animation nodes: split text into characters/words/lines, per-character wave/fade/spring/skew/distort transforms, coverage ranges for reveal effects.",
       "nodes": [
@@ -215,20 +230,6 @@
         "parametricShape",
         "particleEmitter",
         "particleUpdate"
-      ]
-    },
-    "animation": {
-      "description": "Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.",
-      "nodes": [
-        "timeline",
-        "tween",
-        "keyframe",
-        "stagger",
-        "colorTween",
-        "colorKeyframe",
-        "stringKeyframe",
-        "clipPath",
-        "multiKeyframe"
       ]
     },
     "state-machine": {
@@ -2046,6 +2047,49 @@
         "targetSelector": "",
         "sourceAnchor": "center",
         "targetAnchor": "center"
+      },
+      "dynamicPorts": false
+    },
+    "boolTween": {
+      "displayName": "Bool Tween",
+      "category": "animation",
+      "context": "shared",
+      "description": "Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve.",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "any",
+          "label": "Target"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "duration",
+          "label": "Duration (ms)",
+          "type": "float",
+          "min": 0,
+          "max": 10000,
+          "step": 10
+        },
+        {
+          "key": "delay",
+          "label": "Delay (ms)",
+          "type": "float",
+          "min": 0,
+          "max": 10000,
+          "step": 10
+        }
+      ],
+      "defaults": {
+        "duration": 300,
+        "delay": 0
       },
       "dynamicPorts": false
     },
