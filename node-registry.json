@@ -2055,7 +2055,7 @@
       "displayName": "Parameter Write",
       "category": "integration",
       "context": "shared",
-      "description": "Write a constant value to a parameter on a rising-edge trigger. Wire an eventListener.fired output into this node to express \"event → set parameter\" entirely on the graph canvas.",
+      "description": "Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express \"event → set/toggle/fire/increment/decrement parameter\" entirely on the graph canvas.",
       "inputs": [
         {
           "name": "trigger",
@@ -2071,6 +2071,18 @@
           "type": "string"
         },
         {
+          "key": "action",
+          "label": "Action",
+          "type": "enum",
+          "options": [
+            "set",
+            "toggle",
+            "fire",
+            "increment",
+            "decrement"
+          ]
+        },
+        {
           "key": "value",
           "label": "Value",
           "type": "string"
@@ -2078,6 +2090,7 @@
       ],
       "defaults": {
         "parameterId": "",
+        "action": "set",
         "value": false
       },
       "dynamicPorts": false

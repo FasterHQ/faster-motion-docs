@@ -4,7 +4,7 @@
 **Category:** integration  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Write a constant value to a parameter on a rising-edge trigger. Wire an eventListener.fired output into this node to express "event → set parameter" entirely on the graph canvas.
+Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express "event → set/toggle/fire/increment/decrement parameter" entirely on the graph canvas.
 
 ## Inputs
 
@@ -22,5 +22,6 @@ _No outputs._
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `parameterId` | string | `""` | Parameter Id |
+| `action` | enum | `"set"` | Action. Options: `set`, `toggle`, `fire`, `increment`, `decrement` |
 | `value` | string | `false` | Value |
 
