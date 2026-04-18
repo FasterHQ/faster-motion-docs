@@ -1,6 +1,6 @@
 # Node Reference
 
-All 211 graph node types available in Faster Motion.
+All 212 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -166,6 +166,24 @@ Position, rotation, and transform constraints that enforce spatial relationships
 | [Scroll Bar](constraints/scrollBar.md) | `scrollBar` | shared | Scroll bar indicator that tracks scroll position |
 | [Path Follow](constraints/pathFollow.md) | `pathFollow` | shared | Follow a path curve at given progress |
 
+## [Animation](animation/)
+
+Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
+| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
+| [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time. |
+| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
+| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
+| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
+| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
+| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
+| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
+| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
+| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
+
 ## [Skeleton](skeleton/)
 
 Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
@@ -183,23 +201,6 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 | [IK Target](skeleton/ikTarget.md) | `ikTarget` | canvas | Boundary node — bridges scene-object position into IK solve target port. |
 | [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
 | [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
-
-## [Animation](animation/)
-
-Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
-| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
-| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
-| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
-| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
-| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
-| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
-| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
-| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
-| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
 
 ## [Distribution](distribution/)
 
@@ -241,7 +242,7 @@ Graph composition and data flow: ForEach stamping, scene composition, parameter 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
 | [Data Read](integration/dataRead.md) | `dataRead` | shared | Read any-typed value from ParameterStore |
-| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express "event → set/toggle/fire/increment/decrement parameter" entirely on the graph canvas. |
+| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input. |
 | [Float Source](integration/floatSource.md) | `floatSource` | shared | Float value source — reads from connected input or set externally |
 | [Value Source](integration/valueSource.md) | `valueSource` | shared | Externally-set Vec2 value |
 | [Parameter Read](integration/parameterStoreRead.md) | `parameterStoreRead` | shared | Read a float parameter from ParameterStore |

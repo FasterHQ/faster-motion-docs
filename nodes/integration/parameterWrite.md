@@ -4,18 +4,23 @@
 **Category:** integration  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express "event → set/toggle/fire/increment/decrement parameter" entirely on the graph canvas.
+Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
 | `trigger` | `float` | Trigger |
+| `currentValue` | `any` | Current Value |
+| `delta` | `float` | Delta |
 
 
 ## Outputs
 
-_No outputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `nextValue` | `any` | Next Value |
+
 
 ## Parameters
 

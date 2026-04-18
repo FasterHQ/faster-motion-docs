@@ -6,6 +6,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 |------|------|---------|-------------|
 | [Bool Tween](boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
 | [Timeline](timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
+| [Seamless Playhead](seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time. |
 | [Tween](tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
 | [Keyframe](keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
 | [Stagger](stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |

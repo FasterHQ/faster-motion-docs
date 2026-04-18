@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-17",
+  "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 211,
+  "_nodeCount": 212,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -150,6 +150,7 @@
       "nodes": [
         "boolTween",
         "timeline",
+        "seamlessPlayhead",
         "tween",
         "keyframe",
         "stagger",
@@ -2055,15 +2056,31 @@
       "displayName": "Parameter Write",
       "category": "integration",
       "context": "shared",
-      "description": "Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express \"event → set/toggle/fire/increment/decrement parameter\" entirely on the graph canvas.",
+      "description": "Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input.",
       "inputs": [
         {
           "name": "trigger",
           "type": "float",
           "label": "Trigger"
+        },
+        {
+          "name": "currentValue",
+          "type": "any",
+          "label": "Current Value"
+        },
+        {
+          "name": "delta",
+          "type": "float",
+          "label": "Delta"
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "nextValue",
+          "type": "any",
+          "label": "Next Value"
+        }
+      ],
       "parameters": [
         {
           "key": "parameterId",
@@ -3045,6 +3062,60 @@
         "timeScale": 1,
         "delay": 0,
         "autoplay": true
+      },
+      "dynamicPorts": false
+    },
+    "seamlessPlayhead": {
+      "displayName": "Seamless Playhead",
+      "category": "animation",
+      "context": "shared",
+      "description": "Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "iteration",
+          "type": "float",
+          "label": "Iteration"
+        },
+        {
+          "name": "loopDuration",
+          "type": "float",
+          "label": "Loop Duration (s)"
+        },
+        {
+          "name": "overlap",
+          "type": "float",
+          "label": "Overlap"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead (s)"
+        },
+        {
+          "name": "activeIndex",
+          "type": "float",
+          "label": "Active Index"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "slideCount",
+          "label": "Slide Count",
+          "type": "int",
+          "min": 1,
+          "max": 1000,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "slideCount": 1
       },
       "dynamicPorts": false
     },
