@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 216,
+  "_nodeCount": 217,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -153,6 +153,7 @@
         "timeline",
         "seamlessPlayhead",
         "carouselSlideLocalTime",
+        "carouselAutoplay",
         "carouselKeyboardNav",
         "carouselWrapCounter",
         "tween",
@@ -3224,6 +3225,51 @@
         "spacing": 0.1,
         "duration": 1,
         "loopDuration": 1
+      },
+      "dynamicPorts": false
+    },
+    "carouselAutoplay": {
+      "displayName": "Carousel Autoplay",
+      "category": "animation",
+      "context": "shared",
+      "description": "Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "slideOffset",
+          "type": "float",
+          "label": "Slide Offset"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "speed",
+          "label": "Speed (slides/sec)",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        },
+        {
+          "key": "pauseOnHover",
+          "label": "Pause on Hover",
+          "type": "bool"
+        },
+        {
+          "key": "hoverSelector",
+          "label": "Hover Selector",
+          "type": "string"
+        },
+        {
+          "key": "respectReducedMotion",
+          "label": "Respect Reduced Motion",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "speed": 0.5,
+        "pauseOnHover": true,
+        "hoverSelector": "",
+        "respectReducedMotion": true
       },
       "dynamicPorts": false
     },
