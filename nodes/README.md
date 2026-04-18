@@ -1,6 +1,6 @@
 # Node Reference
 
-All 211 graph node types available in Faster Motion.
+All 220 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -14,6 +14,8 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [Pose Eval](state-machine/poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
 | [Blend Pose](state-machine/blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
 | [Masked Blend Pose](state-machine/maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
+| [Animated Parameter](state-machine/animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
+| [Additive Pose Blend](state-machine/additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
 | [Object Pose Eval](state-machine/objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
 | [Gradient Decompose](state-machine/gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
 | [Property Mask](state-machine/propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
@@ -53,6 +55,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [DOM Dock To](boundary/domDockTo.md) | `domDockTo` | shared | Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY. |
 | [DOM Indexed Dock](boundary/domIndexedDock.md) | `domIndexedDock` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. Sibling to domDockTo (which docks onto a static target). Used for typewriter cursors, scanning highlights, focus rings, and any "park X on the active item in a sequence" effect. |
 | [DOM String Write](boundary/domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
+| [DOM Stage Preset](boundary/domStagePreset.md) | `domStagePreset` | shared | One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup. |
 | [DOM Color Write](boundary/domColorWrite.md) | `domColorWrite` | dom | Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input. |
 | [Scene Transform](boundary/sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
 | [Object Property Read](boundary/objectPropertyRead.md) | `objectPropertyRead` | canvas | Read a runtime object property (bidirectional binding read side). |
@@ -148,6 +151,29 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Text Skew Compute](text/textSkewCompute.md) | `textSkewCompute` | shared | Per-character horizontal shear with staggered decay. Geometry modifier — routes through TextApply. |
 | [Text Distort Compute](text/textDistortCompute.md) | `textDistortCompute` | shared | Per-character random scatter/explosion entrance. Deterministic (seed-based). Geometry modifier — routes through TextApply. |
 
+## [Animation](animation/)
+
+Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
+| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
+| [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step). |
+| [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
+| [Carousel Autoplay](animation/carouselAutoplay.md) | `carouselAutoplay` | shared | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
+| [Carousel Keyboard Nav](animation/carouselKeyboardNav.md) | `carouselKeyboardNav` | shared | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
+| [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
+| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
+| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
+| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
+| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
+| [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
+| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
+| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
+| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
+| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
+
 ## [Constraints](constraints/)
 
 Position, rotation, and transform constraints that enforce spatial relationships between objects: follow, aim, distance clamp, drag, path follow, camera bounds.
@@ -184,23 +210,6 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 | [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
 | [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
 
-## [Animation](animation/)
-
-Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
-| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
-| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
-| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
-| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
-| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
-| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
-| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
-| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
-| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
-
 ## [Distribution](distribution/)
 
 Point distribution generators: grid, circle, linear, random, fibonacci spiral, path sampling. Feed into Generator node to create object clones.
@@ -231,7 +240,7 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
 | [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
 | [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, etc.). |
+| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
 | [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
 
 ## [Integration](integration/)
@@ -241,7 +250,7 @@ Graph composition and data flow: ForEach stamping, scene composition, parameter 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
 | [Data Read](integration/dataRead.md) | `dataRead` | shared | Read any-typed value from ParameterStore |
-| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express "event → set/toggle/fire/increment/decrement parameter" entirely on the graph canvas. |
+| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input. |
 | [Float Source](integration/floatSource.md) | `floatSource` | shared | Float value source — reads from connected input or set externally |
 | [Value Source](integration/valueSource.md) | `valueSource` | shared | Externally-set Vec2 value |
 | [Parameter Read](integration/parameterStoreRead.md) | `parameterStoreRead` | shared | Read a float parameter from ParameterStore |

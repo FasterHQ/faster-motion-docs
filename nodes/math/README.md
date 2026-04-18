@@ -11,5 +11,5 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Gate](gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
 | [Parallax](parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
 | [Velocity](velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, etc.). |
+| [Math Utility](mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
 | [String Op](stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |

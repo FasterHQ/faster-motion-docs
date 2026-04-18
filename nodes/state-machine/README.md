@@ -8,6 +8,8 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [Pose Eval](poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
 | [Blend Pose](blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
 | [Masked Blend Pose](maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
+| [Animated Parameter](animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
+| [Additive Pose Blend](additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
 | [Object Pose Eval](objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
 | [Gradient Decompose](gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
 | [Property Mask](propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |

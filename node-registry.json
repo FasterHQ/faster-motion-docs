@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-17",
+  "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 211,
+  "_nodeCount": 220,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -117,6 +117,7 @@
         "domDockTo",
         "domIndexedDock",
         "domStringWrite",
+        "domStagePreset",
         "domColorWrite",
         "sceneTransform",
         "objectPropertyRead",
@@ -150,10 +151,16 @@
       "nodes": [
         "boolTween",
         "timeline",
+        "seamlessPlayhead",
+        "carouselSlideLocalTime",
+        "carouselAutoplay",
+        "carouselKeyboardNav",
+        "carouselWrapCounter",
         "tween",
         "keyframe",
         "stagger",
         "colorTween",
+        "seekRemap",
         "colorKeyframe",
         "stringKeyframe",
         "clipPath",
@@ -240,6 +247,8 @@
         "poseEval",
         "blendPose",
         "maskedBlendPose",
+        "animatedParameter",
+        "additivePoseBlend",
         "objectPoseEval",
         "gradientDecompose",
         "propertyMask",
@@ -2055,15 +2064,31 @@
       "displayName": "Parameter Write",
       "category": "integration",
       "context": "shared",
-      "description": "Apply an action to a parameter on a rising-edge trigger. Wire an eventListener.fired into this node to express \"event → set/toggle/fire/increment/decrement parameter\" entirely on the graph canvas.",
+      "description": "Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input.",
       "inputs": [
         {
           "name": "trigger",
           "type": "float",
           "label": "Trigger"
+        },
+        {
+          "name": "currentValue",
+          "type": "any",
+          "label": "Current Value"
+        },
+        {
+          "name": "delta",
+          "type": "float",
+          "label": "Delta"
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "nextValue",
+          "type": "any",
+          "label": "Next Value"
+        }
+      ],
       "parameters": [
         {
           "key": "parameterId",
@@ -3048,6 +3073,293 @@
       },
       "dynamicPorts": false
     },
+    "seamlessPlayhead": {
+      "displayName": "Seamless Playhead",
+      "category": "animation",
+      "context": "shared",
+      "description": "Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step).",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "iteration",
+          "type": "float",
+          "label": "Iteration"
+        },
+        {
+          "name": "loopDuration",
+          "type": "float",
+          "label": "Loop Duration (s)"
+        },
+        {
+          "name": "overlap",
+          "type": "float",
+          "label": "Overlap"
+        },
+        {
+          "name": "slideOffset",
+          "type": "float",
+          "label": "Slide Offset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead (s)"
+        },
+        {
+          "name": "activeIndex",
+          "type": "float",
+          "label": "Active Index"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "slideCount",
+          "label": "Slide Count",
+          "type": "int",
+          "min": 1,
+          "max": 1000,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "slideCount": 1
+      },
+      "dynamicPorts": false
+    },
+    "domStagePreset": {
+      "displayName": "DOM Stage Preset",
+      "category": "boundary",
+      "context": "shared",
+      "description": "One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "stageSelector",
+          "label": "Stage Selector",
+          "type": "string"
+        },
+        {
+          "key": "slideSelector",
+          "label": "Slide Selector",
+          "type": "string"
+        },
+        {
+          "key": "perspective",
+          "label": "Perspective (px)",
+          "type": "int",
+          "min": 0,
+          "max": 5000,
+          "step": 100
+        },
+        {
+          "key": "transformStyle",
+          "label": "Transform Style",
+          "type": "enum",
+          "options": [
+            "",
+            "preserve-3d",
+            "flat"
+          ]
+        },
+        {
+          "key": "slideTransformOrigin",
+          "label": "Slide Transform Origin",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "stageSelector": "",
+        "slideSelector": "",
+        "perspective": 0,
+        "transformStyle": "",
+        "slideTransformOrigin": ""
+      },
+      "dynamicPorts": false
+    },
+    "carouselSlideLocalTime": {
+      "displayName": "Carousel Slide Local Time",
+      "category": "animation",
+      "context": "shared",
+      "description": "Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1).",
+      "inputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead"
+        },
+        {
+          "name": "slideIndex",
+          "type": "float",
+          "label": "Slide Index"
+        },
+        {
+          "name": "spacing",
+          "type": "float",
+          "label": "Spacing (s)"
+        },
+        {
+          "name": "duration",
+          "type": "float",
+          "label": "Duration (s)"
+        },
+        {
+          "name": "loopDuration",
+          "type": "float",
+          "label": "Loop Duration (s)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "slideProgress",
+          "type": "float",
+          "label": "Slide Progress"
+        }
+      ],
+      "parameters": [],
+      "defaults": {
+        "slideIndex": 0,
+        "spacing": 0.1,
+        "duration": 1,
+        "loopDuration": 1
+      },
+      "dynamicPorts": false
+    },
+    "carouselAutoplay": {
+      "displayName": "Carousel Autoplay",
+      "category": "animation",
+      "context": "shared",
+      "description": "Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "slideOffset",
+          "type": "float",
+          "label": "Slide Offset"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "speed",
+          "label": "Speed (slides/sec)",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        },
+        {
+          "key": "pauseOnHover",
+          "label": "Pause on Hover",
+          "type": "bool"
+        },
+        {
+          "key": "hoverSelector",
+          "label": "Hover Selector",
+          "type": "string"
+        },
+        {
+          "key": "respectReducedMotion",
+          "label": "Respect Reduced Motion",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "speed": 0.5,
+        "pauseOnHover": true,
+        "hoverSelector": "",
+        "respectReducedMotion": true
+      },
+      "dynamicPorts": false
+    },
+    "carouselKeyboardNav": {
+      "displayName": "Carousel Keyboard Nav",
+      "category": "animation",
+      "context": "shared",
+      "description": "Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "iterationOffset",
+          "type": "float",
+          "label": "Iteration Offset"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "prevKey",
+          "label": "Previous Key",
+          "type": "string"
+        },
+        {
+          "key": "nextKey",
+          "label": "Next Key",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "prevKey": "ArrowLeft",
+        "nextKey": "ArrowRight"
+      },
+      "dynamicPorts": false
+    },
+    "carouselWrapCounter": {
+      "displayName": "Carousel Wrap Counter",
+      "category": "animation",
+      "context": "shared",
+      "description": "Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "iteration",
+          "type": "float",
+          "label": "Iteration"
+        },
+        {
+          "name": "wrappedProgress",
+          "type": "float",
+          "label": "Wrapped Progress"
+        },
+        {
+          "name": "direction",
+          "type": "float",
+          "label": "Direction"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "cooldownFrames",
+          "label": "Cooldown Frames",
+          "type": "int",
+          "min": 0,
+          "max": 60,
+          "step": 1
+        },
+        {
+          "key": "directionWindow",
+          "label": "Direction Window",
+          "type": "int",
+          "min": 1,
+          "max": 15,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "cooldownFrames": 2,
+        "directionWindow": 3
+      },
+      "dynamicPorts": false
+    },
     "tween": {
       "displayName": "Tween",
       "category": "animation",
@@ -3458,6 +3770,71 @@
       "defaults": {},
       "dynamicPorts": false
     },
+    "animatedParameter": {
+      "displayName": "Animated Parameter",
+      "category": "state-machine",
+      "context": "shared",
+      "description": "Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "targetParameterId",
+          "label": "Parameter ID",
+          "type": "string"
+        },
+        {
+          "key": "duration",
+          "label": "Duration (ms)",
+          "type": "float",
+          "min": 0
+        }
+      ],
+      "defaults": {
+        "targetParameterId": "",
+        "duration": 1000,
+        "keyframes": []
+      },
+      "dynamicPorts": false
+    },
+    "additivePoseBlend": {
+      "displayName": "Additive Pose Blend",
+      "category": "state-machine",
+      "context": "shared",
+      "description": "Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips).",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pose",
+          "type": "attributes",
+          "label": "Pose"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "poseInputCount",
+          "label": "Pose Input Count",
+          "type": "int",
+          "min": 0
+        }
+      ],
+      "defaults": {
+        "poseInputCount": 0
+      },
+      "dynamicPorts": false
+    },
     "objectPoseEval": {
       "displayName": "Object Pose Eval",
       "category": "state-machine",
@@ -3852,6 +4229,49 @@
       },
       "dynamicPorts": false
     },
+    "seekRemap": {
+      "displayName": "Seek Remap",
+      "category": "animation",
+      "context": "shared",
+      "description": "Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "inputMin",
+          "label": "Input Min",
+          "type": "float"
+        },
+        {
+          "key": "inputMax",
+          "label": "Input Max",
+          "type": "float"
+        },
+        {
+          "key": "invert",
+          "label": "Invert",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "inputMin": -1,
+        "inputMax": 1,
+        "invert": false
+      },
+      "dynamicPorts": false
+    },
     "boneTransform": {
       "displayName": "Bone Transform",
       "category": "skeleton",
@@ -3889,6 +4309,56 @@
           "name": "localMatrix",
           "type": "any",
           "label": "Local Matrix"
+        },
+        {
+          "name": "x",
+          "type": "float",
+          "label": "Local X"
+        },
+        {
+          "name": "y",
+          "type": "float",
+          "label": "Local Y"
+        },
+        {
+          "name": "rotation",
+          "type": "float",
+          "label": "Local Rotation"
+        },
+        {
+          "name": "scaleX",
+          "type": "float",
+          "label": "Local Scale X"
+        },
+        {
+          "name": "scaleY",
+          "type": "float",
+          "label": "Local Scale Y"
+        },
+        {
+          "name": "worldX",
+          "type": "float",
+          "label": "World X"
+        },
+        {
+          "name": "worldY",
+          "type": "float",
+          "label": "World Y"
+        },
+        {
+          "name": "worldRotation",
+          "type": "float",
+          "label": "World Rotation"
+        },
+        {
+          "name": "worldScaleX",
+          "type": "float",
+          "label": "World Scale X"
+        },
+        {
+          "name": "worldScaleY",
+          "type": "float",
+          "label": "World Scale Y"
         }
       ],
       "parameters": [],
@@ -6599,7 +7069,7 @@
       "displayName": "Math Utility",
       "category": "math",
       "context": "shared",
-      "description": "Typed Float→Float math operation (abs, round, clamp, normalize, etc.).",
+      "description": "Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.).",
       "inputs": [
         {
           "name": "value",
@@ -6615,6 +7085,11 @@
           "name": "max",
           "type": "float",
           "label": "Max"
+        },
+        {
+          "name": "b",
+          "type": "float",
+          "label": "B (binary)"
         }
       ],
       "outputs": [
@@ -6642,7 +7117,10 @@
             "reciprocal",
             "sqrt",
             "clamp",
-            "normalize"
+            "normalize",
+            "add",
+            "subtract",
+            "multiply"
           ]
         }
       ],
