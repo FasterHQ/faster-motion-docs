@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 215,
+  "_nodeCount": 216,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -153,6 +153,7 @@
         "timeline",
         "seamlessPlayhead",
         "carouselSlideLocalTime",
+        "carouselKeyboardNav",
         "carouselWrapCounter",
         "tween",
         "keyframe",
@@ -3072,7 +3073,7 @@
       "displayName": "Seamless Playhead",
       "category": "animation",
       "context": "shared",
-      "description": "Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time.",
+      "description": "Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step).",
       "inputs": [
         {
           "name": "progress",
@@ -3093,6 +3094,11 @@
           "name": "overlap",
           "type": "float",
           "label": "Overlap"
+        },
+        {
+          "name": "slideOffset",
+          "type": "float",
+          "label": "Slide Offset"
         }
       ],
       "outputs": [
@@ -3218,6 +3224,37 @@
         "spacing": 0.1,
         "duration": 1,
         "loopDuration": 1
+      },
+      "dynamicPorts": false
+    },
+    "carouselKeyboardNav": {
+      "displayName": "Carousel Keyboard Nav",
+      "category": "animation",
+      "context": "shared",
+      "description": "Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "iterationOffset",
+          "type": "float",
+          "label": "Iteration Offset"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "prevKey",
+          "label": "Previous Key",
+          "type": "string"
+        },
+        {
+          "key": "nextKey",
+          "label": "Next Key",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "prevKey": "ArrowLeft",
+        "nextKey": "ArrowRight"
       },
       "dynamicPorts": false
     },

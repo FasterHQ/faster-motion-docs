@@ -4,7 +4,7 @@
 **Category:** animation  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time.
+Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step).
 
 ## Inputs
 
@@ -14,6 +14,7 @@ Pure-math playhead for seamless infinite loops. Maps progress + iteration to a r
 | `iteration` | `float` | Iteration |
 | `loopDuration` | `float` | Loop Duration (s) |
 | `overlap` | `float` | Overlap |
+| `slideOffset` | `float` | Slide Offset |
 
 
 ## Outputs
