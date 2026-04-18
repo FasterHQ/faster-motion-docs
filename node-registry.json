@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 212,
+  "_nodeCount": 213,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -151,6 +151,7 @@
         "boolTween",
         "timeline",
         "seamlessPlayhead",
+        "carouselWrapCounter",
         "tween",
         "keyframe",
         "stagger",
@@ -3116,6 +3117,59 @@
       ],
       "defaults": {
         "slideCount": 1
+      },
+      "dynamicPorts": false
+    },
+    "carouselWrapCounter": {
+      "displayName": "Carousel Wrap Counter",
+      "category": "animation",
+      "context": "shared",
+      "description": "Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "iteration",
+          "type": "float",
+          "label": "Iteration"
+        },
+        {
+          "name": "wrappedProgress",
+          "type": "float",
+          "label": "Wrapped Progress"
+        },
+        {
+          "name": "direction",
+          "type": "float",
+          "label": "Direction"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "cooldownFrames",
+          "label": "Cooldown Frames",
+          "type": "int",
+          "min": 0,
+          "max": 60,
+          "step": 1
+        },
+        {
+          "key": "directionWindow",
+          "label": "Direction Window",
+          "type": "int",
+          "min": 1,
+          "max": 15,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "cooldownFrames": 2,
+        "directionWindow": 3
       },
       "dynamicPorts": false
     },
