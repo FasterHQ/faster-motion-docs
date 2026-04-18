@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 213,
+  "_nodeCount": 214,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -117,6 +117,7 @@
         "domDockTo",
         "domIndexedDock",
         "domStringWrite",
+        "domStagePreset",
         "domColorWrite",
         "sceneTransform",
         "objectPropertyRead",
@@ -3117,6 +3118,57 @@
       ],
       "defaults": {
         "slideCount": 1
+      },
+      "dynamicPorts": false
+    },
+    "domStagePreset": {
+      "displayName": "DOM Stage Preset",
+      "category": "boundary",
+      "context": "shared",
+      "description": "One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "stageSelector",
+          "label": "Stage Selector",
+          "type": "string"
+        },
+        {
+          "key": "slideSelector",
+          "label": "Slide Selector",
+          "type": "string"
+        },
+        {
+          "key": "perspective",
+          "label": "Perspective (px)",
+          "type": "int",
+          "min": 0,
+          "max": 5000,
+          "step": 100
+        },
+        {
+          "key": "transformStyle",
+          "label": "Transform Style",
+          "type": "enum",
+          "options": [
+            "",
+            "preserve-3d",
+            "flat"
+          ]
+        },
+        {
+          "key": "slideTransformOrigin",
+          "label": "Slide Transform Origin",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "stageSelector": "",
+        "slideSelector": "",
+        "perspective": 0,
+        "transformStyle": "",
+        "slideTransformOrigin": ""
       },
       "dynamicPorts": false
     },
