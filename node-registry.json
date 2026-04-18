@@ -4297,6 +4297,81 @@
           "name": "constraintMask",
           "type": "float",
           "label": "Constraint Mask"
+        },
+        {
+          "name": "overrideX",
+          "type": "float",
+          "label": "Override X"
+        },
+        {
+          "name": "overrideY",
+          "type": "float",
+          "label": "Override Y"
+        },
+        {
+          "name": "overrideRotation",
+          "type": "float",
+          "label": "Override Rotation"
+        },
+        {
+          "name": "overrideScaleX",
+          "type": "float",
+          "label": "Override Scale X"
+        },
+        {
+          "name": "overrideScaleY",
+          "type": "float",
+          "label": "Override Scale Y"
+        },
+        {
+          "name": "overrideWorldX",
+          "type": "float",
+          "label": "Override World X"
+        },
+        {
+          "name": "overrideWorldY",
+          "type": "float",
+          "label": "Override World Y"
+        },
+        {
+          "name": "overrideWorldRotation",
+          "type": "float",
+          "label": "Override World Rotation"
+        },
+        {
+          "name": "overrideWorldScaleX",
+          "type": "float",
+          "label": "Override World Scale X"
+        },
+        {
+          "name": "overrideWorldScaleY",
+          "type": "float",
+          "label": "Override World Scale Y"
+        },
+        {
+          "name": "additiveX",
+          "type": "float",
+          "label": "Additive X"
+        },
+        {
+          "name": "additiveY",
+          "type": "float",
+          "label": "Additive Y"
+        },
+        {
+          "name": "additiveRotation",
+          "type": "float",
+          "label": "Additive Rotation"
+        },
+        {
+          "name": "additiveScaleX",
+          "type": "float",
+          "label": "Additive Scale X"
+        },
+        {
+          "name": "additiveScaleY",
+          "type": "float",
+          "label": "Additive Scale Y"
         }
       ],
       "outputs": [

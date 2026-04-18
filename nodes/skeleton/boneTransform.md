@@ -14,6 +14,21 @@ Per-bone FK node — reads pose at boneIndex, computes world matrix from parent
 | `pose` | `attributes` | Pose |
 | `constraintXform` | `any` | Constraint Override |
 | `constraintMask` | `float` | Constraint Mask |
+| `overrideX` | `float` | Override X |
+| `overrideY` | `float` | Override Y |
+| `overrideRotation` | `float` | Override Rotation |
+| `overrideScaleX` | `float` | Override Scale X |
+| `overrideScaleY` | `float` | Override Scale Y |
+| `overrideWorldX` | `float` | Override World X |
+| `overrideWorldY` | `float` | Override World Y |
+| `overrideWorldRotation` | `float` | Override World Rotation |
+| `overrideWorldScaleX` | `float` | Override World Scale X |
+| `overrideWorldScaleY` | `float` | Override World Scale Y |
+| `additiveX` | `float` | Additive X |
+| `additiveY` | `float` | Additive Y |
+| `additiveRotation` | `float` | Additive Rotation |
+| `additiveScaleX` | `float` | Additive Scale X |
+| `additiveScaleY` | `float` | Additive Scale Y |
 
 
 ## Outputs
