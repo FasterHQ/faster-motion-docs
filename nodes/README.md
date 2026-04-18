@@ -1,6 +1,6 @@
 # Node Reference
 
-All 214 graph node types available in Faster Motion.
+All 215 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -158,6 +158,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
 | [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
 | [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time. |
+| [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
 | [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
 | [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
 | [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
@@ -234,7 +235,7 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
 | [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
 | [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, etc.). |
+| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
 | [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
 
 ## [Integration](integration/)

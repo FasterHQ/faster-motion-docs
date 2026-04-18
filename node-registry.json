@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-18",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 214,
+  "_nodeCount": 215,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -152,6 +152,7 @@
         "boolTween",
         "timeline",
         "seamlessPlayhead",
+        "carouselSlideLocalTime",
         "carouselWrapCounter",
         "tween",
         "keyframe",
@@ -3169,6 +3170,54 @@
         "perspective": 0,
         "transformStyle": "",
         "slideTransformOrigin": ""
+      },
+      "dynamicPorts": false
+    },
+    "carouselSlideLocalTime": {
+      "displayName": "Carousel Slide Local Time",
+      "category": "animation",
+      "context": "shared",
+      "description": "Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1).",
+      "inputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead"
+        },
+        {
+          "name": "slideIndex",
+          "type": "float",
+          "label": "Slide Index"
+        },
+        {
+          "name": "spacing",
+          "type": "float",
+          "label": "Spacing (s)"
+        },
+        {
+          "name": "duration",
+          "type": "float",
+          "label": "Duration (s)"
+        },
+        {
+          "name": "loopDuration",
+          "type": "float",
+          "label": "Loop Duration (s)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "slideProgress",
+          "type": "float",
+          "label": "Slide Progress"
+        }
+      ],
+      "parameters": [],
+      "defaults": {
+        "slideIndex": 0,
+        "spacing": 0.1,
+        "duration": 1,
+        "loopDuration": 1
       },
       "dynamicPorts": false
     },
@@ -6776,7 +6825,7 @@
       "displayName": "Math Utility",
       "category": "math",
       "context": "shared",
-      "description": "Typed Float→Float math operation (abs, round, clamp, normalize, etc.).",
+      "description": "Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.).",
       "inputs": [
         {
           "name": "value",
@@ -6792,6 +6841,11 @@
           "name": "max",
           "type": "float",
           "label": "Max"
+        },
+        {
+          "name": "b",
+          "type": "float",
+          "label": "B (binary)"
         }
       ],
       "outputs": [
@@ -6819,7 +6873,10 @@
             "reciprocal",
             "sqrt",
             "clamp",
-            "normalize"
+            "normalize",
+            "add",
+            "subtract",
+            "multiply"
           ]
         }
       ],

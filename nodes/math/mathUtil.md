@@ -4,7 +4,7 @@
 **Category:** math  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Typed Float→Float math operation (abs, round, clamp, normalize, etc.).
+Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.).
 
 ## Inputs
 
@@ -13,6 +13,7 @@ Typed Float→Float math operation (abs, round, clamp, normalize, etc.).
 | `value` | `float` | Value |
 | `min` | `float` | Min |
 | `max` | `float` | Max |
+| `b` | `float` | B (binary) |
 
 
 ## Outputs
@@ -26,5 +27,5 @@ Typed Float→Float math operation (abs, round, clamp, normalize, etc.).
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `operation` | enum | `"abs"` | Operation. Options: `negate`, `abs`, `round`, `floor`, `ceil`, `sign`, `degToRad`, `radToDeg`, `fract`, `reciprocal`, `sqrt`, `clamp`, `normalize` |
+| `operation` | enum | `"abs"` | Operation. Options: `negate`, `abs`, `round`, `floor`, `ceil`, `sign`, `degToRad`, `radToDeg`, `fract`, `reciprocal`, `sqrt`, `clamp`, `normalize`, `add`, `subtract`, `multiply` |
 
