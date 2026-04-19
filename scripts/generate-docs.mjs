@@ -54,6 +54,18 @@ try {
 
 console.log(`Parsed ${nodes.length} nodes from NodeMetadata.ts`);
 
+// Filter out loader-generated internal nodes. These are materialized by
+// loader phases from higher-level authoring primitives (e.g. MaskClipNode
+// from the `maskId` string on objects) and are not authored directly. They
+// belong in the FM runtime codebase, not in author-facing documentation
+// per CLAUDE.md's "do not document internal FM implementation details".
+const authoredNodes = nodes.filter(n => n.internal !== true);
+const internalCount = nodes.length - authoredNodes.length;
+if (internalCount > 0) {
+  console.log(`Filtered ${internalCount} internal node(s) from author-facing docs: ${nodes.filter(n => n.internal === true).map(n => n.type).join(', ')}`);
+}
+nodes = authoredNodes;
+
 // ── Category descriptions ─────────────────────────────────────────────────
 
 const CATEGORY_DESCRIPTIONS = {
