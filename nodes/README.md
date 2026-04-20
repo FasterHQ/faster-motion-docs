@@ -1,6 +1,6 @@
 # Node Reference
 
-All 220 graph node types available in Faster Motion.
+All 222 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -62,6 +62,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [Layout Compute](boundary/layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
 | [Mask Sync](boundary/maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
 | [Camera](boundary/camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
+| [Switch Gate](boundary/switchGate.md) | `switchGate` | shared | Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node. |
 | [Clip Path Write](boundary/clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
 | [DOM Pose Write](boundary/domPoseWrite.md) | `domPoseWrite` | shared | Write multiple float values to CSS properties on a single DOM element. Transform components route through the accumulator, other properties go through DOMBatcher. |
 | [DOM Attribute Read](boundary/domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM/SVG attribute (e.g., d, viewBox, points) from an element at bind time and outputs it as a string. Static read — the boundary counterpart to DOMStringWriteNode. |
@@ -173,6 +174,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
 | [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
 | [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
+| [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
 
 ## [Constraints](constraints/)
 

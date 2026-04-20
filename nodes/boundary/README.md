@@ -22,6 +22,7 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [Layout Compute](layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
 | [Mask Sync](maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
 | [Camera](camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
+| [Switch Gate](switchGate.md) | `switchGate` | shared | Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node. |
 | [Clip Path Write](clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
 | [DOM Pose Write](domPoseWrite.md) | `domPoseWrite` | shared | Write multiple float values to CSS properties on a single DOM element. Transform components route through the accumulator, other properties go through DOMBatcher. |
 | [DOM Attribute Read](domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM/SVG attribute (e.g., d, viewBox, points) from an element at bind time and outputs it as a string. Static read — the boundary counterpart to DOMStringWriteNode. |

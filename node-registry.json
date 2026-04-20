@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-19",
+  "_generatedAt": "2026-04-20",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 220,
+  "_nodeCount": 222,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -124,6 +124,7 @@
         "layoutCompute",
         "maskSync",
         "camera",
+        "switchGate",
         "clipPathWrite",
         "domPoseWrite",
         "domAttributeRead",
@@ -164,7 +165,8 @@
         "colorKeyframe",
         "stringKeyframe",
         "clipPath",
-        "multiKeyframe"
+        "multiKeyframe",
+        "propertyAnimation"
       ]
     },
     "text": {
@@ -9062,6 +9064,45 @@
       "defaults": {},
       "dynamicPorts": false
     },
+    "switchGate": {
+      "displayName": "Switch Gate",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node.",
+      "inputs": [
+        {
+          "name": "parentVisible",
+          "type": "bool",
+          "label": "Parent Visible"
+        },
+        {
+          "name": "activeChildIndex",
+          "type": "float",
+          "label": "Active Child Index"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "visible",
+          "type": "bool",
+          "label": "Visible"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "myIndex",
+          "label": "My Index",
+          "type": "int",
+          "min": 0,
+          "max": 99999,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "myIndex": 0
+      },
+      "dynamicPorts": false
+    },
     "timelinePose": {
       "displayName": "Timeline Pose",
       "category": "state-machine",
@@ -11232,6 +11273,51 @@
       "parameters": [],
       "defaults": {},
       "dynamicPorts": true
+    },
+    "propertyAnimation": {
+      "displayName": "Property Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "propertyAnimationChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "channels": {
+          "opacity": {
+            "cssUnit": "none",
+            "keyframes": [
+              {
+                "time": 0,
+                "value": 0
+              },
+              {
+                "time": 1,
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "dynamicPorts": false
     }
   }
 }
