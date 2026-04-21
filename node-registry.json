@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 225,
+  "_nodeCount": 226,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -193,6 +193,7 @@
         "textSkewCompute",
         "textDistortCompute",
         "counterAnimation",
+        "textSequenceAnimation",
         "textScrambleAnimation"
       ]
     },
@@ -11435,6 +11436,37 @@
         "decimals": 0,
         "format": "{value}",
         "separator": ""
+      },
+      "dynamicPorts": false
+    },
+    "textSequenceAnimation": {
+      "displayName": "Text Sequence Animation",
+      "category": "text",
+      "context": "shared",
+      "description": "Cycle through a sequence of strings based on progress and write the current text as the textContent of a target element. Compound: expanded into `textSequence + domPoseWrite` at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "texts",
+          "label": "Text Sequence",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "texts": []
       },
       "dynamicPorts": false
     },
