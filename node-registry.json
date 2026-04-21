@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 226,
+  "_nodeCount": 227,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -167,7 +167,8 @@
         "clipPath",
         "multiKeyframe",
         "propertyAnimation",
-        "clipPathAnimation"
+        "clipPathAnimation",
+        "dockToAnimation"
       ]
     },
     "text": {
@@ -11446,6 +11447,66 @@
             "from": "text",
             "propertyName": "textContent",
             "writeMode": "textContent"
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "dockToAnimation": {
+      "displayName": "Dock To Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "sourceSelector",
+          "label": "Source Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "targetSelector",
+          "label": "Target Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "sourceAnchor",
+          "label": "Source Anchor",
+          "type": "string"
+        },
+        {
+          "key": "targetAnchor",
+          "label": "Target Anchor",
+          "type": "string"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "dockToChannels"
+        }
+      ],
+      "defaults": {
+        "sourceSelector": "",
+        "targetSelector": "",
+        "sourceAnchor": "center",
+        "targetAnchor": "center",
+        "channels": {
+          "translateX": {
+            "from": "offsetX",
+            "propertyName": "translateX",
+            "cssUnit": "px"
+          },
+          "translateY": {
+            "from": "offsetY",
+            "propertyName": "translateY",
+            "cssUnit": "px"
           }
         }
       },
