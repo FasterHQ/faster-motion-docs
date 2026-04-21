@@ -27,3 +27,4 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Conform to Path](conformToPath.md) | `conformToPath` | shared | Deform source to follow target path shape. |
 | [Merge Paths](mergePaths.md) | `mergePaths` | shared | Boolean ops (union/intersect/subtract/exclude) via clipper2. |
 | [Path Vertex Anim](pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
+| [Morph Path Animation](morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |

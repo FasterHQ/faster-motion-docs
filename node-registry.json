@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 229,
+  "_nodeCount": 230,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -225,7 +225,8 @@
         "repeater",
         "conformToPath",
         "mergePaths",
-        "pathVertexAnim"
+        "pathVertexAnim",
+        "morphPathAnimation"
       ]
     },
     "media": {
@@ -11594,6 +11595,37 @@
             ]
           }
         }
+      },
+      "dynamicPorts": false
+    },
+    "morphPathAnimation": {
+      "displayName": "Morph Path Animation",
+      "category": "paths",
+      "context": "shared",
+      "description": "Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "toPath",
+          "label": "Target Path (d)",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "toPath": ""
       },
       "dynamicPorts": false
     },
