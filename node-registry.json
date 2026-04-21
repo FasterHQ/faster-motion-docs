@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-20",
+  "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 222,
+  "_nodeCount": 223,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -166,7 +166,8 @@
         "stringKeyframe",
         "clipPath",
         "multiKeyframe",
-        "propertyAnimation"
+        "propertyAnimation",
+        "clipPathAnimation"
       ]
     },
     "text": {
@@ -11316,6 +11317,64 @@
             ]
           }
         }
+      },
+      "dynamicPorts": false
+    },
+    "clipPathAnimation": {
+      "displayName": "Clip Path Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "keyframes",
+          "label": "Keyframes",
+          "type": "clipPathKeyframes"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "keyframes": [
+          {
+            "time": 0,
+            "values": [
+              50,
+              50,
+              50,
+              50,
+              50,
+              50,
+              50,
+              50
+            ]
+          },
+          {
+            "time": 1,
+            "values": [
+              0,
+              0,
+              100,
+              0,
+              100,
+              100,
+              0,
+              100
+            ]
+          }
+        ]
       },
       "dynamicPorts": false
     }

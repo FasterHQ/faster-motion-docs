@@ -1,6 +1,6 @@
 # Node Reference
 
-All 222 graph node types available in Faster Motion.
+All 223 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -175,6 +175,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
 | [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
 | [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
+| [Clip Path Animation](animation/clipPathAnimation.md) | `clipPathAnimation` | shared | Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class. |
 
 ## [Constraints](constraints/)
 
