@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 227,
+  "_nodeCount": 228,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -168,6 +168,7 @@
         "multiKeyframe",
         "propertyAnimation",
         "clipPathAnimation",
+        "slideSlotAnimation",
         "dockToAnimation"
       ]
     },
@@ -11447,6 +11448,65 @@
             "from": "text",
             "propertyName": "textContent",
             "writeMode": "textContent"
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "slideSlotAnimation": {
+      "displayName": "Slide Slot Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "slotStart",
+          "label": "Slot Start (playhead)",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "slotEnd",
+          "label": "Slot End (playhead)",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "propertyAnimationChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "slotStart": 0,
+        "slotEnd": 1,
+        "channels": {
+          "opacity": {
+            "cssUnit": "none",
+            "keyframes": [
+              {
+                "time": 0,
+                "value": 0
+              },
+              {
+                "time": 1,
+                "value": 1
+              }
+            ]
           }
         }
       },
