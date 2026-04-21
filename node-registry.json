@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 223,
+  "_nodeCount": 224,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -191,7 +191,8 @@
         "textDrawLayerIndexApply",
         "textEffectApply",
         "textSkewCompute",
-        "textDistortCompute"
+        "textDistortCompute",
+        "textScrambleAnimation"
       ]
     },
     "paths": {
@@ -11375,6 +11376,59 @@
             ]
           }
         ]
+      },
+      "dynamicPorts": false
+    },
+    "textScrambleAnimation": {
+      "displayName": "Text Scramble Animation",
+      "category": "text",
+      "context": "shared",
+      "description": "Scramble a single character at a target selector — cycles through a charset and settles on the original character, driven by a 0..1 progress input. One compound per character (use one per DOM element; author a multiKeyframe to drive all of them from one scroll/hover source). Compound: expanded into `scrambleCompute + domStringWrite` at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "originalText",
+          "label": "Original Character",
+          "type": "string"
+        },
+        {
+          "key": "charset",
+          "label": "Character Set",
+          "type": "string"
+        },
+        {
+          "key": "count",
+          "label": "Total Characters",
+          "type": "int",
+          "min": 1,
+          "step": 1
+        },
+        {
+          "key": "index",
+          "label": "Character Index",
+          "type": "int",
+          "min": 0,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "originalText": "",
+        "charset": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*",
+        "count": 8,
+        "index": 0
       },
       "dynamicPorts": false
     }

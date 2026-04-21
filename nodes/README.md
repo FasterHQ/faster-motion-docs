@@ -1,6 +1,6 @@
 # Node Reference
 
-All 223 graph node types available in Faster Motion.
+All 224 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -100,32 +100,6 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Merge Paths](paths/mergePaths.md) | `mergePaths` | shared | Boolean ops (union/intersect/subtract/exclude) via clipper2. |
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 
-## [Inputs](inputs/)
-
-Nodes that read external signals into the graph: DOM events, mouse position, scroll progress, keyboard input, time, and other browser/device inputs.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Scroll Input](inputs/scrollInput.md) | `scrollInput` | dom | Scroll progress (0-1) from page scroll position |
-| [Time Input](inputs/timeInput.md) | `timeInput` | shared | Elapsed time to normalized progress (0-1) |
-| [Mouse Input](inputs/mouseInput.md) | `mouseInput` | dom | Pointer position (0-1) on selected axis |
-| [Mouse Velocity](inputs/mouseVelocity.md) | `mouseVelocity` | dom | Pointer velocity magnitude (-1 to 1) |
-| [Distance Input](inputs/distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
-| [Drag Input](inputs/dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
-| [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, and isInView |
-| [Scroll Pin](inputs/scrollPin.md) | `scrollPin` | dom | Pin a DOM element to fixed position while scroll progress is within range |
-| [Pointer](inputs/pointer.md) | `pointer` | dom | Track pointer position — outputs x, y, normalized, isInside |
-| [Observer](inputs/observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
-| [Event Listener](inputs/eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |
-| [Keyboard Listener](inputs/keyboardListener.md) | `keyboardListener` | dom | Keyboard key press/release to graph signal |
-| [Text Input](inputs/textInput.md) | `textInput` | canvas | Interactive text field with cursor and selection |
-| [Hover](inputs/hover.md) | `hover` | shared | mouseenter/mouseleave with smooth 0→1 transition over duration. |
-| [Distance](inputs/distance.md) | `distance` | shared | Mouse-to-element-rect proximity. Outputs 0 (far) to 1 (touching) with falloff. |
-| [Scroll Progress](inputs/scrollProgress.md) | `scrollProgress` | dom | Outputs normalized scroll position [0, 1]. Drive text/instance animations from scroll. |
-| [Mouse Progress](inputs/mouseProgress.md) | `mouseProgress` | shared | Outputs normalized mouse position [0, 1] relative to a target element or viewport. |
-| [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
-| [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
-
 ## [Text](text/)
 
 Text animation nodes: split text into characters/words/lines, per-character wave/fade/spring/skew/distort transforms, coverage ranges for reveal effects.
@@ -151,6 +125,33 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Text Effect Apply](text/textEffectApply.md) | `textEffectApply` | canvas | Per-character blur/glow/shadow via the F260 port contract. Writes piece.outputs.blur/glow/shadow.set(v) per character using the perCharProgress stagger + reveal mode. The `effect` param selects which port to write. |
 | [Text Skew Compute](text/textSkewCompute.md) | `textSkewCompute` | shared | Per-character horizontal shear with staggered decay. Geometry modifier — routes through TextApply. |
 | [Text Distort Compute](text/textDistortCompute.md) | `textDistortCompute` | shared | Per-character random scatter/explosion entrance. Deterministic (seed-based). Geometry modifier — routes through TextApply. |
+| [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character at a target selector — cycles through a charset and settles on the original character, driven by a 0..1 progress input. One compound per character (use one per DOM element; author a multiKeyframe to drive all of them from one scroll/hover source). Compound: expanded into `scrambleCompute + domStringWrite` at load time — no runtime class. |
+
+## [Inputs](inputs/)
+
+Nodes that read external signals into the graph: DOM events, mouse position, scroll progress, keyboard input, time, and other browser/device inputs.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Scroll Input](inputs/scrollInput.md) | `scrollInput` | dom | Scroll progress (0-1) from page scroll position |
+| [Time Input](inputs/timeInput.md) | `timeInput` | shared | Elapsed time to normalized progress (0-1) |
+| [Mouse Input](inputs/mouseInput.md) | `mouseInput` | dom | Pointer position (0-1) on selected axis |
+| [Mouse Velocity](inputs/mouseVelocity.md) | `mouseVelocity` | dom | Pointer velocity magnitude (-1 to 1) |
+| [Distance Input](inputs/distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
+| [Drag Input](inputs/dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
+| [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, and isInView |
+| [Scroll Pin](inputs/scrollPin.md) | `scrollPin` | dom | Pin a DOM element to fixed position while scroll progress is within range |
+| [Pointer](inputs/pointer.md) | `pointer` | dom | Track pointer position — outputs x, y, normalized, isInside |
+| [Observer](inputs/observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
+| [Event Listener](inputs/eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |
+| [Keyboard Listener](inputs/keyboardListener.md) | `keyboardListener` | dom | Keyboard key press/release to graph signal |
+| [Text Input](inputs/textInput.md) | `textInput` | canvas | Interactive text field with cursor and selection |
+| [Hover](inputs/hover.md) | `hover` | shared | mouseenter/mouseleave with smooth 0→1 transition over duration. |
+| [Distance](inputs/distance.md) | `distance` | shared | Mouse-to-element-rect proximity. Outputs 0 (far) to 1 (touching) with falloff. |
+| [Scroll Progress](inputs/scrollProgress.md) | `scrollProgress` | dom | Outputs normalized scroll position [0, 1]. Drive text/instance animations from scroll. |
+| [Mouse Progress](inputs/mouseProgress.md) | `mouseProgress` | shared | Outputs normalized mouse position [0, 1] relative to a target element or viewport. |
+| [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
+| [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
 
 ## [Animation](animation/)
 
