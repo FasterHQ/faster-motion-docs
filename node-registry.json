@@ -11385,7 +11385,7 @@
       "displayName": "Counter Animation",
       "category": "text",
       "context": "shared",
-      "description": "Interpolate a number from min to max, format it, and write it as the textContent of a target element, driven by a 0..1 progress input. Compound: expanded into `counter + domPoseWrite` at load time — no runtime class.",
+      "description": "Interpolate a number from min to max (formatted via template, decimals, thousand separator) driven by a 0..1 progress input. Authors pick any number of output targets via `channels`: `from: \"text\"` writes the formatted string to any DOM string target (textContent, aria-valuetext, CSS var, title, data-*, etc.), `from: \"value\"` routes the raw float to any numeric CSS property (opacity, translateY, scale, rotate, width, …). One compound can show the number AND animate motion simultaneously from the same count. Compound: expands into `counter + one domPoseWrite + N domStringWrites` at load time — no runtime class.",
       "inputs": [
         {
           "name": "progress",
@@ -11427,6 +11427,11 @@
           "key": "separator",
           "label": "Thousand Separator",
           "type": "string"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "counterChannels"
         }
       ],
       "defaults": {
@@ -11435,7 +11440,14 @@
         "max": 100,
         "decimals": 0,
         "format": "{value}",
-        "separator": ""
+        "separator": "",
+        "channels": {
+          "textContent": {
+            "from": "text",
+            "propertyName": "textContent",
+            "writeMode": "textContent"
+          }
+        }
       },
       "dynamicPorts": false
     },
