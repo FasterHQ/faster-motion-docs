@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 230,
+  "_nodeCount": 232,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -100,7 +100,8 @@
         "parallax",
         "velocity",
         "mathUtil",
-        "stringOp"
+        "stringOp",
+        "stringEquals"
       ]
     },
     "boundary": {
@@ -170,7 +171,8 @@
         "clipPathAnimation",
         "carouselEffectAnimation",
         "slideSlotAnimation",
-        "dockToAnimation"
+        "dockToAnimation",
+        "indexedDockAnimation"
       ]
     },
     "text": {
@@ -9115,12 +9117,17 @@
       "displayName": "Timeline Pose",
       "category": "state-machine",
       "context": "canvas",
-      "description": "Evaluates animation clip bone tracks at current Timeline progress.",
+      "description": "Evaluates animation clip bone tracks at current Timeline progress. F316: weight gates contribution to additive blender (0 = rest pose, 1 = full, default 1).",
       "inputs": [
         {
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "weight",
+          "type": "float",
+          "label": "Weight"
         }
       ],
       "outputs": [
@@ -9134,6 +9141,40 @@
       "defaults": {
         "boneNames": []
       },
+      "dynamicPorts": false
+    },
+    "stringEquals": {
+      "displayName": "String Equals",
+      "category": "math",
+      "context": "shared",
+      "description": "F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired.",
+      "inputs": [
+        {
+          "name": "a",
+          "type": "string",
+          "label": "A"
+        },
+        {
+          "name": "b",
+          "type": "string",
+          "label": "B"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "literalB",
+          "label": "Literal B",
+          "type": "string"
+        }
+      ],
+      "defaults": {},
       "dynamicPorts": false
     },
     "pathVertexAnim": {
@@ -11683,6 +11724,49 @@
           "translateY": {
             "from": "offsetY",
             "propertyName": "translateY",
+            "cssUnit": "px"
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "indexedDockAnimation": {
+      "displayName": "Indexed Dock Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. One authoring node replaces the canonical `domIndexedDock + domPoseWrite` chain. Used for typewriter cursors, tab underlines, focus rings, onboarding step indicators, carousel page dots — any \"chrome follows active item in a list\" pattern. Authors route offsetX to any CSS property via `channels` (default: translateX px). Compound: expanded into those two primitives at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "sourceSelector",
+          "label": "Source (what docks)",
+          "type": "elementSelector"
+        },
+        {
+          "key": "childSelector",
+          "label": "Children (the list)",
+          "type": "elementSelector"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "indexedDockChannels"
+        }
+      ],
+      "defaults": {
+        "sourceSelector": "",
+        "childSelector": "",
+        "channels": {
+          "translateX": {
+            "from": "offsetX",
+            "propertyName": "translateX",
             "cssUnit": "px"
           }
         }

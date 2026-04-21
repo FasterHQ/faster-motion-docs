@@ -15,7 +15,7 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [Property Mask](propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
 | [Object Blend](objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
 | [Object Masked Blend](objectMaskedBlend.md) | `objectMaskedBlend` | canvas | Blend two object pose bundles with per-object mask — unmasked objects pass through from A |
-| [Timeline Pose](timelinePose.md) | `timelinePose` | canvas | Evaluates animation clip bone tracks at current Timeline progress. |
+| [Timeline Pose](timelinePose.md) | `timelinePose` | canvas | Evaluates animation clip bone tracks at current Timeline progress. F316: weight gates contribution to additive blender (0 = rest pose, 1 = full, default 1). |
 | [Timeline State](timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
 | [Remap Apply](remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
 | [SM Parameter Store](smParameterStore.md) | `smParameterStore` | canvas | Declarative parameter store — one dynamic output port per SM parameter. Receives writes from listeners, drivers, and audio bindings. |

@@ -1,6 +1,6 @@
 # Node Reference
 
-All 230 graph node types available in Faster Motion.
+All 232 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -21,7 +21,7 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [Property Mask](state-machine/propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
 | [Object Blend](state-machine/objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
 | [Object Masked Blend](state-machine/objectMaskedBlend.md) | `objectMaskedBlend` | canvas | Blend two object pose bundles with per-object mask — unmasked objects pass through from A |
-| [Timeline Pose](state-machine/timelinePose.md) | `timelinePose` | canvas | Evaluates animation clip bone tracks at current Timeline progress. |
+| [Timeline Pose](state-machine/timelinePose.md) | `timelinePose` | canvas | Evaluates animation clip bone tracks at current Timeline progress. F316: weight gates contribution to additive blender (0 = rest pose, 1 = full, default 1). |
 | [Timeline State](state-machine/timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
 | [Remap Apply](state-machine/remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
 | [SM Parameter Store](state-machine/smParameterStore.md) | `smParameterStore` | canvas | Declarative parameter store — one dynamic output port per SM parameter. Receives writes from listeners, drivers, and audio bindings. |
@@ -101,6 +101,35 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 | [Morph Path Animation](paths/morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |
 
+## [Animation](animation/)
+
+Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
+| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
+| [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step). |
+| [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
+| [Carousel Autoplay](animation/carouselAutoplay.md) | `carouselAutoplay` | shared | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
+| [Carousel Keyboard Nav](animation/carouselKeyboardNav.md) | `carouselKeyboardNav` | shared | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
+| [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
+| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
+| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
+| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
+| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
+| [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
+| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
+| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
+| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
+| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
+| [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
+| [Clip Path Animation](animation/clipPathAnimation.md) | `clipPathAnimation` | shared | Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class. |
+| [Carousel Effect Animation](animation/carouselEffectAnimation.md) | `carouselEffectAnimation` | shared | An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class. |
+| [Slide Slot Animation](animation/slideSlotAnimation.md) | `slideSlotAnimation` | shared | A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class. |
+| [Dock To Animation](animation/dockToAnimation.md) | `dockToAnimation` | shared | Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class. |
+| [Indexed Dock Animation](animation/indexedDockAnimation.md) | `indexedDockAnimation` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. One authoring node replaces the canonical `domIndexedDock + domPoseWrite` chain. Used for typewriter cursors, tab underlines, focus rings, onboarding step indicators, carousel page dots — any "chrome follows active item in a list" pattern. Authors route offsetX to any CSS property via `channels` (default: translateX px). Compound: expanded into those two primitives at load time — no runtime class. |
+
 ## [Text](text/)
 
 Text animation nodes: split text into characters/words/lines, per-character wave/fade/spring/skew/distort transforms, coverage ranges for reveal effects.
@@ -129,34 +158,6 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Counter Animation](text/counterAnimation.md) | `counterAnimation` | shared | Interpolate a number from min to max (formatted via template, decimals, thousand separator) driven by a 0..1 progress input. Authors pick any number of output targets via `channels`: `from: "text"` writes the formatted string to any DOM string target (textContent, aria-valuetext, CSS var, title, data-*, etc.), `from: "value"` routes the raw float to any numeric CSS property (opacity, translateY, scale, rotate, width, …). One compound can show the number AND animate motion simultaneously from the same count. Compound: expands into `counter + one domPoseWrite + N domStringWrites` at load time — no runtime class. |
 | [Text Sequence Animation](text/textSequenceAnimation.md) | `textSequenceAnimation` | shared | Cycle through a sequence of strings based on progress. textSequence emits both the current string (`text`) and its position in the array (`index`, float). Authors pick any number of output targets via `channels`: `from: "text"` routes the string to any DOM string target (textContent, aria-label, CSS var, title, data-*, etc.), `from: "index"` routes the position float to any numeric CSS property (opacity gating, slide offset, step-in indicator). Compound: expands into `textSequence + one domPoseWrite + N domStringWrites` at load time — no runtime class. |
 | [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
-
-## [Animation](animation/)
-
-Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
-| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
-| [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step). |
-| [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
-| [Carousel Autoplay](animation/carouselAutoplay.md) | `carouselAutoplay` | shared | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
-| [Carousel Keyboard Nav](animation/carouselKeyboardNav.md) | `carouselKeyboardNav` | shared | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
-| [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
-| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
-| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
-| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
-| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
-| [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
-| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
-| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
-| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
-| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
-| [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
-| [Clip Path Animation](animation/clipPathAnimation.md) | `clipPathAnimation` | shared | Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class. |
-| [Carousel Effect Animation](animation/carouselEffectAnimation.md) | `carouselEffectAnimation` | shared | An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class. |
-| [Slide Slot Animation](animation/slideSlotAnimation.md) | `slideSlotAnimation` | shared | A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class. |
-| [Dock To Animation](animation/dockToAnimation.md) | `dockToAnimation` | shared | Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class. |
 
 ## [Inputs](inputs/)
 
@@ -220,6 +221,23 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 | [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
 | [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
 
+## [Math](math/)
+
+Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
+| [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
+| [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
+| [Smoothing](math/smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
+| [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
+| [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
+| [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
+| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
+| [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
+| [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
+
 ## [Distribution](distribution/)
 
 Point distribution generators: grid, circle, linear, random, fibonacci spiral, path sampling. Feed into Generator node to create object clones.
@@ -236,22 +254,6 @@ Point distribution generators: grid, circle, linear, random, fibonacci spiral, p
 | [Clone Slot](distribution/cloneSlot.md) | `cloneSlot` | canvas | Pre-declared clone slot for GeneratorNode. Gates clone visibility based on activeCount from generator. |
 | [Instance Stagger Compute](distribution/instanceStaggerCompute.md) | `instanceStaggerCompute` | canvas | Per-instance staggered offset/scale animation. Proves Mat4 pipeline works for non-text domains. |
 | [Instance Apply](distribution/instanceApply.md) | `instanceApply` | canvas | F264 Phase 2: Writes Mat4TransformBundle per-instance transforms to GeneratorNode clone STNs via SceneTransformNode.setPose. Decomposes 4×4 → 2D pose per clone — full port contract flow, no imperative HeadlessObject mutation. |
-
-## [Math](math/)
-
-Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
-| [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
-| [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
-| [Smoothing](math/smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
-| [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
-| [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
-| [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
-| [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
 
 ## [Integration](integration/)
 

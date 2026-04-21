@@ -13,3 +13,4 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Velocity](velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
 | [Math Utility](mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
 | [String Op](stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
+| [String Equals](stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
