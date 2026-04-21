@@ -1,6 +1,6 @@
 # Node Reference
 
-All 224 graph node types available in Faster Motion.
+All 225 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -125,6 +125,7 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Text Effect Apply](text/textEffectApply.md) | `textEffectApply` | canvas | Per-character blur/glow/shadow via the F260 port contract. Writes piece.outputs.blur/glow/shadow.set(v) per character using the perCharProgress stagger + reveal mode. The `effect` param selects which port to write. |
 | [Text Skew Compute](text/textSkewCompute.md) | `textSkewCompute` | shared | Per-character horizontal shear with staggered decay. Geometry modifier — routes through TextApply. |
 | [Text Distort Compute](text/textDistortCompute.md) | `textDistortCompute` | shared | Per-character random scatter/explosion entrance. Deterministic (seed-based). Geometry modifier — routes through TextApply. |
+| [Counter Animation](text/counterAnimation.md) | `counterAnimation` | shared | Interpolate a number from min to max, format it, and write it as the textContent of a target element, driven by a 0..1 progress input. Compound: expanded into `counter + domPoseWrite` at load time — no runtime class. |
 | [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character at a target selector — cycles through a charset and settles on the original character, driven by a 0..1 progress input. One compound per character (use one per DOM element; author a multiKeyframe to drive all of them from one scroll/hover source). Compound: expanded into `scrambleCompute + domStringWrite` at load time — no runtime class. |
 
 ## [Inputs](inputs/)

@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 224,
+  "_nodeCount": 225,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -192,6 +192,7 @@
         "textEffectApply",
         "textSkewCompute",
         "textDistortCompute",
+        "counterAnimation",
         "textScrambleAnimation"
       ]
     },
@@ -11376,6 +11377,64 @@
             ]
           }
         ]
+      },
+      "dynamicPorts": false
+    },
+    "counterAnimation": {
+      "displayName": "Counter Animation",
+      "category": "text",
+      "context": "shared",
+      "description": "Interpolate a number from min to max, format it, and write it as the textContent of a target element, driven by a 0..1 progress input. Compound: expanded into `counter + domPoseWrite` at load time — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "min",
+          "label": "Min",
+          "type": "float"
+        },
+        {
+          "key": "max",
+          "label": "Max",
+          "type": "float"
+        },
+        {
+          "key": "decimals",
+          "label": "Decimals",
+          "type": "int",
+          "min": 0,
+          "max": 10,
+          "step": 1
+        },
+        {
+          "key": "format",
+          "label": "Format Template",
+          "type": "string"
+        },
+        {
+          "key": "separator",
+          "label": "Thousand Separator",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "min": 0,
+        "max": 100,
+        "decimals": 0,
+        "format": "{value}",
+        "separator": ""
       },
       "dynamicPorts": false
     },
