@@ -10,7 +10,7 @@ WASM flex layout recompute + animated transitions.
 
 | Port | Type | Description |
 |------|------|-------------|
-| `deltaTime` | `float` | Delta Time |
+| `smWritesDone` | `any` | SM Writes Done |
 
 
 ## Outputs

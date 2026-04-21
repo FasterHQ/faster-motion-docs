@@ -1,6 +1,6 @@
 # Node Reference
 
-All 228 graph node types available in Faster Motion.
+All 229 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -153,6 +153,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
 | [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
 | [Clip Path Animation](animation/clipPathAnimation.md) | `clipPathAnimation` | shared | Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class. |
+| [Carousel Effect Animation](animation/carouselEffectAnimation.md) | `carouselEffectAnimation` | shared | An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class. |
 | [Slide Slot Animation](animation/slideSlotAnimation.md) | `slideSlotAnimation` | shared | A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class. |
 | [Dock To Animation](animation/dockToAnimation.md) | `dockToAnimation` | shared | Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class. |
 

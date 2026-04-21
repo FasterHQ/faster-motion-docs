@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-21",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 228,
+  "_nodeCount": 229,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -168,6 +168,7 @@
         "multiKeyframe",
         "propertyAnimation",
         "clipPathAnimation",
+        "carouselEffectAnimation",
         "slideSlotAnimation",
         "dockToAnimation"
       ]
@@ -8871,9 +8872,9 @@
       "description": "WASM flex layout recompute + animated transitions.",
       "inputs": [
         {
-          "name": "deltaTime",
-          "type": "float",
-          "label": "Delta Time"
+          "name": "smWritesDone",
+          "type": "any",
+          "label": "SM Writes Done"
         }
       ],
       "outputs": [],
@@ -11448,6 +11449,90 @@
             "from": "text",
             "propertyName": "textContent",
             "writeMode": "textContent"
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "carouselEffectAnimation": {
+      "displayName": "Carousel Effect Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class.",
+      "inputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selectorTemplate",
+          "label": "Selector Template",
+          "type": "string"
+        },
+        {
+          "key": "slotCount",
+          "label": "Slot Count",
+          "type": "int",
+          "min": 1,
+          "max": 100,
+          "step": 1
+        },
+        {
+          "key": "slotStride",
+          "label": "Slot Stride (playhead)",
+          "type": "float",
+          "step": 0.01
+        },
+        {
+          "key": "slotWindow",
+          "label": "Slot Window",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "slotOffsetBase",
+          "label": "Slot 0 Offset",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "indexBase",
+          "label": "Selector Index Base",
+          "type": "int",
+          "min": 0,
+          "max": 1,
+          "step": 1
+        },
+        {
+          "key": "channels",
+          "label": "Channels (shared by every slot)",
+          "type": "propertyAnimationChannels"
+        }
+      ],
+      "defaults": {
+        "selectorTemplate": ".carousel-slide:nth-of-type({i})",
+        "slotCount": 6,
+        "slotStride": 0.1,
+        "slotWindow": 1,
+        "slotOffsetBase": 0,
+        "indexBase": 1,
+        "channels": {
+          "opacity": {
+            "cssUnit": "none",
+            "keyframes": [
+              {
+                "time": 0,
+                "value": 0
+              },
+              {
+                "time": 1,
+                "value": 1
+              }
+            ]
           }
         }
       },
