@@ -11455,7 +11455,7 @@
       "displayName": "Text Sequence Animation",
       "category": "text",
       "context": "shared",
-      "description": "Cycle through a sequence of strings based on progress and write the current text as the textContent of a target element. Compound: expanded into `textSequence + domPoseWrite` at load time — no runtime class.",
+      "description": "Cycle through a sequence of strings based on progress. textSequence emits both the current string (`text`) and its position in the array (`index`, float). Authors pick any number of output targets via `channels`: `from: \"text\"` routes the string to any DOM string target (textContent, aria-label, CSS var, title, data-*, etc.), `from: \"index\"` routes the position float to any numeric CSS property (opacity gating, slide offset, step-in indicator). Compound: expands into `textSequence + one domPoseWrite + N domStringWrites` at load time — no runtime class.",
       "inputs": [
         {
           "name": "progress",
@@ -11474,11 +11474,23 @@
           "key": "texts",
           "label": "Text Sequence",
           "type": "string"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "textSequenceChannels"
         }
       ],
       "defaults": {
         "selector": "",
-        "texts": []
+        "texts": [],
+        "channels": {
+          "textContent": {
+            "from": "text",
+            "propertyName": "textContent",
+            "writeMode": "textContent"
+          }
+        }
       },
       "dynamicPorts": false
     },
