@@ -11474,7 +11474,7 @@
       "displayName": "Text Scramble Animation",
       "category": "text",
       "context": "shared",
-      "description": "Scramble a single character at a target selector — cycles through a charset and settles on the original character, driven by a 0..1 progress input. One compound per character (use one per DOM element; author a multiKeyframe to drive all of them from one scroll/hover source). Compound: expanded into `scrambleCompute + domStringWrite` at load time — no runtime class.",
+      "description": "Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class.",
       "inputs": [
         {
           "name": "progress",
@@ -11512,6 +11512,11 @@
           "type": "int",
           "min": 0,
           "step": 1
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "stringChannels"
         }
       ],
       "defaults": {
@@ -11519,7 +11524,13 @@
         "originalText": "",
         "charset": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*",
         "count": 8,
-        "index": 0
+        "index": 0,
+        "channels": {
+          "textContent": {
+            "propertyName": "textContent",
+            "writeMode": "textContent"
+          }
+        }
       },
       "dynamicPorts": false
     }

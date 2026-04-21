@@ -4,7 +4,7 @@
 **Category:** text  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Scramble a single character at a target selector — cycles through a charset and settles on the original character, driven by a 0..1 progress input. One compound per character (use one per DOM element; author a multiKeyframe to drive all of them from one scroll/hover source). Compound: expanded into `scrambleCompute + domStringWrite` at load time — no runtime class.
+Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class.
 
 ## Inputs
 
@@ -26,4 +26,5 @@ _No outputs._
 | `charset` | string | `"ABCDEFGHIJKLMNOPQRSTUVWXYZ...` | Character Set |
 | `count` | int | `8` | Total Characters (min: 1) |
 | `index` | int | `0` | Character Index (min: 0) |
+| `channels` | stringChannels | `{"textContent":{"propertyNa...` | Channels |
 
