@@ -6,6 +6,7 @@ Common graph wiring recipes for real-world animations.
 
 | Pattern | Description |
 |---------|-------------|
+| [Property Animation](property-animation.md) | Idiomatic compound — multi-channel CSS property animation from one progress source |
 | [Scroll-Driven Fade](scroll-driven-fade.md) | Fade elements in on scroll with translateY |
 | [Hover Scale](hover-scale.md) | Spring-based scale on hover |
 | [Staggered Text Reveal](staggered-text-reveal.md) | Per-character reveal with wave timing |
