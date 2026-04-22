@@ -22,4 +22,7 @@ Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Co
 
 ## Parameters
 
-_No configurable parameters._
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `keyframes` | colorKeyframes | `[{"time":0,"value":"#000000...` | Keyframes |
+

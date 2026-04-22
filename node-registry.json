@@ -9352,7 +9352,13 @@
           "label": "Color"
         }
       ],
-      "parameters": [],
+      "parameters": [
+        {
+          "key": "keyframes",
+          "label": "Keyframes",
+          "type": "colorKeyframes"
+        }
+      ],
       "defaults": {
         "keyframes": [
           {
