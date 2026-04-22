@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-22",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 233,
+  "_nodeCount": 234,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -200,6 +200,7 @@
         "counterAnimation",
         "textSequenceAnimation",
         "textStaggerAnimation",
+        "staggerAnimation",
         "textScrambleAnimation"
       ]
     },
@@ -11892,6 +11893,104 @@
             "ease": "easeOutCubic",
             "from": 0,
             "to": 1
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "staggerAnimation": {
+      "displayName": "Stagger Animation",
+      "category": "text",
+      "context": "shared",
+      "description": "Fan a single animation template across N indexed DOM elements with per-child stagger offsets. Selector template uses `{i}` as the per-child index placeholder (e.g. `.card:nth-child({i})`, `.dot[data-i=\"{i}\"]`). Inner `each` is a propertyAnimation template — keyframes get shifted into each child's slot window at load time. Generic counterpart to F323 textStaggerAnimation (which is splitText-specific); use this for pre-existing DOM elements like card grids, list items, icon rows, dot indicators, wave / ripple effects. Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw) — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selectorTemplate",
+          "label": "Selector Template",
+          "type": "string"
+        },
+        {
+          "key": "count",
+          "label": "Child Count",
+          "type": "int",
+          "min": 1,
+          "step": 1
+        },
+        {
+          "key": "indexBase",
+          "label": "Index Base",
+          "type": "int",
+          "min": 0,
+          "step": 1
+        },
+        {
+          "key": "stagger",
+          "label": "Stagger (per child)",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "staggerFrom",
+          "label": "Stagger From",
+          "type": "enum",
+          "options": [
+            "start",
+            "end",
+            "center",
+            "edges",
+            "random"
+          ]
+        },
+        {
+          "key": "delayOffset",
+          "label": "Delay Offset",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "each",
+          "label": "Inner Animation",
+          "type": "staggerInnerTemplate"
+        }
+      ],
+      "defaults": {
+        "selectorTemplate": "",
+        "count": 1,
+        "indexBase": 1,
+        "stagger": 0.05,
+        "staggerFrom": "start",
+        "delayOffset": 0,
+        "each": {
+          "type": "propertyAnimation",
+          "params": {
+            "channels": {
+              "opacity": {
+                "type": "float",
+                "cssUnit": "none",
+                "keyframes": [
+                  {
+                    "time": 0,
+                    "value": 0
+                  },
+                  {
+                    "time": 1,
+                    "value": 1
+                  }
+                ]
+              }
+            }
           }
         }
       },
