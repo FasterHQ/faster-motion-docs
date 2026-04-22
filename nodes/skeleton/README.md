@@ -4,7 +4,8 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
-| [Bone Transform](boneTransform.md) | `boneTransform` | canvas | Per-bone FK node — reads pose at boneIndex, computes world matrix from parent |
+| [Rest Pose Bone](restPoseBone.md) | `restPoseBone` | shared | Per-bone pure-FK node — reads pose at boneIndex, computes pre-override world matrix from parent. Paired with boneTransform. |
+| [Bone Transform](boneTransform.md) | `boneTransform` | canvas | Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix |
 | [Bone Collector](boneCollector.md) | `boneCollector` | canvas | Gather per-bone world matrices into AttributeBundle for IK solver |
 | [Skeleton Transform](skeletonTransform.md) | `skeletonTransform` | canvas | Reads skeleton root transform each frame — feeds root bone parentWorldMatrix |
 | [IK Solve](ikSolve.md) | `ikSolve` | canvas | Per-chain IK solver. Pure array-based FABRIK on AttributeBundle data. |

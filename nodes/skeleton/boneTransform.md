@@ -4,14 +4,18 @@
 **Category:** skeleton  
 **Context:** Canvas — operates on canvas scene objects, bones, or skeletons  
 
-Per-bone FK node — reads pose at boneIndex, computes world matrix from parent
+Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
 | `parentWorldMatrix` | `any` | Parent World Matrix |
-| `pose` | `attributes` | Pose |
+| `restX` | `float` | Rest X |
+| `restY` | `float` | Rest Y |
+| `restRotation` | `float` | Rest Rotation |
+| `restScaleX` | `float` | Rest Scale X |
+| `restScaleY` | `float` | Rest Scale Y |
 | `constraintXform` | `any` | Constraint Override |
 | `constraintMask` | `float` | Constraint Mask |
 | `overrideX` | `float` | Override X |

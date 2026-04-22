@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-22",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 235,
+  "_nodeCount": 236,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -298,6 +298,7 @@
     "skeleton": {
       "description": "Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.",
       "nodes": [
+        "restPoseBone",
         "boneTransform",
         "boneCollector",
         "skeletonTransform",
@@ -4287,11 +4288,76 @@
       },
       "dynamicPorts": false
     },
+    "restPoseBone": {
+      "displayName": "Rest Pose Bone",
+      "category": "skeleton",
+      "context": "shared",
+      "description": "Per-bone pure-FK node — reads pose at boneIndex, computes pre-override world matrix from parent. Paired with boneTransform.",
+      "inputs": [
+        {
+          "name": "parentWorldMatrix",
+          "type": "any",
+          "label": "Parent Rest World Matrix"
+        },
+        {
+          "name": "pose",
+          "type": "attributes",
+          "label": "Pose"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "restWorldMatrix",
+          "type": "any",
+          "label": "Rest World Matrix"
+        },
+        {
+          "name": "restLocalMatrix",
+          "type": "any",
+          "label": "Rest Local Matrix"
+        },
+        {
+          "name": "restX",
+          "type": "float",
+          "label": "Rest X"
+        },
+        {
+          "name": "restY",
+          "type": "float",
+          "label": "Rest Y"
+        },
+        {
+          "name": "restRotation",
+          "type": "float",
+          "label": "Rest Rotation"
+        },
+        {
+          "name": "restScaleX",
+          "type": "float",
+          "label": "Rest Scale X"
+        },
+        {
+          "name": "restScaleY",
+          "type": "float",
+          "label": "Rest Scale Y"
+        }
+      ],
+      "parameters": [],
+      "defaults": {
+        "boneIndex": 0,
+        "boneName": "",
+        "inheritRotation": true,
+        "inheritScale": true,
+        "tipLocalX": 0,
+        "tipLocalY": 0
+      },
+      "dynamicPorts": false
+    },
     "boneTransform": {
       "displayName": "Bone Transform",
       "category": "skeleton",
       "context": "canvas",
-      "description": "Per-bone FK node — reads pose at boneIndex, computes world matrix from parent",
+      "description": "Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix",
       "inputs": [
         {
           "name": "parentWorldMatrix",
@@ -4299,9 +4365,29 @@
           "label": "Parent World Matrix"
         },
         {
-          "name": "pose",
-          "type": "attributes",
-          "label": "Pose"
+          "name": "restX",
+          "type": "float",
+          "label": "Rest X"
+        },
+        {
+          "name": "restY",
+          "type": "float",
+          "label": "Rest Y"
+        },
+        {
+          "name": "restRotation",
+          "type": "float",
+          "label": "Rest Rotation"
+        },
+        {
+          "name": "restScaleX",
+          "type": "float",
+          "label": "Rest Scale X"
+        },
+        {
+          "name": "restScaleY",
+          "type": "float",
+          "label": "Rest Scale Y"
         },
         {
           "name": "constraintXform",
@@ -4453,10 +4539,11 @@
       ],
       "parameters": [],
       "defaults": {
-        "boneIndex": 0,
         "boneName": "",
         "inheritRotation": true,
-        "inheritScale": true
+        "inheritScale": true,
+        "tipLocalX": 0,
+        "tipLocalY": 0
       },
       "dynamicPorts": false
     },
@@ -9235,7 +9322,7 @@
       "displayName": "Color Keyframe",
       "category": "animation",
       "context": "shared",
-      "description": "Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255).",
+      "description": "Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). Keyframes are `{ time, value, ease? }` where value is a CSS color string.",
       "inputs": [
         {
           "name": "progress",
@@ -9265,11 +9352,11 @@
         "keyframes": [
           {
             "time": 0,
-            "color": "#000000"
+            "value": "#000000"
           },
           {
             "time": 1,
-            "color": "#ffffff"
+            "value": "#ffffff"
           }
         ]
       },

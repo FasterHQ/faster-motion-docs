@@ -1,6 +1,6 @@
 # Node Reference
 
-All 235 graph node types available in Faster Motion.
+All 236 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -151,7 +151,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
 | [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
 | [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
-| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). |
+| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
 | [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
 | [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
 | [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
@@ -188,6 +188,25 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
 | [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
 
+## [Skeleton](skeleton/)
+
+Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Rest Pose Bone](skeleton/restPoseBone.md) | `restPoseBone` | shared | Per-bone pure-FK node — reads pose at boneIndex, computes pre-override world matrix from parent. Paired with boneTransform. |
+| [Bone Transform](skeleton/boneTransform.md) | `boneTransform` | canvas | Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix |
+| [Bone Collector](skeleton/boneCollector.md) | `boneCollector` | canvas | Gather per-bone world matrices into AttributeBundle for IK solver |
+| [Skeleton Transform](skeleton/skeletonTransform.md) | `skeletonTransform` | canvas | Reads skeleton root transform each frame — feeds root bone parentWorldMatrix |
+| [IK Solve](skeleton/ikSolve.md) | `ikSolve` | canvas | Per-chain IK solver. Pure array-based FABRIK on AttributeBundle data. |
+| [FK Recompose](skeleton/fkRecompose.md) | `fkRecompose` | canvas | Reads a post-IK/physics bone pose bundle and outputs per-bone world matrices via full parent×local FK. One per IK/physics skeleton, lives at scene level (outside rig Module) so only one bundle wire crosses the Module boundary. |
+| [Jiggle Bone](skeleton/jiggleBone.md) | `jiggleBone` | canvas | 2D position spring — adds bouncy displacement to bone x/y from parent movement. |
+| [Spring Bone](skeleton/springBonePhysics.md) | `springBonePhysics` | canvas | Rotational spring — bone rotation follows parent with spring dynamics, gravity, and wind. |
+| [Chain Physics](skeleton/chainPhysics.md) | `chainPhysics` | canvas | Verlet chain simulation for hair, tails, ropes. Fixed timestep with distance/angular constraints. |
+| [IK Target](skeleton/ikTarget.md) | `ikTarget` | canvas | Boundary node — bridges scene-object position into IK solve target port. |
+| [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
+| [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
+
 ## [Constraints](constraints/)
 
 Position, rotation, and transform constraints that enforce spatial relationships between objects: follow, aim, distance clamp, drag, path follow, camera bounds.
@@ -205,24 +224,6 @@ Position, rotation, and transform constraints that enforce spatial relationships
 | [Scroll Constraint](constraints/scroll.md) | `scroll` | shared | Scrollable container with bounds and momentum |
 | [Scroll Bar](constraints/scrollBar.md) | `scrollBar` | shared | Scroll bar indicator that tracks scroll position |
 | [Path Follow](constraints/pathFollow.md) | `pathFollow` | shared | Follow a path curve at given progress |
-
-## [Skeleton](skeleton/)
-
-Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Bone Transform](skeleton/boneTransform.md) | `boneTransform` | canvas | Per-bone FK node — reads pose at boneIndex, computes world matrix from parent |
-| [Bone Collector](skeleton/boneCollector.md) | `boneCollector` | canvas | Gather per-bone world matrices into AttributeBundle for IK solver |
-| [Skeleton Transform](skeleton/skeletonTransform.md) | `skeletonTransform` | canvas | Reads skeleton root transform each frame — feeds root bone parentWorldMatrix |
-| [IK Solve](skeleton/ikSolve.md) | `ikSolve` | canvas | Per-chain IK solver. Pure array-based FABRIK on AttributeBundle data. |
-| [FK Recompose](skeleton/fkRecompose.md) | `fkRecompose` | canvas | Reads a post-IK/physics bone pose bundle and outputs per-bone world matrices via full parent×local FK. One per IK/physics skeleton, lives at scene level (outside rig Module) so only one bundle wire crosses the Module boundary. |
-| [Jiggle Bone](skeleton/jiggleBone.md) | `jiggleBone` | canvas | 2D position spring — adds bouncy displacement to bone x/y from parent movement. |
-| [Spring Bone](skeleton/springBonePhysics.md) | `springBonePhysics` | canvas | Rotational spring — bone rotation follows parent with spring dynamics, gravity, and wind. |
-| [Chain Physics](skeleton/chainPhysics.md) | `chainPhysics` | canvas | Verlet chain simulation for hair, tails, ropes. Fixed timestep with distance/angular constraints. |
-| [IK Target](skeleton/ikTarget.md) | `ikTarget` | canvas | Boundary node — bridges scene-object position into IK solve target port. |
-| [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
-| [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
 
 ## [Math](math/)
 

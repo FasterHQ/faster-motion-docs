@@ -4,7 +4,7 @@
 **Category:** animation  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255).
+Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). Keyframes are `{ time, value, ease? }` where value is a CSS color string.
 
 ## Inputs
 
