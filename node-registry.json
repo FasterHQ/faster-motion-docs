@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-22",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 236,
+  "_nodeCount": 237,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -187,6 +187,7 @@
         "splitText",
         "counter",
         "textSequence",
+        "textDecompose",
         "textFadeCompute",
         "textSpringCompute",
         "textScrambleApply",
@@ -9767,6 +9768,76 @@
       "parameters": [],
       "defaults": {
         "texts": []
+      },
+      "dynamicPorts": false
+    },
+    "textDecompose": {
+      "displayName": "Text Decompose",
+      "category": "text",
+      "context": "shared",
+      "description": "Pure text-data transform. Splits a source string into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter).",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "string",
+          "label": "Text"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "items",
+          "type": "stringArray",
+          "label": "Items"
+        },
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "granularity",
+          "label": "Granularity",
+          "type": "enum",
+          "options": [
+            "char",
+            "word",
+            "sentence",
+            "line"
+          ]
+        },
+        {
+          "key": "shape",
+          "label": "Shape",
+          "type": "enum",
+          "options": [
+            "atoms",
+            "prefixes",
+            "suffixes"
+          ]
+        },
+        {
+          "key": "includeEmpty",
+          "label": "Prepend empty entry",
+          "type": "bool"
+        },
+        {
+          "key": "stripWhitespace",
+          "label": "Strip whitespace-only entries",
+          "type": "bool"
+        },
+        {
+          "key": "separator",
+          "label": "Custom separator (overrides granularity)",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "granularity": "char",
+        "shape": "atoms",
+        "includeEmpty": false,
+        "stripWhitespace": false
       },
       "dynamicPorts": false
     },
