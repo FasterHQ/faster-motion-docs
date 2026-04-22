@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-22",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 234,
+  "_nodeCount": 235,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -201,6 +201,7 @@
         "textSequenceAnimation",
         "textStaggerAnimation",
         "staggerAnimation",
+        "variantStaggerAnimation",
         "textScrambleAnimation"
       ]
     },
@@ -2415,11 +2416,6 @@
           "name": "count",
           "type": "float",
           "label": "Count"
-        },
-        {
-          "name": "glyphAdvances",
-          "type": "attribute",
-          "label": "Glyph Advances"
         },
         {
           "name": "glyphPositions",
@@ -11993,6 +11989,68 @@
             }
           }
         }
+      },
+      "dynamicPorts": false
+    },
+    "variantStaggerAnimation": {
+      "displayName": "Variant Stagger Animation",
+      "category": "text",
+      "context": "shared",
+      "description": "Fan a compound across N indexed DOM elements where each child has UNIQUE from/to values on shared channels. Per-child variation sibling of F324 staggerAnimation (which requires uniform values). Use for mouse-driven dispersals, hover-chaos grids, card-spread layouts, per-icon flutter — any \"N siblings, same channels, different ranges\". Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw).",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selectorTemplate",
+          "label": "Selector Template",
+          "type": "string"
+        },
+        {
+          "key": "channels",
+          "label": "Channel Metadata",
+          "type": "variantStaggerChannelMeta"
+        },
+        {
+          "key": "variants",
+          "label": "Variants",
+          "type": "variantStaggerTable"
+        }
+      ],
+      "defaults": {
+        "selectorTemplate": "",
+        "channels": {
+          "translateX": {
+            "type": "float",
+            "unit": "px",
+            "ease": "linear"
+          }
+        },
+        "variants": [
+          {
+            "index": 1,
+            "values": {
+              "translateX": [
+                0,
+                10
+              ]
+            }
+          },
+          {
+            "index": 2,
+            "values": {
+              "translateX": [
+                0,
+                -10
+              ]
+            }
+          }
+        ]
       },
       "dynamicPorts": false
     },

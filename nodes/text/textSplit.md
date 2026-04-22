@@ -19,7 +19,6 @@ Split text into chars/words/lines with glyph metrics for per-element animation
 | Port | Type | Description |
 |------|------|-------------|
 | `count` | `float` | Count |
-| `glyphAdvances` | `attribute` | Glyph Advances |
 | `glyphPositions` | `attribute` | Glyph Positions |
 | `bundle` | `mat4Bundle` | Bundle |
 
