@@ -3860,6 +3860,11 @@
           "name": "layerRef",
           "type": "any",
           "label": "Layer Ref"
+        },
+        {
+          "name": "weight",
+          "type": "float",
+          "label": "Weight"
         }
       ],
       "outputs": [
@@ -11871,6 +11876,11 @@
           ]
         },
         {
+          "key": "discrete",
+          "label": "Discrete (instant flip per child)",
+          "type": "bool"
+        },
+        {
           "key": "channels",
           "label": "Channels",
           "type": "textStaggerChannels"
@@ -11882,6 +11892,7 @@
         "count": 1,
         "stagger": 0.04,
         "staggerFrom": "start",
+        "discrete": false,
         "channels": {
           "opacity": {
             "type": "float",

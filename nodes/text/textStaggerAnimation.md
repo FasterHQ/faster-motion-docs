@@ -26,5 +26,6 @@ _No outputs._
 | `count` | int | `1` | Child Count (min: 1) |
 | `stagger` | float | `0.04` | Stagger (per child) (min: 0, max: 1) |
 | `staggerFrom` | enum | `"start"` | Stagger From. Options: `start`, `end`, `center`, `edges`, `random` |
+| `discrete` | bool | `false` | Discrete (instant flip per child) |
 | `channels` | textStaggerChannels | `{"opacity":{"type":"float",...` | Channels |
 
