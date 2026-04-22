@@ -3564,13 +3564,28 @@
       "parameters": [
         {
           "key": "selector",
-          "label": "CSS Selector",
-          "type": "string"
+          "label": "Target",
+          "type": "elementSelector"
         },
         {
           "key": "propertyName",
           "label": "Property",
-          "type": "string"
+          "type": "enum",
+          "options": [
+            "color",
+            "backgroundColor",
+            "borderColor",
+            "borderTopColor",
+            "borderRightColor",
+            "borderBottomColor",
+            "borderLeftColor",
+            "outlineColor",
+            "textDecorationColor",
+            "caretColor",
+            "accentColor",
+            "fill",
+            "stroke"
+          ]
         }
       ],
       "defaults": {

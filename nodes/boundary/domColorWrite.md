@@ -21,6 +21,6 @@ _No outputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `""` | CSS Selector |
-| `propertyName` | string | `"color"` | Property |
+| `selector` | elementSelector | `""` | Target |
+| `propertyName` | enum | `"color"` | Property. Options: `color`, `backgroundColor`, `borderColor`, `borderTopColor`, `borderRightColor`, `borderBottomColor`, `borderLeftColor`, `outlineColor`, `textDecorationColor`, `caretColor`, `accentColor`, `fill`, `stroke` |
 
