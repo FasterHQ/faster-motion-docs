@@ -9322,7 +9322,7 @@
       "displayName": "Color Keyframe",
       "category": "animation",
       "context": "shared",
-      "description": "Multi-stop color interpolation in OKLab space — outputs r, g, b channels (0-255). Keyframes are `{ time, value, ease? }` where value is a CSS color string.",
+      "description": "Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires directly into DOMColorWriteNode.color. Keyframes are `{ time, value, ease? }` where value is a CSS color string.",
       "inputs": [
         {
           "name": "progress",
@@ -9332,19 +9332,9 @@
       ],
       "outputs": [
         {
-          "name": "r",
-          "type": "float",
-          "label": "R"
-        },
-        {
-          "name": "g",
-          "type": "float",
-          "label": "G"
-        },
-        {
-          "name": "b",
-          "type": "float",
-          "label": "B"
+          "name": "color",
+          "type": "color",
+          "label": "Color"
         }
       ],
       "parameters": [],
