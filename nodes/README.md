@@ -1,6 +1,6 @@
 # Node Reference
 
-All 232 graph node types available in Faster Motion.
+All 233 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -101,6 +101,36 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 | [Morph Path Animation](paths/morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |
 
+## [Text](text/)
+
+Text animation nodes: split text into characters/words/lines, per-character wave/fade/spring/skew/distort transforms, coverage ranges for reveal effects.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Text Split](text/textSplit.md) | `textSplit` | canvas | Split text into chars/words/lines with glyph metrics for per-element animation |
+| [Scramble Compute](text/scrambleCompute.md) | `scrambleCompute` | dom | Per-character scramble effect — outputs original or random character |
+| [Text Wave Compute](text/textWaveCompute.md) | `textWaveCompute` | shared | F256: Pure per-character wave sweep. Takes progress + upstream Mat4 bundle. schedulerPhase=pure, zero this.context access. |
+| [Coverage Range](text/coverageRange.md) | `coverageRange` | shared | Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes. |
+| [Coverage Group](text/coverageGroup.md) | `coverageGroup` | shared | F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle. |
+| [Text Apply](text/textApply.md) | `textApply` | canvas | Pure passthrough: forwards per-character Mat4 transforms to output port for SRN consumption. Follows SkinnedPathDeformNode pattern (F264). |
+| [Split Text](text/splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — splits target element into spans (words/chars/lines). |
+| [Counter](text/counter.md) | `counter` | shared | Animated number counter — interpolates min→max with formatting (decimals, separator, template). |
+| [Text Sequence](text/textSequence.md) | `textSequence` | canvas | Cycles through a string array based on progress — outputs current text and index. |
+| [Text Fade Compute](text/textFadeCompute.md) | `textFadeCompute` | shared | Per-character opacity ramp with stagger. Geometry modifier — routes through TextApply via Mat4Bundle. |
+| [Text Spring Compute](text/textSpringCompute.md) | `textSpringCompute` | shared | Per-character bouncy scale/offset via closed-form damped spring. Geometry modifier — routes through TextApply. |
+| [Text Scramble Apply](text/textScrambleApply.md) | `textScrambleApply` | canvas | Per-character glyph swap from a pre-rasterized pool. F272: configurable pool, easing curves, per-char stagger + reveal mode. |
+| [Text Color Apply](text/textColorApply.md) | `textColorApply` | canvas | Per-character fill color interpolation. Writes `piece.outputs.fill.set(lerpedColor)` via the F260 port-sourced rendering contract. Supports 4 reveal modes (linear, center-out, edges-in, random) + stagger control. |
+| [Text Stroke Apply](text/textStrokeApply.md) | `textStrokeApply` | canvas | Per-character stroke color interpolation. Writes `piece.outputs.stroke.set(lerpedColor)` via the F260 port-sourced rendering contract. |
+| [Text Stroke Width Apply](text/textStrokeWidthApply.md) | `textStrokeWidthApply` | canvas | Per-character stroke width interpolation. Writes `piece.outputs.strokeWidth.set(lerped)` via the F260 port-sourced rendering contract. |
+| [Text Draw Layer Index Apply](text/textDrawLayerIndexApply.md) | `textDrawLayerIndexApply` | canvas | Per-character draw-order layering. Assigns a discrete layer index per character based on reveal order pattern + stride. Writes `piece.outputs.drawLayerIndex.set(layerIdx)` via the F260 port-sourced rendering contract. |
+| [Text Effect Apply](text/textEffectApply.md) | `textEffectApply` | canvas | Per-character blur/glow/shadow via the F260 port contract. Writes piece.outputs.blur/glow/shadow.set(v) per character using the perCharProgress stagger + reveal mode. The `effect` param selects which port to write. |
+| [Text Skew Compute](text/textSkewCompute.md) | `textSkewCompute` | shared | Per-character horizontal shear with staggered decay. Geometry modifier — routes through TextApply. |
+| [Text Distort Compute](text/textDistortCompute.md) | `textDistortCompute` | shared | Per-character random scatter/explosion entrance. Deterministic (seed-based). Geometry modifier — routes through TextApply. |
+| [Counter Animation](text/counterAnimation.md) | `counterAnimation` | shared | Interpolate a number from min to max (formatted via template, decimals, thousand separator) driven by a 0..1 progress input. Authors pick any number of output targets via `channels`: `from: "text"` writes the formatted string to any DOM string target (textContent, aria-valuetext, CSS var, title, data-*, etc.), `from: "value"` routes the raw float to any numeric CSS property (opacity, translateY, scale, rotate, width, …). One compound can show the number AND animate motion simultaneously from the same count. Compound: expands into `counter + one domPoseWrite + N domStringWrites` at load time — no runtime class. |
+| [Text Sequence Animation](text/textSequenceAnimation.md) | `textSequenceAnimation` | shared | Cycle through a sequence of strings based on progress. textSequence emits both the current string (`text`) and its position in the array (`index`, float). Authors pick any number of output targets via `channels`: `from: "text"` routes the string to any DOM string target (textContent, aria-label, CSS var, title, data-*, etc.), `from: "index"` routes the position float to any numeric CSS property (opacity gating, slide offset, step-in indicator). Compound: expands into `textSequence + one domPoseWrite + N domStringWrites` at load time — no runtime class. |
+| [Text Stagger Animation](text/textStaggerAnimation.md) | `textStaggerAnimation` | shared | Split a text element into chars/words/lines and animate each piece with a staggered from→to progression. Collapses the canonical splitText + N× propertyAnimation pattern (16 chars × 3 channels = up to 48 nodes on blur-focus) into one authoring node. Channels map carries mixed float/string types like propertyAnimation. Compound: expands into `splitText` + N× `propertyAnimation` at load time (each per-child PA then expands to mk+pw via the fixed-point loop) — no runtime class. |
+| [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
+
 ## [Animation](animation/)
 
 Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
@@ -129,35 +159,6 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Slide Slot Animation](animation/slideSlotAnimation.md) | `slideSlotAnimation` | shared | A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class. |
 | [Dock To Animation](animation/dockToAnimation.md) | `dockToAnimation` | shared | Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class. |
 | [Indexed Dock Animation](animation/indexedDockAnimation.md) | `indexedDockAnimation` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. One authoring node replaces the canonical `domIndexedDock + domPoseWrite` chain. Used for typewriter cursors, tab underlines, focus rings, onboarding step indicators, carousel page dots — any "chrome follows active item in a list" pattern. Authors route offsetX to any CSS property via `channels` (default: translateX px). Compound: expanded into those two primitives at load time — no runtime class. |
-
-## [Text](text/)
-
-Text animation nodes: split text into characters/words/lines, per-character wave/fade/spring/skew/distort transforms, coverage ranges for reveal effects.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Text Split](text/textSplit.md) | `textSplit` | canvas | Split text into chars/words/lines with glyph metrics for per-element animation |
-| [Scramble Compute](text/scrambleCompute.md) | `scrambleCompute` | dom | Per-character scramble effect — outputs original or random character |
-| [Text Wave Compute](text/textWaveCompute.md) | `textWaveCompute` | shared | F256: Pure per-character wave sweep. Takes progress + upstream Mat4 bundle. schedulerPhase=pure, zero this.context access. |
-| [Coverage Range](text/coverageRange.md) | `coverageRange` | shared | Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes. |
-| [Coverage Group](text/coverageGroup.md) | `coverageGroup` | shared | F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle. |
-| [Text Apply](text/textApply.md) | `textApply` | canvas | Pure passthrough: forwards per-character Mat4 transforms to output port for SRN consumption. Follows SkinnedPathDeformNode pattern (F264). |
-| [Split Text](text/splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — splits target element into spans (words/chars/lines). |
-| [Counter](text/counter.md) | `counter` | shared | Animated number counter — interpolates min→max with formatting (decimals, separator, template). |
-| [Text Sequence](text/textSequence.md) | `textSequence` | canvas | Cycles through a string array based on progress — outputs current text and index. |
-| [Text Fade Compute](text/textFadeCompute.md) | `textFadeCompute` | shared | Per-character opacity ramp with stagger. Geometry modifier — routes through TextApply via Mat4Bundle. |
-| [Text Spring Compute](text/textSpringCompute.md) | `textSpringCompute` | shared | Per-character bouncy scale/offset via closed-form damped spring. Geometry modifier — routes through TextApply. |
-| [Text Scramble Apply](text/textScrambleApply.md) | `textScrambleApply` | canvas | Per-character glyph swap from a pre-rasterized pool. F272: configurable pool, easing curves, per-char stagger + reveal mode. |
-| [Text Color Apply](text/textColorApply.md) | `textColorApply` | canvas | Per-character fill color interpolation. Writes `piece.outputs.fill.set(lerpedColor)` via the F260 port-sourced rendering contract. Supports 4 reveal modes (linear, center-out, edges-in, random) + stagger control. |
-| [Text Stroke Apply](text/textStrokeApply.md) | `textStrokeApply` | canvas | Per-character stroke color interpolation. Writes `piece.outputs.stroke.set(lerpedColor)` via the F260 port-sourced rendering contract. |
-| [Text Stroke Width Apply](text/textStrokeWidthApply.md) | `textStrokeWidthApply` | canvas | Per-character stroke width interpolation. Writes `piece.outputs.strokeWidth.set(lerped)` via the F260 port-sourced rendering contract. |
-| [Text Draw Layer Index Apply](text/textDrawLayerIndexApply.md) | `textDrawLayerIndexApply` | canvas | Per-character draw-order layering. Assigns a discrete layer index per character based on reveal order pattern + stride. Writes `piece.outputs.drawLayerIndex.set(layerIdx)` via the F260 port-sourced rendering contract. |
-| [Text Effect Apply](text/textEffectApply.md) | `textEffectApply` | canvas | Per-character blur/glow/shadow via the F260 port contract. Writes piece.outputs.blur/glow/shadow.set(v) per character using the perCharProgress stagger + reveal mode. The `effect` param selects which port to write. |
-| [Text Skew Compute](text/textSkewCompute.md) | `textSkewCompute` | shared | Per-character horizontal shear with staggered decay. Geometry modifier — routes through TextApply. |
-| [Text Distort Compute](text/textDistortCompute.md) | `textDistortCompute` | shared | Per-character random scatter/explosion entrance. Deterministic (seed-based). Geometry modifier — routes through TextApply. |
-| [Counter Animation](text/counterAnimation.md) | `counterAnimation` | shared | Interpolate a number from min to max (formatted via template, decimals, thousand separator) driven by a 0..1 progress input. Authors pick any number of output targets via `channels`: `from: "text"` writes the formatted string to any DOM string target (textContent, aria-valuetext, CSS var, title, data-*, etc.), `from: "value"` routes the raw float to any numeric CSS property (opacity, translateY, scale, rotate, width, …). One compound can show the number AND animate motion simultaneously from the same count. Compound: expands into `counter + one domPoseWrite + N domStringWrites` at load time — no runtime class. |
-| [Text Sequence Animation](text/textSequenceAnimation.md) | `textSequenceAnimation` | shared | Cycle through a sequence of strings based on progress. textSequence emits both the current string (`text`) and its position in the array (`index`, float). Authors pick any number of output targets via `channels`: `from: "text"` routes the string to any DOM string target (textContent, aria-label, CSS var, title, data-*, etc.), `from: "index"` routes the position float to any numeric CSS property (opacity gating, slide offset, step-in indicator). Compound: expands into `textSequence + one domPoseWrite + N domStringWrites` at load time — no runtime class. |
-| [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
 
 ## [Inputs](inputs/)
 

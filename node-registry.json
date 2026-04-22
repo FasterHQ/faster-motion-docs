@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-21",
+  "_generatedAt": "2026-04-22",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 232,
+  "_nodeCount": 233,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -199,6 +199,7 @@
         "textDistortCompute",
         "counterAnimation",
         "textSequenceAnimation",
+        "textStaggerAnimation",
         "textScrambleAnimation"
       ]
     },
@@ -11811,6 +11812,86 @@
             "from": "text",
             "propertyName": "textContent",
             "writeMode": "textContent"
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "textStaggerAnimation": {
+      "displayName": "Text Stagger Animation",
+      "category": "text",
+      "context": "shared",
+      "description": "Split a text element into chars/words/lines and animate each piece with a staggered from→to progression. Collapses the canonical splitText + N× propertyAnimation pattern (16 chars × 3 channels = up to 48 nodes on blur-focus) into one authoring node. Channels map carries mixed float/string types like propertyAnimation. Compound: expands into `splitText` + N× `propertyAnimation` at load time (each per-child PA then expands to mk+pw via the fixed-point loop) — no runtime class.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "splitMode",
+          "label": "Split Mode",
+          "type": "enum",
+          "options": [
+            "chars",
+            "words",
+            "lines"
+          ]
+        },
+        {
+          "key": "count",
+          "label": "Child Count",
+          "type": "int",
+          "min": 1,
+          "step": 1
+        },
+        {
+          "key": "stagger",
+          "label": "Stagger (per child)",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "staggerFrom",
+          "label": "Stagger From",
+          "type": "enum",
+          "options": [
+            "start",
+            "end",
+            "center",
+            "edges",
+            "random"
+          ]
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "textStaggerChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "splitMode": "chars",
+        "count": 1,
+        "stagger": 0.04,
+        "staggerFrom": "start",
+        "channels": {
+          "opacity": {
+            "type": "float",
+            "unit": "none",
+            "ease": "easeOutCubic",
+            "from": 0,
+            "to": 1
           }
         }
       },
