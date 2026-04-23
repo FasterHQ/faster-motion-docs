@@ -33,6 +33,6 @@ _No outputs._
 | `separator` | string | `—` | Custom separator (overrides granularity) |
 | `writeMode` | enum | `"textContent"` | Write mode. Options: `textContent`, `attribute`, `style` |
 | `propertyName` | string | `"textContent"` | Property name |
-| `channels` | string | `—` | Channels (per-source side effects) |
-| `variants` | string | `—` | Variants (values per source index) |
+| `channels` | textRevealChannels | `—` | Channels |
+| `variants` | textRevealVariants | `—` | Variants |
 

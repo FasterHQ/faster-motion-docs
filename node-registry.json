@@ -9889,13 +9889,13 @@
         },
         {
           "key": "channels",
-          "label": "Channels (per-source side effects)",
-          "type": "string"
+          "label": "Channels",
+          "type": "textRevealChannels"
         },
         {
           "key": "variants",
-          "label": "Variants (values per source index)",
-          "type": "string"
+          "label": "Variants",
+          "type": "textRevealVariants"
         }
       ],
       "defaults": {
