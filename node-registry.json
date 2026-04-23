@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-22",
+  "_generatedAt": "2026-04-23",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 237,
+  "_nodeCount": 238,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -187,6 +187,7 @@
         "splitText",
         "counter",
         "textSequence",
+        "textRevealAnimation",
         "textDecompose",
         "textFadeCompute",
         "textSpringCompute",
@@ -9745,12 +9746,17 @@
       "displayName": "Text Sequence",
       "category": "text",
       "context": "canvas",
-      "description": "Cycles through a string array based on progress — outputs current text and index.",
+      "description": "Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array.",
       "inputs": [
         {
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "texts",
+          "type": "stringArray",
+          "label": "Texts"
         }
       ],
       "outputs": [
@@ -9771,11 +9777,99 @@
       },
       "dynamicPorts": false
     },
+    "textRevealAnimation": {
+      "displayName": "Text Reveal",
+      "category": "text",
+      "context": "shared",
+      "description": "Compound — progressively reveals a source string by character, word, sentence, or line, driven by a progress input. Replaces hand-rolled `textSequenceAnimation` with a baked `texts: [\"\",\"s\",\"st\",\"sta\",...]` array: authors set `source` and `granularity`, the loader expands to textDecompose + textSequence + domStringWrite so i18n swaps and granularity changes edit one param, not an array. Default (char + prefixes) gives classic typewriter; word/sentence/line give the corresponding reveal without separate node types.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target selector",
+          "type": "string"
+        },
+        {
+          "key": "source",
+          "label": "Source text",
+          "type": "string"
+        },
+        {
+          "key": "granularity",
+          "label": "Granularity",
+          "type": "enum",
+          "options": [
+            "char",
+            "word",
+            "sentence",
+            "line"
+          ]
+        },
+        {
+          "key": "shape",
+          "label": "Shape",
+          "type": "enum",
+          "options": [
+            "prefixes",
+            "suffixes",
+            "atoms"
+          ]
+        },
+        {
+          "key": "includeEmpty",
+          "label": "Start from blank",
+          "type": "bool"
+        },
+        {
+          "key": "stripWhitespace",
+          "label": "Strip whitespace-only entries",
+          "type": "bool"
+        },
+        {
+          "key": "separator",
+          "label": "Custom separator (overrides granularity)",
+          "type": "string"
+        },
+        {
+          "key": "writeMode",
+          "label": "Write mode",
+          "type": "enum",
+          "options": [
+            "textContent",
+            "attribute",
+            "style"
+          ]
+        },
+        {
+          "key": "propertyName",
+          "label": "Property name",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "source": "",
+        "granularity": "char",
+        "shape": "prefixes",
+        "includeEmpty": true,
+        "stripWhitespace": false,
+        "writeMode": "textContent",
+        "propertyName": "textContent"
+      },
+      "dynamicPorts": false
+    },
     "textDecompose": {
       "displayName": "Text Decompose",
       "category": "text",
       "context": "shared",
-      "description": "Pure text-data transform. Splits a source string into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter).",
+      "description": "Pure text-data transform. Splits a source string into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter). The `text` input port takes priority over the static `text` param when wired, letting the node compose with DOM readers or accept a baked-in source.",
       "inputs": [
         {
           "name": "text",
@@ -9796,6 +9890,11 @@
         }
       ],
       "parameters": [
+        {
+          "key": "text",
+          "label": "Source text",
+          "type": "string"
+        },
         {
           "key": "granularity",
           "label": "Granularity",
@@ -9837,7 +9936,8 @@
         "granularity": "char",
         "shape": "atoms",
         "includeEmpty": false,
-        "stripWhitespace": false
+        "stripWhitespace": false,
+        "text": ""
       },
       "dynamicPorts": false
     },
