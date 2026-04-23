@@ -9794,7 +9794,7 @@
         {
           "key": "selector",
           "label": "Target selector",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "source",

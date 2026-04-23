@@ -21,7 +21,7 @@ _No outputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `""` | Target selector |
+| `selector` | elementSelector | `""` | Target selector |
 | `source` | string | `""` | Source text |
 | `granularity` | enum | `"char"` | Granularity. Options: `char`, `word`, `sentence`, `line` |
 | `shape` | enum | `"prefixes"` | Shape. Options: `prefixes`, `suffixes`, `atoms` |
