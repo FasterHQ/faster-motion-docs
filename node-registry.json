@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-23",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 239,
+  "_nodeCount": 240,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -129,6 +129,7 @@
         "clipPathWrite",
         "domPoseWrite",
         "domAttributeRead",
+        "domStringArrayRead",
         "sceneRender",
         "boneRender",
         "additivePropertyWrite"
@@ -9526,7 +9527,7 @@
       "displayName": "DOM Attribute Read",
       "category": "boundary",
       "context": "shared",
-      "description": "Reads a DOM/SVG attribute (e.g., d, viewBox, points) from an element at bind time and outputs it as a string. Static read — the boundary counterpart to DOMStringWriteNode.",
+      "description": "Reads a DOM value from an element at bind time and outputs it as a string. `readMode: attribute` (default) reads via getAttribute — SVG d/viewBox/points, data-* attributes, aria-* attributes. `readMode: textContent` reads el.textContent — used for i18n-friendly text animations where the translatable string lives in the DOM. Static read. Boundary counterpart to DOMStringWriteNode.",
       "inputs": [],
       "outputs": [
         {
@@ -9539,17 +9540,27 @@
         {
           "key": "selector",
           "label": "CSS Selector",
-          "type": "string"
+          "type": "elementSelector"
+        },
+        {
+          "key": "readMode",
+          "label": "Read mode",
+          "type": "enum",
+          "options": [
+            "attribute",
+            "textContent"
+          ]
         },
         {
           "key": "attribute",
-          "label": "Attribute",
+          "label": "Attribute name",
           "type": "string"
         }
       ],
       "defaults": {
         "selector": "",
-        "attribute": "d"
+        "attribute": "d",
+        "readMode": "attribute"
       },
       "dynamicPorts": false
     },
@@ -9782,7 +9793,7 @@
       "displayName": "Text Reveal",
       "category": "text",
       "context": "shared",
-      "description": "Compound — progressively reveals a source string by character, word, sentence, or line, driven by a progress input. Replaces hand-rolled `textSequenceAnimation` with a baked `texts: [\"\",\"s\",\"st\",\"sta\",...]` array: authors set `source` and `granularity`, the loader expands to textDecompose + textSequence + domStringWrite so i18n swaps and granularity changes edit one param, not an array. Default (char + prefixes) gives classic typewriter; word/sentence/line give the corresponding reveal without separate node types. For multi-word cycles (e.g. types \"static\", then \"boring\", then \"flat\"), pass `sources: string[]` instead of `source`: the expander fans out to N textDecompose + stringArrayConcat + textSequence so one progress drive cycles through every source in order.",
+      "description": "Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type.",
       "inputs": [
         {
           "name": "progress",
@@ -9794,7 +9805,27 @@
       "parameters": [
         {
           "key": "selector",
-          "label": "Target selector",
+          "label": "Target selector (write)",
+          "type": "elementSelector"
+        },
+        {
+          "key": "sourceFrom",
+          "label": "Source",
+          "type": "enum",
+          "options": [
+            "element",
+            "elements",
+            "param"
+          ]
+        },
+        {
+          "key": "sourceSelector",
+          "label": "Read selector (defaults to target)",
+          "type": "elementSelector"
+        },
+        {
+          "key": "sourcesSelector",
+          "label": "Sources selector (N elements)",
           "type": "elementSelector"
         },
         {
@@ -9825,7 +9856,7 @@
         },
         {
           "key": "includeEmpty",
-          "label": "Start from blank",
+          "label": "Start from blank (or between words)",
           "type": "bool"
         },
         {
@@ -9856,13 +9887,54 @@
       ],
       "defaults": {
         "selector": "",
-        "source": "",
+        "sourceFrom": "element",
         "granularity": "char",
         "shape": "prefixes",
         "includeEmpty": true,
         "stripWhitespace": false,
         "writeMode": "textContent",
         "propertyName": "textContent"
+      },
+      "dynamicPorts": false
+    },
+    "domStringArrayRead": {
+      "displayName": "DOM String Array Read",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Reads textContent (or an attribute) from EVERY element matching a selector, emits the results as a stringArray. Purpose: i18n-friendly multi-source text animations — the HTML owns every translatable string, the .fmtion carries only the recipe. Static read at bind time via querySelectorAll; document-order matches.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "items",
+          "type": "stringArray",
+          "label": "Items"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "readMode",
+          "label": "Read mode",
+          "type": "enum",
+          "options": [
+            "textContent",
+            "attribute"
+          ]
+        },
+        {
+          "key": "attribute",
+          "label": "Attribute name",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "readMode": "textContent",
+        "attribute": ""
       },
       "dynamicPorts": false
     },
@@ -9897,12 +9969,17 @@
       "displayName": "Text Decompose",
       "category": "text",
       "context": "shared",
-      "description": "Pure text-data transform. Splits a source string into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter). The `text` input port takes priority over the static `text` param when wired, letting the node compose with DOM readers or accept a baked-in source.",
+      "description": "Pure text-data transform. Splits one or more source strings into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter). Input precedence (highest wins): `sources` stringArray port (multi-source — typically wired from domStringArrayRead for i18n cycles), `sources` string[] param, `text` string port (single-source wire), `text` string param. Multi-source mode decomposes each entry and concatenates — one graph chain types through every word in order.",
       "inputs": [
         {
           "name": "text",
           "type": "string",
           "label": "Text"
+        },
+        {
+          "name": "sources",
+          "type": "stringArray",
+          "label": "Sources"
         }
       ],
       "outputs": [
@@ -9920,7 +9997,7 @@
       "parameters": [
         {
           "key": "text",
-          "label": "Source text",
+          "label": "Source text (fallback)",
           "type": "string"
         },
         {
