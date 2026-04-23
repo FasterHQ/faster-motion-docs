@@ -1,6 +1,6 @@
 # Node Reference
 
-All 240 graph node types available in Faster Motion.
+All 243 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -19,9 +19,10 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Split Text](text/splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — splits target element into spans (words/chars/lines). |
 | [Counter](text/counter.md) | `counter` | shared | Animated number counter — interpolates min→max with formatting (decimals, separator, template). |
 | [Text Sequence](text/textSequence.md) | `textSequence` | canvas | Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array. |
-| [Text Reveal](text/textRevealAnimation.md) | `textRevealAnimation` | shared | Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type. |
+| [Text Reveal](text/textRevealAnimation.md) | `textRevealAnimation` | shared | Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type. OPTIONAL `channels` + `variants` (same shape as variantStaggerAnimation) declare per-source side effects — e.g. a `color` channel with three hex values cycles the color at actual word boundaries regardless of word length or language. Each channel expands to one arrayPick + one writer; no more authoring colorKeyframe with hand-tuned times that drift across languages. |
+| [String Array Pick](text/stringArrayPick.md) | `stringArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a string. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback string returned when the resolved array is empty. |
 | [String Array Concat](text/stringArrayConcat.md) | `stringArrayConcat` | shared | Pure data transform. Concatenates up to N stringArray inputs (in0..inN-1, default 8) into a single flat stringArray output. Complement to textDecompose for multi-source typewriter-style graphs: each source goes through its own textDecompose; this node stitches the per-source items[] into one indexable stream for textSequence. Unwired ports contribute nothing (default = empty array) so the node is safe to serialize with fewer connections than ports. |
-| [Text Decompose](text/textDecompose.md) | `textDecompose` | shared | Pure text-data transform. Splits one or more source strings into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on "Sunny" → ["S","Su","Sun","Sunn","Sunny"] (classic typewriter). Input precedence (highest wins): `sources` stringArray port (multi-source — typically wired from domStringArrayRead for i18n cycles), `sources` string[] param, `text` string port (single-source wire), `text` string param. Multi-source mode decomposes each entry and concatenates — one graph chain types through every word in order. |
+| [Text Decompose](text/textDecompose.md) | `textDecompose` | shared | Pure text-data transform. Splits one or more source strings into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on "Sunny" → ["S","Su","Sun","Sunn","Sunny"] (classic typewriter). Input precedence (highest wins): `sources` stringArray port (multi-source — typically wired from domStringArrayRead for i18n cycles), `sources` string[] param, `text` string port (single-source wire), `text` string param. Multi-source mode decomposes each entry and concatenates — one graph chain types through every word in order. Emits a parallel `itemSources: floatArray` output that tags each item with its source index — lets downstream nodes drive per-source side effects (per-word colors, opacities, etc.) without re-deriving boundaries. |
 | [Text Fade Compute](text/textFadeCompute.md) | `textFadeCompute` | shared | Per-character opacity ramp with stagger. Geometry modifier — routes through TextApply via Mat4Bundle. |
 | [Text Spring Compute](text/textSpringCompute.md) | `textSpringCompute` | shared | Per-character bouncy scale/offset via closed-form damped spring. Geometry modifier — routes through TextApply. |
 | [Text Scramble Apply](text/textScrambleApply.md) | `textScrambleApply` | canvas | Per-character glyph swap from a pre-rasterized pool. F272: configurable pool, easing curves, per-char stagger + reveal mode. |
@@ -192,6 +193,25 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
 | [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
 
+## [Math](math/)
+
+Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
+| [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
+| [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
+| [Smoothing](math/smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
+| [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
+| [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
+| [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
+| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
+| [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
+| [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
+| [Float Array Pick](math/floatArrayPick.md) | `floatArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects. |
+| [Color Array Pick](math/colorArrayPick.md) | `colorArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\s sourceIndex or variantStagger\s per-child index. |
+
 ## [Skeleton](skeleton/)
 
 Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
@@ -228,23 +248,6 @@ Position, rotation, and transform constraints that enforce spatial relationships
 | [Scroll Constraint](constraints/scroll.md) | `scroll` | shared | Scrollable container with bounds and momentum |
 | [Scroll Bar](constraints/scrollBar.md) | `scrollBar` | shared | Scroll bar indicator that tracks scroll position |
 | [Path Follow](constraints/pathFollow.md) | `pathFollow` | shared | Follow a path curve at given progress |
-
-## [Math](math/)
-
-Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
-| [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
-| [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
-| [Smoothing](math/smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
-| [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
-| [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
-| [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
-| [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
-| [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
 
 ## [Distribution](distribution/)
 

@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-23",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 240,
+  "_nodeCount": 243,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -101,7 +101,9 @@
         "velocity",
         "mathUtil",
         "stringOp",
-        "stringEquals"
+        "stringEquals",
+        "floatArrayPick",
+        "colorArrayPick"
       ]
     },
     "boundary": {
@@ -189,6 +191,7 @@
         "counter",
         "textSequence",
         "textRevealAnimation",
+        "stringArrayPick",
         "stringArrayConcat",
         "textDecompose",
         "textFadeCompute",
@@ -9793,7 +9796,7 @@
       "displayName": "Text Reveal",
       "category": "text",
       "context": "shared",
-      "description": "Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type.",
+      "description": "Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type. OPTIONAL `channels` + `variants` (same shape as variantStaggerAnimation) declare per-source side effects — e.g. a `color` channel with three hex values cycles the color at actual word boundaries regardless of word length or language. Each channel expands to one arrayPick + one writer; no more authoring colorKeyframe with hand-tuned times that drift across languages.",
       "inputs": [
         {
           "name": "progress",
@@ -9883,6 +9886,16 @@
           "key": "propertyName",
           "label": "Property name",
           "type": "string"
+        },
+        {
+          "key": "channels",
+          "label": "Channels (per-source side effects)",
+          "type": "string"
+        },
+        {
+          "key": "variants",
+          "label": "Variants (values per source index)",
+          "type": "string"
         }
       ],
       "defaults": {
@@ -9894,6 +9907,114 @@
         "stripWhitespace": false,
         "writeMode": "textContent",
         "propertyName": "textContent"
+      },
+      "dynamicPorts": false
+    },
+    "floatArrayPick": {
+      "displayName": "Float Array Pick",
+      "category": "math",
+      "context": "shared",
+      "description": "Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects.",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        },
+        {
+          "name": "array",
+          "type": "floatArray",
+          "label": "Array"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "fallback",
+          "label": "Fallback (empty array)",
+          "type": "float"
+        }
+      ],
+      "defaults": {
+        "fallback": 0
+      },
+      "dynamicPorts": false
+    },
+    "stringArrayPick": {
+      "displayName": "String Array Pick",
+      "category": "text",
+      "context": "shared",
+      "description": "Pure picker — emits `array[floor(index)]` as a string. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback string returned when the resolved array is empty.",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        },
+        {
+          "name": "array",
+          "type": "stringArray",
+          "label": "Array"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "string",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "fallback",
+          "label": "Fallback (empty array)",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "fallback": ""
+      },
+      "dynamicPorts": false
+    },
+    "colorArrayPick": {
+      "displayName": "Color Array Pick",
+      "category": "math",
+      "context": "shared",
+      "description": "Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\\s sourceIndex or variantStagger\\s per-child index.",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        },
+        {
+          "name": "array",
+          "type": "colorArray",
+          "label": "Array"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "color",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "fallbackHex",
+          "label": "Fallback (empty array)",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "fallbackHex": "#ffffff"
       },
       "dynamicPorts": false
     },
@@ -9969,7 +10090,7 @@
       "displayName": "Text Decompose",
       "category": "text",
       "context": "shared",
-      "description": "Pure text-data transform. Splits one or more source strings into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter). Input precedence (highest wins): `sources` stringArray port (multi-source — typically wired from domStringArrayRead for i18n cycles), `sources` string[] param, `text` string port (single-source wire), `text` string param. Multi-source mode decomposes each entry and concatenates — one graph chain types through every word in order.",
+      "description": "Pure text-data transform. Splits one or more source strings into an array of strings by granularity (char/word/sentence/line) and optionally reshapes into a cumulative pyramid (prefixes/suffixes). Decouples the data-shape problem from animation — feed items[] into textSequence, variantStagger, or any index-driven consumer. Example: granularity=char, shape=prefixes on \"Sunny\" → [\"S\",\"Su\",\"Sun\",\"Sunn\",\"Sunny\"] (classic typewriter). Input precedence (highest wins): `sources` stringArray port (multi-source — typically wired from domStringArrayRead for i18n cycles), `sources` string[] param, `text` string port (single-source wire), `text` string param. Multi-source mode decomposes each entry and concatenates — one graph chain types through every word in order. Emits a parallel `itemSources: floatArray` output that tags each item with its source index — lets downstream nodes drive per-source side effects (per-word colors, opacities, etc.) without re-deriving boundaries.",
       "inputs": [
         {
           "name": "text",
@@ -9992,6 +10113,11 @@
           "name": "count",
           "type": "float",
           "label": "Count"
+        },
+        {
+          "name": "itemSources",
+          "type": "floatArray",
+          "label": "Item → Source"
         }
       ],
       "parameters": [
