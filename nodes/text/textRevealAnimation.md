@@ -4,7 +4,7 @@
 **Category:** text  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Compound — progressively reveals a source string by character, word, sentence, or line, driven by a progress input. Replaces hand-rolled `textSequenceAnimation` with a baked `texts: ["","s","st","sta",...]` array: authors set `source` and `granularity`, the loader expands to textDecompose + textSequence + domStringWrite so i18n swaps and granularity changes edit one param, not an array. Default (char + prefixes) gives classic typewriter; word/sentence/line give the corresponding reveal without separate node types.
+Compound — progressively reveals a source string by character, word, sentence, or line, driven by a progress input. Replaces hand-rolled `textSequenceAnimation` with a baked `texts: ["","s","st","sta",...]` array: authors set `source` and `granularity`, the loader expands to textDecompose + textSequence + domStringWrite so i18n swaps and granularity changes edit one param, not an array. Default (char + prefixes) gives classic typewriter; word/sentence/line give the corresponding reveal without separate node types. For multi-word cycles (e.g. types "static", then "boring", then "flat"), pass `sources: string[]` instead of `source`: the expander fans out to N textDecompose + stringArrayConcat + textSequence so one progress drive cycles through every source in order.
 
 ## Inputs
 

@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-23",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 238,
+  "_nodeCount": 239,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -188,6 +188,7 @@
         "counter",
         "textSequence",
         "textRevealAnimation",
+        "stringArrayConcat",
         "textDecompose",
         "textFadeCompute",
         "textSpringCompute",
@@ -9781,7 +9782,7 @@
       "displayName": "Text Reveal",
       "category": "text",
       "context": "shared",
-      "description": "Compound — progressively reveals a source string by character, word, sentence, or line, driven by a progress input. Replaces hand-rolled `textSequenceAnimation` with a baked `texts: [\"\",\"s\",\"st\",\"sta\",...]` array: authors set `source` and `granularity`, the loader expands to textDecompose + textSequence + domStringWrite so i18n swaps and granularity changes edit one param, not an array. Default (char + prefixes) gives classic typewriter; word/sentence/line give the corresponding reveal without separate node types.",
+      "description": "Compound — progressively reveals a source string by character, word, sentence, or line, driven by a progress input. Replaces hand-rolled `textSequenceAnimation` with a baked `texts: [\"\",\"s\",\"st\",\"sta\",...]` array: authors set `source` and `granularity`, the loader expands to textDecompose + textSequence + domStringWrite so i18n swaps and granularity changes edit one param, not an array. Default (char + prefixes) gives classic typewriter; word/sentence/line give the corresponding reveal without separate node types. For multi-word cycles (e.g. types \"static\", then \"boring\", then \"flat\"), pass `sources: string[]` instead of `source`: the expander fans out to N textDecompose + stringArrayConcat + textSequence so one progress drive cycles through every source in order.",
       "inputs": [
         {
           "name": "progress",
@@ -9864,6 +9865,33 @@
         "propertyName": "textContent"
       },
       "dynamicPorts": false
+    },
+    "stringArrayConcat": {
+      "displayName": "String Array Concat",
+      "category": "text",
+      "context": "shared",
+      "description": "Pure data transform. Concatenates up to N stringArray inputs (in0..inN-1, default 8) into a single flat stringArray output. Complement to textDecompose for multi-source typewriter-style graphs: each source goes through its own textDecompose; this node stitches the per-source items[] into one indexable stream for textSequence. Unwired ports contribute nothing (default = empty array) so the node is safe to serialize with fewer connections than ports.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "items",
+          "type": "stringArray",
+          "label": "Items"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "portCount",
+          "label": "Input port count",
+          "type": "int",
+          "min": 2,
+          "max": 32
+        }
+      ],
+      "defaults": {
+        "portCount": 8
+      },
+      "dynamicPorts": true
     },
     "textDecompose": {
       "displayName": "Text Decompose",
