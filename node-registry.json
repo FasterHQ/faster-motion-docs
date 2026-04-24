@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-04-23",
+  "_generatedAt": "2026-04-24",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
   "_nodeCount": 243,
   "portTypes": {
@@ -3040,11 +3040,11 @@
       "parameters": [
         {
           "key": "duration",
-          "label": "Duration (ms)",
+          "label": "Duration (s)",
           "type": "float",
           "min": 0,
-          "max": 60000,
-          "step": 100
+          "max": 60,
+          "step": 0.1
         },
         {
           "key": "iterations",
@@ -3069,11 +3069,11 @@
         },
         {
           "key": "delay",
-          "label": "Delay (ms)",
+          "label": "Delay (s)",
           "type": "float",
           "min": 0,
-          "max": 10000,
-          "step": 100
+          "max": 10,
+          "step": 0.1
         },
         {
           "key": "autoplay",
@@ -3082,7 +3082,7 @@
         }
       ],
       "defaults": {
-        "duration": 1000,
+        "duration": 1,
         "iterations": 1,
         "pingPong": false,
         "timeScale": 1,

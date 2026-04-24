@@ -31,10 +31,10 @@ Playback sequencer — self-advancing or externally driven (scroll, parameter)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `duration` | float | `1000` | Duration (ms) (min: 0, max: 60000) |
+| `duration` | float | `1` | Duration (s) (min: 0, max: 60) |
 | `iterations` | int | `1` | Iterations (min: 0, max: 100) |
 | `pingPong` | bool | `false` | Ping Pong |
 | `timeScale` | float | `1` | Speed (min: -10, max: 10) |
-| `delay` | float | `0` | Delay (ms) (min: 0, max: 10000) |
+| `delay` | float | `0` | Delay (s) (min: 0, max: 10) |
 | `autoplay` | bool | `true` | Autoplay |
 
