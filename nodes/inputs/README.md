@@ -10,8 +10,8 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Mouse Velocity](mouseVelocity.md) | `mouseVelocity` | dom | Pointer velocity magnitude (-1 to 1) |
 | [Distance Input](distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
 | [Drag Input](dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
-| [Scroll Trigger](scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, and isInView |
-| [Scroll Pin](scrollPin.md) | `scrollPin` | dom | Pin a DOM element to fixed position while scroll progress is within range |
+| [Scroll Trigger](scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect. |
+| [Pin](pin.md) | `pin` | shared | F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnchorNode) + progress; runs the 3-state lifecycle: BEFORE (progress ≤ 0) = element natural inside spacer; PINNED (0 < progress < 1) = element position:fixed at viewport top; AFTER (progress ≥ 1) = element at bottom of spacer via padding-top. Spacer + handle ownership lives on PinAnchorNode (loader-emitted). Subsumes scrollPin. |
 | [Pointer](pointer.md) | `pointer` | dom | Track pointer position — outputs x, y, normalized, isInside |
 | [Observer](observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
 | [Event Listener](eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |

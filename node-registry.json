@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-04-24",
+  "_generatedAt": "2026-04-25",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
   "_nodeCount": 243,
   "portTypes": {
@@ -59,7 +59,7 @@
         "distanceInput",
         "dragInput",
         "scrollTrigger",
-        "scrollPin",
+        "pin",
         "pointer",
         "observer",
         "eventListener",
@@ -1885,13 +1885,24 @@
       "displayName": "Scroll Trigger",
       "category": "inputs",
       "context": "dom",
-      "description": "Track element visibility during scroll — outputs progress, direction, velocity, and isInView",
-      "inputs": [],
+      "description": "Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect.",
+      "inputs": [
+        {
+          "name": "flowTop",
+          "type": "float",
+          "label": "Pin Anchor Flow Top"
+        }
+      ],
       "outputs": [
         {
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "unclampedProgress",
+          "type": "float",
+          "label": "Progress (unclamped)"
         },
         {
           "name": "isInView",
@@ -1907,6 +1918,11 @@
           "name": "velocity",
           "type": "float",
           "label": "Velocity"
+        },
+        {
+          "name": "pinTopOffset",
+          "type": "float",
+          "label": "Pin Top Offset"
         }
       ],
       "parameters": [
@@ -2223,41 +2239,72 @@
       },
       "dynamicPorts": false
     },
-    "scrollPin": {
-      "displayName": "Scroll Pin",
+    "pin": {
+      "displayName": "Pin",
       "category": "inputs",
-      "context": "dom",
-      "description": "Pin a DOM element to fixed position while scroll progress is within range",
+      "context": "shared",
+      "description": "F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnchorNode) + progress; runs the 3-state lifecycle: BEFORE (progress ≤ 0) = element natural inside spacer; PINNED (0 < progress < 1) = element position:fixed at viewport top; AFTER (progress ≥ 1) = element at bottom of spacer via padding-top. Spacer + handle ownership lives on PinAnchorNode (loader-emitted). Subsumes scrollPin.",
       "inputs": [
+        {
+          "name": "handle",
+          "type": "any",
+          "label": "Pin Handle"
+        },
         {
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "rawProgress",
+          "type": "float",
+          "label": "Raw Progress (unclamped)"
+        },
+        {
+          "name": "topOverride",
+          "type": "float",
+          "label": "Top Override"
+        },
+        {
+          "name": "leftOverride",
+          "type": "float",
+          "label": "Left Override"
+        },
+        {
+          "name": "widthOverride",
+          "type": "float",
+          "label": "Width Override"
         }
       ],
       "outputs": [
         {
-          "name": "pinProgress",
+          "name": "isEngaged",
           "type": "float",
-          "label": "Pin Progress"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "selector",
-          "label": "Element to Pin",
-          "type": "string"
+          "label": "Is Engaged"
         },
         {
-          "key": "pinSpacing",
-          "label": "Add Spacer",
-          "type": "bool"
+          "name": "rectTop",
+          "type": "float",
+          "label": "Rect Top"
+        },
+        {
+          "name": "rectLeft",
+          "type": "float",
+          "label": "Rect Left"
+        },
+        {
+          "name": "rectWidth",
+          "type": "float",
+          "label": "Rect Width"
+        },
+        {
+          "name": "rectHeight",
+          "type": "float",
+          "label": "Rect Height"
         }
       ],
-      "defaults": {
-        "selector": "",
-        "pinSpacing": true
-      },
+      "parameters": [],
+      "defaults": {},
       "dynamicPorts": false
     },
     "parallax": {
