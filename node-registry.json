@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-26",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 248,
+  "_nodeCount": 249,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -103,6 +103,37 @@
         "staggerDriver"
       ]
     },
+    "animation": {
+      "description": "Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.",
+      "nodes": [
+        "scrollTo",
+        "boolTween",
+        "timeline",
+        "seamlessPlayhead",
+        "carouselSlideLocalTime",
+        "carouselAutoplay",
+        "carouselKeyboardNav",
+        "carouselWrapCounter",
+        "tween",
+        "keyframe",
+        "stagger",
+        "colorTween",
+        "seekRemap",
+        "clipRegistry",
+        "boneClipEval",
+        "objectClipEval",
+        "colorKeyframe",
+        "stringKeyframe",
+        "clipPath",
+        "multiKeyframe",
+        "propertyAnimation",
+        "clipPathAnimation",
+        "carouselEffectAnimation",
+        "slideSlotAnimation",
+        "dockToAnimation",
+        "indexedDockAnimation"
+      ]
+    },
     "math": {
       "description": "Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.",
       "nodes": [
@@ -163,36 +194,6 @@
         "forEach",
         "sceneGraph",
         "dirtyTrigger"
-      ]
-    },
-    "animation": {
-      "description": "Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.",
-      "nodes": [
-        "boolTween",
-        "timeline",
-        "seamlessPlayhead",
-        "carouselSlideLocalTime",
-        "carouselAutoplay",
-        "carouselKeyboardNav",
-        "carouselWrapCounter",
-        "tween",
-        "keyframe",
-        "stagger",
-        "colorTween",
-        "seekRemap",
-        "clipRegistry",
-        "boneClipEval",
-        "objectClipEval",
-        "colorKeyframe",
-        "stringKeyframe",
-        "clipPath",
-        "multiKeyframe",
-        "propertyAnimation",
-        "clipPathAnimation",
-        "carouselEffectAnimation",
-        "slideSlotAnimation",
-        "dockToAnimation",
-        "indexedDockAnimation"
       ]
     },
     "text": {
@@ -1380,6 +1381,73 @@
         "minDuration": 0.2,
         "maxDuration": 2,
         "snap": []
+      },
+      "dynamicPorts": false
+    },
+    "scrollTo": {
+      "displayName": "Scroll To",
+      "category": "animation",
+      "context": "shared",
+      "description": "F337 — animated scroll-to. Trigger-launched tween over the scroller's scrollTop. Resolves the target Y from a CSS selector (or \"top\" / \"bottom\") at trigger time, lerps from current scroll through the configured ease, outputs a `value` to feed a domPropertyWrite(scrollTop). Pure-graph; no imperative API.",
+      "inputs": [
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "isScrolling",
+          "type": "float",
+          "label": "Is Scrolling"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "targetSelector",
+          "label": "Target Selector",
+          "type": "string"
+        },
+        {
+          "key": "duration",
+          "label": "Duration",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        },
+        {
+          "key": "ease",
+          "label": "Ease",
+          "type": "string"
+        },
+        {
+          "key": "offsetY",
+          "label": "Offset Y",
+          "type": "float"
+        },
+        {
+          "key": "scroller",
+          "label": "Scroller",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "targetSelector": "",
+        "duration": 0.8,
+        "ease": "easeInOutCubic",
+        "offsetY": 0,
+        "scroller": ""
       },
       "dynamicPorts": false
     },
