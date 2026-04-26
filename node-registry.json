@@ -2801,7 +2801,7 @@
       "displayName": "Scramble Compute",
       "category": "text",
       "context": "dom",
-      "description": "Per-character scramble effect — outputs original or random character",
+      "description": "Per-character scramble effect — outputs original or random character. Convention: progress=1 fully scrambled, progress=0 fully revealed; per-char threshold derived from index/count so leftmost char reveals first. F336 adds `speed` (cycle-rate multiplier on the 16Hz baseline flicker) and `revealDelay` (hold-on-scramble fraction at the high-progress end before any chars resolve). `charset` accepts preset names (`upperCase`, `lowerCase`, `upperAndLowerCase`, `01`, `symbols`) or any literal string.",
       "inputs": [
         {
           "name": "progress",
@@ -2826,10 +2826,27 @@
           "key": "charset",
           "label": "Character Set",
           "type": "string"
+        },
+        {
+          "key": "speed",
+          "label": "Cycle Speed",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        },
+        {
+          "key": "revealDelay",
+          "label": "Reveal Delay (0..1)",
+          "type": "float",
+          "min": 0,
+          "max": 0.999,
+          "step": 0.05
         }
       ],
       "defaults": {
-        "originalText": ""
+        "originalText": "",
+        "speed": 1,
+        "revealDelay": 0
       },
       "dynamicPorts": false
     },
@@ -13079,6 +13096,21 @@
           "step": 1
         },
         {
+          "key": "speed",
+          "label": "Cycle Speed",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        },
+        {
+          "key": "revealDelay",
+          "label": "Reveal Delay (0..1)",
+          "type": "float",
+          "min": 0,
+          "max": 0.999,
+          "step": 0.05
+        },
+        {
           "key": "channels",
           "label": "Channels",
           "type": "stringChannels"
@@ -13090,6 +13122,8 @@
         "charset": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*",
         "count": 8,
         "index": 0,
+        "speed": 1,
+        "revealDelay": 0,
         "channels": {
           "textContent": {
             "propertyName": "textContent",

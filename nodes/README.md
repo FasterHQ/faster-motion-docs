@@ -11,7 +11,7 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
 | [Text Split](text/textSplit.md) | `textSplit` | canvas | Split text into chars/words/lines with glyph metrics for per-element animation |
-| [Scramble Compute](text/scrambleCompute.md) | `scrambleCompute` | dom | Per-character scramble effect — outputs original or random character |
+| [Scramble Compute](text/scrambleCompute.md) | `scrambleCompute` | dom | Per-character scramble effect — outputs original or random character. Convention: progress=1 fully scrambled, progress=0 fully revealed; per-char threshold derived from index/count so leftmost char reveals first. F336 adds `speed` (cycle-rate multiplier on the 16Hz baseline flicker) and `revealDelay` (hold-on-scramble fraction at the high-progress end before any chars resolve). `charset` accepts preset names (`upperCase`, `lowerCase`, `upperAndLowerCase`, `01`, `symbols`) or any literal string. |
 | [Text Wave Compute](text/textWaveCompute.md) | `textWaveCompute` | shared | F256: Pure per-character wave sweep. Takes progress + upstream Mat4 bundle. schedulerPhase=pure, zero this.context access. |
 | [Coverage Range](text/coverageRange.md) | `coverageRange` | shared | Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes. |
 | [Coverage Group](text/coverageGroup.md) | `coverageGroup` | shared | F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle. |

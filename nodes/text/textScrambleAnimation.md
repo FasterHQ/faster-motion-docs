@@ -26,5 +26,7 @@ _No outputs._
 | `charset` | string | `"ABCDEFGHIJKLMNOPQRSTUVWXYZ...` | Character Set |
 | `count` | int | `8` | Total Characters (min: 1) |
 | `index` | int | `0` | Character Index (min: 0) |
+| `speed` | float | `1` | Cycle Speed (min: 0) |
+| `revealDelay` | float | `0` | Reveal Delay (0..1) (min: 0, max: 0.999) |
 | `channels` | stringChannels | `{"textContent":{"propertyNa...` | Channels |
 
