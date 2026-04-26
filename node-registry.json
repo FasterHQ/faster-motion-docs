@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-26",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 249,
+  "_nodeCount": 251,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -93,6 +93,7 @@
       "description": "Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.",
       "nodes": [
         "inertia",
+        "physics2D",
         "wiggle",
         "noise",
         "spring",
@@ -121,6 +122,7 @@
         "seekRemap",
         "clipRegistry",
         "boneClipEval",
+        "stateAnimEval",
         "objectClipEval",
         "colorKeyframe",
         "stringKeyframe",
@@ -1448,6 +1450,89 @@
         "ease": "easeInOutCubic",
         "offsetY": 0,
         "scroller": ""
+      },
+      "dynamicPorts": false
+    },
+    "physics2D": {
+      "displayName": "Physics 2D",
+      "category": "procedural",
+      "context": "shared",
+      "description": "F335 — single-body 2D ballistic motion. Rising-edge `trigger` launches a body from origin at `velocity` in direction `angle°`, integrates Verlet under constant `gravity` + exponential `friction`. Outputs current `(x, y)` and `(vx, vy)` so downstream graph nodes can drive position, rotation-from-velocity, fade-by-speed, etc. Auto-stops after `duration` seconds.",
+      "inputs": [
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "x",
+          "type": "float",
+          "label": "X"
+        },
+        {
+          "name": "y",
+          "type": "float",
+          "label": "Y"
+        },
+        {
+          "name": "vx",
+          "type": "float",
+          "label": "VX"
+        },
+        {
+          "name": "vy",
+          "type": "float",
+          "label": "VY"
+        },
+        {
+          "name": "isLaunched",
+          "type": "float",
+          "label": "Is Launched"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "velocity",
+          "label": "Velocity",
+          "type": "float",
+          "min": 0,
+          "step": 50
+        },
+        {
+          "key": "angle",
+          "label": "Angle (°)",
+          "type": "float",
+          "step": 1
+        },
+        {
+          "key": "gravity",
+          "label": "Gravity",
+          "type": "float",
+          "step": 50
+        },
+        {
+          "key": "friction",
+          "label": "Friction",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        },
+        {
+          "key": "duration",
+          "label": "Duration (sec)",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        }
+      ],
+      "defaults": {
+        "velocity": 800,
+        "angle": -45,
+        "gravity": 1000,
+        "friction": 0,
+        "duration": 3
       },
       "dynamicPorts": false
     },
@@ -4616,6 +4701,55 @@
         {
           "key": "skeletonId",
           "label": "Skeleton Id",
+          "type": "string"
+        }
+      ],
+      "defaults": {},
+      "dynamicPorts": false
+    },
+    "stateAnimEval": {
+      "displayName": "State Anim Eval",
+      "category": "animation",
+      "context": "shared",
+      "description": "F345: evaluates a single SM animation state's clip at progress and outputs a transforms map. Reads clip from a wired ClipRegistry port. The downstream StateTransformsMux selects the active state's output by currentStateId. Replaces PoseEvalNode's imperative state.clip read.",
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "any",
+          "label": "Clip"
+        },
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "weight",
+          "type": "float",
+          "label": "Weight"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "transforms",
+          "type": "any",
+          "label": "Transforms"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "stateId",
+          "label": "State Id",
+          "type": "string"
+        },
+        {
+          "key": "animationId",
+          "label": "Animation Id",
+          "type": "string"
+        },
+        {
+          "key": "role",
+          "label": "Role",
           "type": "string"
         }
       ],

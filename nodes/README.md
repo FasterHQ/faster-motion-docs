@@ -1,6 +1,6 @@
 # Node Reference
 
-All 249 graph node types available in Faster Motion.
+All 251 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -61,6 +61,7 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
 | [Clip Registry](animation/clipRegistry.md) | `clipRegistry` | shared | F342: graph-native publisher of AnimationClip references by id. One dynamic output port per clip (clip_${id}) carries the live AnimationClip reference. Replaces imperative TPN/OPE bind(clip) seams with port-routed clip identity. |
 | [Bone Clip Eval](animation/boneClipEval.md) | `boneClipEval` | shared | F342: evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Replaces TimelinePoseNode. Reads clip from a wired ClipRegistry port and rest baseline from a wired SkeletonSource port — no imperative bind(clip). |
+| [State Anim Eval](animation/stateAnimEval.md) | `stateAnimEval` | shared | F345: evaluates a single SM animation state's clip at progress and outputs a transforms map. Reads clip from a wired ClipRegistry port. The downstream StateTransformsMux selects the active state's output by currentStateId. Replaces PoseEvalNode's imperative state.clip read. |
 | [Object Clip Eval](animation/objectClipEval.md) | `objectClipEval` | shared | F342: evaluates an AnimationClip's object tracks at progress and outputs an absolute pose AttributeBundle (per-object x/y/rotation/scale/opacity + extended scalar props + text strings). Replaces ObjectPoseEvalNode's Timeline-only bindClip path. Reads clip + rest from typed ports; no imperative bindClip. |
 | [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires directly into DOMColorWriteNode.color. Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
 | [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
@@ -254,6 +255,23 @@ Position, rotation, and transform constraints that enforce spatial relationships
 | [Scroll Bar](constraints/scrollBar.md) | `scrollBar` | shared | Scroll bar indicator that tracks scroll position |
 | [Path Follow](constraints/pathFollow.md) | `pathFollow` | shared | Follow a path curve at given progress |
 
+## [Procedural](procedural/)
+
+Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Inertia](procedural/inertia.md) | `inertia` | shared | F334 — exponential-decay tween. Animates a value from `from` under throw physics with a starting velocity. Optional snap targets land the natural rest position on the nearest snap value while preserving the decel curve. Use as a standalone "throw a property" driver independent of drag. |
+| [Physics 2D](procedural/physics2D.md) | `physics2D` | shared | F335 — single-body 2D ballistic motion. Rising-edge `trigger` launches a body from origin at `velocity` in direction `angle°`, integrates Verlet under constant `gravity` + exponential `friction`. Outputs current `(x, y)` and `(vx, vy)` so downstream graph nodes can drive position, rotation-from-velocity, fade-by-speed, etc. Auto-stops after `duration` seconds. |
+| [Wiggle](procedural/wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
+| [Noise](procedural/noise.md) | `noise` | shared | Multi-octave simplex noise |
+| [Spring](procedural/spring.md) | `spring` | shared | Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value). |
+| [Oscillator](procedural/oscillator.md) | `oscillator` | shared | Periodic wave generator (sine, triangle, square, sawtooth) |
+| [Modulate](procedural/modulate.md) | `modulate` | shared | Remap value through a piecewise-linear curve. Defaults to replace composition. |
+| [Ring (Delay)](procedural/ring.md) | `ring` | shared | Ring buffer delay — output a past value. Defaults to replace composition. |
+| [Random](procedural/random.md) | `random` | shared | Seeded random value per frame. Uniform or gaussian distribution. |
+| [Stagger Driver](procedural/staggerDriver.md) | `staggerDriver` | shared | Index-based wave propagation. Uses ForEach element context for per-instance offset. |
+
 ## [Distribution](distribution/)
 
 Point distribution generators: grid, circle, linear, random, fibonacci spiral, path sampling. Feed into Generator node to create object clones.
@@ -270,22 +288,6 @@ Point distribution generators: grid, circle, linear, random, fibonacci spiral, p
 | [Clone Slot](distribution/cloneSlot.md) | `cloneSlot` | canvas | Pre-declared clone slot for GeneratorNode. Gates clone visibility based on activeCount from generator. |
 | [Instance Stagger Compute](distribution/instanceStaggerCompute.md) | `instanceStaggerCompute` | canvas | Per-instance staggered offset/scale animation. Proves Mat4 pipeline works for non-text domains. |
 | [Instance Apply](distribution/instanceApply.md) | `instanceApply` | canvas | F264 Phase 2: Writes Mat4TransformBundle per-instance transforms to GeneratorNode clone STNs via SceneTransformNode.setPose. Decomposes 4×4 → 2D pose per clone — full port contract flow, no imperative HeadlessObject mutation. |
-
-## [Procedural](procedural/)
-
-Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Inertia](procedural/inertia.md) | `inertia` | shared | F334 — exponential-decay tween. Animates a value from `from` under throw physics with a starting velocity. Optional snap targets land the natural rest position on the nearest snap value while preserving the decel curve. Use as a standalone "throw a property" driver independent of drag. |
-| [Wiggle](procedural/wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
-| [Noise](procedural/noise.md) | `noise` | shared | Multi-octave simplex noise |
-| [Spring](procedural/spring.md) | `spring` | shared | Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value). |
-| [Oscillator](procedural/oscillator.md) | `oscillator` | shared | Periodic wave generator (sine, triangle, square, sawtooth) |
-| [Modulate](procedural/modulate.md) | `modulate` | shared | Remap value through a piecewise-linear curve. Defaults to replace composition. |
-| [Ring (Delay)](procedural/ring.md) | `ring` | shared | Ring buffer delay — output a past value. Defaults to replace composition. |
-| [Random](procedural/random.md) | `random` | shared | Seeded random value per frame. Uniform or gaussian distribution. |
-| [Stagger Driver](procedural/staggerDriver.md) | `staggerDriver` | shared | Index-based wave propagation. Uses ForEach element context for per-instance offset. |
 
 ## [Integration](integration/)
 
