@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-26",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 251,
+  "_nodeCount": 255,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -58,6 +58,7 @@
         "mouseVelocity",
         "distanceInput",
         "dragInput",
+        "scrollEvent",
         "scrollTrigger",
         "pin",
         "pointer",
@@ -115,6 +116,7 @@
         "carouselAutoplay",
         "carouselKeyboardNav",
         "carouselWrapCounter",
+        "pulseTween",
         "tween",
         "keyframe",
         "stagger",
@@ -122,6 +124,7 @@
         "seekRemap",
         "clipRegistry",
         "boneClipEval",
+        "stateTransformsMux",
         "stateAnimEval",
         "objectClipEval",
         "colorKeyframe",
@@ -142,6 +145,7 @@
         "remap",
         "expression",
         "converter",
+        "snapFloat",
         "smoothing",
         "gate",
         "parallax",
@@ -2131,6 +2135,64 @@
       },
       "dynamicPorts": false
     },
+    "scrollEvent": {
+      "displayName": "Scroll Event",
+      "category": "inputs",
+      "context": "shared",
+      "description": "F349 — edge-pulse detector on a 0..1 progress signal. Emits 1-frame pulses on threshold crossings: `entered` (forward across startThreshold), `left` (forward across endThreshold), `enteredBack` (backward across endThreshold), `leftBack` (backward across startThreshold). Pair with `pulseTween` and/or `parameterAction(set/toggle)` to recover trigger-mode toggleActions semantics, or with `parameterAction(set, amount=1)` on `entered` only to recover an observe-once latch.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "entered",
+          "type": "float",
+          "label": "Entered"
+        },
+        {
+          "name": "left",
+          "type": "float",
+          "label": "Left"
+        },
+        {
+          "name": "enteredBack",
+          "type": "float",
+          "label": "Entered Back"
+        },
+        {
+          "name": "leftBack",
+          "type": "float",
+          "label": "Left Back"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "startThreshold",
+          "label": "Start Threshold",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "endThreshold",
+          "label": "End Threshold",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        }
+      ],
+      "defaults": {
+        "startThreshold": 0,
+        "endThreshold": 1
+      },
+      "dynamicPorts": false
+    },
     "scrollTrigger": {
       "displayName": "Scroll Trigger",
       "category": "inputs",
@@ -2207,6 +2269,46 @@
         "startEdge": "top bottom",
         "endEdge": "bottom top",
         "invert": false
+      },
+      "dynamicPorts": false
+    },
+    "snapFloat": {
+      "displayName": "Snap Float",
+      "category": "math",
+      "context": "shared",
+      "description": "F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style \"magnetic\" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16).",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "snapped",
+          "type": "float",
+          "label": "Snapped"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "values",
+          "label": "Snap Targets",
+          "type": "string"
+        },
+        {
+          "key": "smooth",
+          "label": "Magnetic Smooth",
+          "type": "float",
+          "min": 0,
+          "max": 10,
+          "step": 0.1
+        }
+      ],
+      "defaults": {
+        "values": [],
+        "smooth": 0
       },
       "dynamicPorts": false
     },
@@ -3692,6 +3794,70 @@
       },
       "dynamicPorts": false
     },
+    "pulseTween": {
+      "displayName": "Pulse Tween",
+      "category": "animation",
+      "context": "shared",
+      "description": "F349 — one-shot 0→1 clock controlled by event pulses. Each input is rising-edge-detected: `play` advances toward 1, `reverse` advances toward 0, `restart` resets to 0 and plays forward, `pause` freezes, `resume` un-freezes. Output `progress` is the eased value; `playing` is 1 while advancing. Maps the GSAP `toggleActions` model onto graph ports. Distinct from the stateless `tween` interpolator (which is a pure function of input progress) — pulseTween OWNS the progress.",
+      "inputs": [
+        {
+          "name": "play",
+          "type": "float",
+          "label": "Play"
+        },
+        {
+          "name": "reverse",
+          "type": "float",
+          "label": "Reverse"
+        },
+        {
+          "name": "restart",
+          "type": "float",
+          "label": "Restart"
+        },
+        {
+          "name": "pause",
+          "type": "float",
+          "label": "Pause"
+        },
+        {
+          "name": "resume",
+          "type": "float",
+          "label": "Resume"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "playing",
+          "type": "float",
+          "label": "Playing"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "duration",
+          "label": "Duration (sec)",
+          "type": "float",
+          "min": 0.001,
+          "step": 0.1
+        },
+        {
+          "key": "ease",
+          "label": "Easing",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "duration": 1,
+        "ease": "linear"
+      },
+      "dynamicPorts": false
+    },
     "tween": {
       "displayName": "Tween",
       "category": "animation",
@@ -4718,6 +4884,45 @@
         {
           "key": "skeletonId",
           "label": "Skeleton Id",
+          "type": "string"
+        }
+      ],
+      "defaults": {},
+      "dynamicPorts": false
+    },
+    "stateTransformsMux": {
+      "displayName": "State Transforms Mux",
+      "category": "animation",
+      "context": "shared",
+      "description": "F345: selects an SM layer's active state's transforms by id. Reads currentStateId from LayerAdvanceNode + per-state transforms from dynamic transforms_${stateId} input ports wired from per-state evaluator nodes; outputs the active state's transforms. Replaces PoseEvalNode's imperative layer.getCurrentState().clip read.",
+      "inputs": [
+        {
+          "name": "currentStateId",
+          "type": "string",
+          "label": "Current State Id"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "transforms",
+          "type": "any",
+          "label": "Transforms"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "layerId",
+          "label": "Layer Id",
+          "type": "string"
+        },
+        {
+          "key": "role",
+          "label": "Role",
+          "type": "string"
+        },
+        {
+          "key": "stateIds",
+          "label": "State Ids",
           "type": "string"
         }
       ],

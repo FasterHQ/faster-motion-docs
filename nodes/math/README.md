@@ -7,6 +7,7 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Remap](remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
 | [Expression](expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
 | [Converter](converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
+| [Snap Float](snapFloat.md) | `snapFloat` | shared | F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style "magnetic" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16). |
 | [Smoothing](smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
 | [Gate](gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
 | [Parallax](parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
