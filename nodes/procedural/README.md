@@ -4,6 +4,7 @@ Time-driven procedural generators: wiggle, noise, oscillator, spring physics, mo
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
+| [Inertia](inertia.md) | `inertia` | shared | F334 — exponential-decay tween. Animates a value from `from` under throw physics with a starting velocity. Optional snap targets land the natural rest position on the nearest snap value while preserving the decel curve. Use as a standalone "throw a property" driver independent of drag. |
 | [Wiggle](wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
 | [Noise](noise.md) | `noise` | shared | Multi-octave simplex noise |
 | [Spring](spring.md) | `spring` | shared | Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value). |

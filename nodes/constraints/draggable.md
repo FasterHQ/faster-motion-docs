@@ -4,13 +4,12 @@
 **Category:** constraints  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Enable drag interaction with optional axis lock and bounds
+Wrap a DOM element or canvas object as draggable, with optional inertia. Outputs current position + drag state + velocity, suitable for driving any downstream graph node. Set `direction` to lock to an axis.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `targetPosition` | `vec2` | Target |
 | `weight` | `float` | Weight |
 
 
@@ -18,17 +17,22 @@ Enable drag interaction with optional axis lock and bounds
 
 | Port | Type | Description |
 |------|------|-------------|
-| `result` | `vec2` | Result |
+| `position` | `vec2` | Position |
+| `x` | `float` | X |
+| `y` | `float` | Y |
+| `isDragging` | `float` | Is Dragging |
+| `velocityX` | `float` | Velocity X |
+| `velocityY` | `float` | Velocity Y |
+| `resultX` | `float` | Result X |
+| `resultY` | `float` | Result Y |
 
 
 ## Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `lockX` | bool | `false` | Lock X |
-| `lockY` | bool | `false` | Lock Y |
-| `boundsMinX` | float | `99999` | Min X |
-| `boundsMaxX` | float | `99999` | Max X |
-| `boundsMinY` | float | `99999` | Min Y |
-| `boundsMaxY` | float | `99999` | Max Y |
+| `direction` | enum | `"both"` | Direction. Options: `both`, `horizontal`, `vertical` |
+| `selector` | string | `""` | Selector |
+| `inertia` | bool | `true` | Inertia |
+| `throwResistance` | float | `0.55` | Throw Resistance (min: 0) |
 

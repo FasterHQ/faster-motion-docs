@@ -1,6 +1,6 @@
 # Node Reference
 
-All 243 graph node types available in Faster Motion.
+All 248 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -40,40 +40,6 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Variant Stagger Animation](text/variantStaggerAnimation.md) | `variantStaggerAnimation` | shared | Fan a compound across N indexed DOM elements where each child has UNIQUE from/to values on shared channels. Per-child variation sibling of F324 staggerAnimation (which requires uniform values). Use for mouse-driven dispersals, hover-chaos grids, card-spread layouts, per-icon flutter — any "N siblings, same channels, different ranges". Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw). |
 | [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
 
-## [State machine](state-machine/)
-
-State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [SM Property Apply](state-machine/smPropertyApply.md) | `smPropertyApply` | canvas | Signal node — SM property writes are done, downstream can read safely |
-| [Pose Eval](state-machine/poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
-| [Blend Pose](state-machine/blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
-| [Masked Blend Pose](state-machine/maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
-| [Animated Parameter](state-machine/animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
-| [Additive Pose Blend](state-machine/additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
-| [Object Pose Eval](state-machine/objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
-| [Gradient Decompose](state-machine/gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
-| [Property Mask](state-machine/propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
-| [Object Blend](state-machine/objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
-| [Object Masked Blend](state-machine/objectMaskedBlend.md) | `objectMaskedBlend` | canvas | Blend two object pose bundles with per-object mask — unmasked objects pass through from A |
-| [Timeline Pose](state-machine/timelinePose.md) | `timelinePose` | canvas | Evaluates animation clip bone tracks at current Timeline progress. F316: weight gates contribution to additive blender (0 = rest pose, 1 = full, default 1). |
-| [Timeline State](state-machine/timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
-| [Remap Apply](state-machine/remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
-| [SM Parameter Store](state-machine/smParameterStore.md) | `smParameterStore` | canvas | Declarative parameter store — one dynamic output port per SM parameter. Receives writes from listeners, drivers, and audio bindings. |
-| [Layer Advance](state-machine/layerAdvance.md) | `layerAdvance` | canvas | Per-layer state machine solver — evaluates conditions, advances transitions, outputs current/previous state progress and weights. |
-| [State Apply](state-machine/stateApply.md) | `stateApply` | canvas | Reads layer state from LayerAdvanceNode, sets animation clip progress and applies state evaluation. |
-| [Blend Space 1D Eval](state-machine/blendSpace1DEval.md) | `blendSpace1DEval` | canvas | F266 Phase 3: pure 1D blend space evaluator. Wraps evaluateBlend1DTransforms(). Inputs: inputValue (axis parameter), progress. Output: per-object transform map blended between adjacent animations. |
-| [Blend Direct Eval](state-machine/blendDirectEval.md) | `blendDirectEval` | canvas | F266 Phase 3: pure direct-blend evaluator. Wraps evaluateBlendDirectTransforms(). Per-animation weight inputs (weight_<id>) drive sequential blend-on-top. Weights from parameters use normalized scale (value/100, clamped 0..1). |
-| [Blend Space 2D Eval](state-machine/blendSpace2DEval.md) | `blendSpace2DEval` | canvas | F266 Phase 3: 2D blend space graph citizen. Serializable and inspectable in FVE. Evaluator stub — 2D blend transform output is still produced by BlendSpace2D.apply() pending extraction of a pure helper (Phase 6+). |
-| [Reset Map](state-machine/resetMap.md) | `resetMap` | canvas | Applies animation reset maps during state transitions — properties animated by only one state get reset values during crossfade. |
-| [SM Hit Test](state-machine/smHitTest.md) | `smHitTest` | canvas | Translates pointer events + hit object IDs into per-target HitResult map for listener evaluation. |
-| [Listener Action](state-machine/listenerAction.md) | `listenerAction` | canvas | Routes listener actions into parameter writes (for SMParameterStoreNode) and side-effect actions (for audio/callback nodes). |
-| [SM Audio Action](state-machine/smAudioAction.md) | `smAudioAction` | canvas | Terminal node for audio side effects — owns HTMLAudioElement cache, handles play/pause/stop actions. |
-| [SM Callback Action](state-machine/smCallbackAction.md) | `smCallbackAction` | canvas | Terminal node for stateless one-shot callbacks — dispatches switchCamera, setSkin, openUrl, fireEvent, animationAction. |
-| [SM Post Advance](state-machine/smPostAdvance.md) | `smPostAdvance` | canvas | Post-advance coordinator — trigger consumption, reset maps application, solver reset signal. Runs after all layers complete. |
-| [SM Audio Binding](state-machine/smAudioBinding.md) | `smAudioBinding` | canvas | Reads frequency data from audio tracks, applies temporal smoothing, outputs parameter values for audio-reactive animations. |
-
 ## [Boundary](boundary/)
 
 Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribute writes, color writes, stagger writes, data writes.
@@ -107,6 +73,71 @@ Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribu
 | [Bone Render](boundary/boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
 | [Additive Property Write](boundary/additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |
 
+## [State machine](state-machine/)
+
+State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [SM Property Apply](state-machine/smPropertyApply.md) | `smPropertyApply` | canvas | Signal node — SM property writes are done, downstream can read safely |
+| [Pose Eval](state-machine/poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
+| [Blend Pose](state-machine/blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
+| [Masked Blend Pose](state-machine/maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
+| [Animated Parameter](state-machine/animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
+| [Additive Pose Blend](state-machine/additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
+| [Object Pose Eval](state-machine/objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
+| [Gradient Decompose](state-machine/gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
+| [Property Mask](state-machine/propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
+| [Object Blend](state-machine/objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
+| [Object Masked Blend](state-machine/objectMaskedBlend.md) | `objectMaskedBlend` | canvas | Blend two object pose bundles with per-object mask — unmasked objects pass through from A |
+| [Timeline State](state-machine/timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
+| [Remap Apply](state-machine/remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
+| [SM Parameter Store](state-machine/smParameterStore.md) | `smParameterStore` | canvas | Declarative parameter store — one dynamic output port per SM parameter. Receives writes from listeners, drivers, and audio bindings. |
+| [Layer Advance](state-machine/layerAdvance.md) | `layerAdvance` | canvas | Per-layer state machine solver — evaluates conditions, advances transitions, outputs current/previous state progress and weights. |
+| [State Apply](state-machine/stateApply.md) | `stateApply` | canvas | Reads layer state from LayerAdvanceNode, sets animation clip progress and applies state evaluation. |
+| [Blend Space 1D Eval](state-machine/blendSpace1DEval.md) | `blendSpace1DEval` | canvas | F266 Phase 3: pure 1D blend space evaluator. Wraps evaluateBlend1DTransforms(). Inputs: inputValue (axis parameter), progress. Output: per-object transform map blended between adjacent animations. |
+| [Blend Direct Eval](state-machine/blendDirectEval.md) | `blendDirectEval` | canvas | F266 Phase 3: pure direct-blend evaluator. Wraps evaluateBlendDirectTransforms(). Per-animation weight inputs (weight_<id>) drive sequential blend-on-top. Weights from parameters use normalized scale (value/100, clamped 0..1). |
+| [Blend Space 2D Eval](state-machine/blendSpace2DEval.md) | `blendSpace2DEval` | canvas | F266 Phase 3: 2D blend space graph citizen. Serializable and inspectable in FVE. Evaluator stub — 2D blend transform output is still produced by BlendSpace2D.apply() pending extraction of a pure helper (Phase 6+). |
+| [Reset Map](state-machine/resetMap.md) | `resetMap` | canvas | Applies animation reset maps during state transitions — properties animated by only one state get reset values during crossfade. |
+| [SM Hit Test](state-machine/smHitTest.md) | `smHitTest` | canvas | Translates pointer events + hit object IDs into per-target HitResult map for listener evaluation. |
+| [Listener Action](state-machine/listenerAction.md) | `listenerAction` | canvas | Routes listener actions into parameter writes (for SMParameterStoreNode) and side-effect actions (for audio/callback nodes). |
+| [SM Audio Action](state-machine/smAudioAction.md) | `smAudioAction` | canvas | Terminal node for audio side effects — owns HTMLAudioElement cache, handles play/pause/stop actions. |
+| [SM Callback Action](state-machine/smCallbackAction.md) | `smCallbackAction` | canvas | Terminal node for stateless one-shot callbacks — dispatches switchCamera, setSkin, openUrl, fireEvent, animationAction. |
+| [SM Post Advance](state-machine/smPostAdvance.md) | `smPostAdvance` | canvas | Post-advance coordinator — trigger consumption, reset maps application, solver reset signal. Runs after all layers complete. |
+| [SM Audio Binding](state-machine/smAudioBinding.md) | `smAudioBinding` | canvas | Reads frequency data from audio tracks, applies temporal smoothing, outputs parameter values for audio-reactive animations. |
+
+## [Animation](animation/)
+
+Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
+| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
+| [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step). |
+| [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
+| [Carousel Autoplay](animation/carouselAutoplay.md) | `carouselAutoplay` | shared | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
+| [Carousel Keyboard Nav](animation/carouselKeyboardNav.md) | `carouselKeyboardNav` | shared | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
+| [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
+| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
+| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
+| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
+| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
+| [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
+| [Clip Registry](animation/clipRegistry.md) | `clipRegistry` | shared | F342: graph-native publisher of AnimationClip references by id. One dynamic output port per clip (clip_${id}) carries the live AnimationClip reference. Replaces imperative TPN/OPE bind(clip) seams with port-routed clip identity. |
+| [Bone Clip Eval](animation/boneClipEval.md) | `boneClipEval` | shared | F342: evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Replaces TimelinePoseNode. Reads clip from a wired ClipRegistry port and rest baseline from a wired SkeletonSource port — no imperative bind(clip). |
+| [Object Clip Eval](animation/objectClipEval.md) | `objectClipEval` | shared | F342: evaluates an AnimationClip's object tracks at progress and outputs an absolute pose AttributeBundle (per-object x/y/rotation/scale/opacity + extended scalar props + text strings). Replaces ObjectPoseEvalNode's Timeline-only bindClip path. Reads clip + rest from typed ports; no imperative bindClip. |
+| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires directly into DOMColorWriteNode.color. Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
+| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
+| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
+| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
+| [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
+| [Clip Path Animation](animation/clipPathAnimation.md) | `clipPathAnimation` | shared | Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class. |
+| [Carousel Effect Animation](animation/carouselEffectAnimation.md) | `carouselEffectAnimation` | shared | An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class. |
+| [Slide Slot Animation](animation/slideSlotAnimation.md) | `slideSlotAnimation` | shared | A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class. |
+| [Dock To Animation](animation/dockToAnimation.md) | `dockToAnimation` | shared | Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class. |
+| [Indexed Dock Animation](animation/indexedDockAnimation.md) | `indexedDockAnimation` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. One authoring node replaces the canonical `domIndexedDock + domPoseWrite` chain. Used for typewriter cursors, tab underlines, focus rings, onboarding step indicators, carousel page dots — any "chrome follows active item in a list" pattern. Authors route offsetX to any CSS property via `channels` (default: translateX px). Compound: expanded into those two primitives at load time — no runtime class. |
+
 ## [Paths](paths/)
 
 Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, boolean ops, wiggle path, round corners, repeater, conform, and more.
@@ -138,35 +169,6 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 | [Morph Path Animation](paths/morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |
 
-## [Animation](animation/)
-
-Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
-| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
-| [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step). |
-| [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
-| [Carousel Autoplay](animation/carouselAutoplay.md) | `carouselAutoplay` | shared | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
-| [Carousel Keyboard Nav](animation/carouselKeyboardNav.md) | `carouselKeyboardNav` | shared | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
-| [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
-| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
-| [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
-| [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
-| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
-| [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
-| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires directly into DOMColorWriteNode.color. Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
-| [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
-| [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
-| [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
-| [Property Animation](animation/propertyAnimation.md) | `propertyAnimation` | shared | Animate one or more CSS properties on a target element, driven by a 0..1 progress input. Compound: expanded into `multiKeyframe + domPoseWrite` at load time — no runtime class. |
-| [Clip Path Animation](animation/clipPathAnimation.md) | `clipPathAnimation` | shared | Animate a CSS polygon() clip-path on a target element, driven by a 0..1 progress input. Each keyframe carries `values[]` (the polygon point coordinates). Compound: expanded into `clipPath + clipPathWrite` at load time — no runtime class. |
-| [Carousel Effect Animation](animation/carouselEffectAnimation.md) | `carouselEffectAnimation` | shared | An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class. |
-| [Slide Slot Animation](animation/slideSlotAnimation.md) | `slideSlotAnimation` | shared | A single slot in a seamlessPlayhead-driven carousel. Maps a per-slot window of the carousel playhead (e.g. [0.1, 1.1]) to a [0,1] slot-local progress (remap + fract), then animates CSS properties on the slot element via channels. One compound per slot collapses the canonical `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` chain that every carousel effect repeats per slide. Compound: expanded into those four primitives at load time — no runtime class. |
-| [Dock To Animation](animation/dockToAnimation.md) | `dockToAnimation` | shared | Dock a source DOM element onto a target DOM element, driven by a 0..1 progress input (0 = at rest, 1 = fully docked). Emits horizontal + vertical pixel offsets; authors route each offset to any CSS property via `channels`. Default maps offsetX → translateX(px) and offsetY → translateY(px) on the source element — override for axis-only docking, or to pipe the offset into marginLeft / mask-position / CSS custom vars / scale compensation, etc. Compound: expanded into `domDockTo + domPoseWrite` at load time — no runtime class. |
-| [Indexed Dock Animation](animation/indexedDockAnimation.md) | `indexedDockAnimation` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. One authoring node replaces the canonical `domIndexedDock + domPoseWrite` chain. Used for typewriter cursors, tab underlines, focus rings, onboarding step indicators, carousel page dots — any "chrome follows active item in a list" pattern. Authors route offsetX to any CSS property via `channels` (default: translateX px). Compound: expanded into those two primitives at load time — no runtime class. |
-
 ## [Inputs](inputs/)
 
 Nodes that read external signals into the graph: DOM events, mouse position, scroll progress, keyboard input, time, and other browser/device inputs.
@@ -193,6 +195,27 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
 | [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
 
+## [Skeleton](skeleton/)
+
+Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Skeleton Source](skeleton/skeletonSource.md) | `skeletonSource` | shared | Graph-native publisher of a Skeleton's rest pose. Loader calls bind(skeleton) once; the source pulls the rest bundle from skeleton.getRestBundle() (snapshot captured by skeleton.markRest() before IK solves). Output flows to APB.restBaseline / rig pose boundary through typed edges. |
+| [Bundle Source](skeleton/bundleSource.md) | `bundleSource` | shared | Graph-native publisher of an externally-built AttributeBundle. Used for scene-level multi-clip APBs whose rest baseline is computed dynamically (no Skeleton involved). Caller (scene-subgraph) calls bind(bundle) at synthesis time. |
+| [Rest Pose Bone](skeleton/restPoseBone.md) | `restPoseBone` | shared | Per-bone pure-FK node — reads pose at boneIndex, computes pre-override world matrix from parent. Paired with boneTransform. |
+| [Bone Transform](skeleton/boneTransform.md) | `boneTransform` | canvas | Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix |
+| [Bone Collector](skeleton/boneCollector.md) | `boneCollector` | canvas | Gather per-bone world matrices into AttributeBundle for IK solver |
+| [Skeleton Transform](skeleton/skeletonTransform.md) | `skeletonTransform` | canvas | Reads skeleton root transform each frame — feeds root bone parentWorldMatrix |
+| [IK Solve](skeleton/ikSolve.md) | `ikSolve` | canvas | Per-chain IK solver. Pure array-based FABRIK on AttributeBundle data. |
+| [FK Recompose](skeleton/fkRecompose.md) | `fkRecompose` | canvas | Reads a post-IK/physics bone pose bundle and outputs per-bone world matrices via full parent×local FK. One per IK/physics skeleton, lives at scene level (outside rig Module) so only one bundle wire crosses the Module boundary. |
+| [Jiggle Bone](skeleton/jiggleBone.md) | `jiggleBone` | canvas | 2D position spring — adds bouncy displacement to bone x/y from parent movement. |
+| [Spring Bone](skeleton/springBonePhysics.md) | `springBonePhysics` | canvas | Rotational spring — bone rotation follows parent with spring dynamics, gravity, and wind. |
+| [Chain Physics](skeleton/chainPhysics.md) | `chainPhysics` | canvas | Verlet chain simulation for hair, tails, ropes. Fixed timestep with distance/angular constraints. |
+| [IK Target](skeleton/ikTarget.md) | `ikTarget` | canvas | Boundary node — bridges scene-object position into IK solve target port. |
+| [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
+| [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
+
 ## [Math](math/)
 
 Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
@@ -212,25 +235,6 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Float Array Pick](math/floatArrayPick.md) | `floatArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects. |
 | [Color Array Pick](math/colorArrayPick.md) | `colorArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\s sourceIndex or variantStagger\s per-child index. |
 
-## [Skeleton](skeleton/)
-
-Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Rest Pose Bone](skeleton/restPoseBone.md) | `restPoseBone` | shared | Per-bone pure-FK node — reads pose at boneIndex, computes pre-override world matrix from parent. Paired with boneTransform. |
-| [Bone Transform](skeleton/boneTransform.md) | `boneTransform` | canvas | Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix |
-| [Bone Collector](skeleton/boneCollector.md) | `boneCollector` | canvas | Gather per-bone world matrices into AttributeBundle for IK solver |
-| [Skeleton Transform](skeleton/skeletonTransform.md) | `skeletonTransform` | canvas | Reads skeleton root transform each frame — feeds root bone parentWorldMatrix |
-| [IK Solve](skeleton/ikSolve.md) | `ikSolve` | canvas | Per-chain IK solver. Pure array-based FABRIK on AttributeBundle data. |
-| [FK Recompose](skeleton/fkRecompose.md) | `fkRecompose` | canvas | Reads a post-IK/physics bone pose bundle and outputs per-bone world matrices via full parent×local FK. One per IK/physics skeleton, lives at scene level (outside rig Module) so only one bundle wire crosses the Module boundary. |
-| [Jiggle Bone](skeleton/jiggleBone.md) | `jiggleBone` | canvas | 2D position spring — adds bouncy displacement to bone x/y from parent movement. |
-| [Spring Bone](skeleton/springBonePhysics.md) | `springBonePhysics` | canvas | Rotational spring — bone rotation follows parent with spring dynamics, gravity, and wind. |
-| [Chain Physics](skeleton/chainPhysics.md) | `chainPhysics` | canvas | Verlet chain simulation for hair, tails, ropes. Fixed timestep with distance/angular constraints. |
-| [IK Target](skeleton/ikTarget.md) | `ikTarget` | canvas | Boundary node — bridges scene-object position into IK solve target port. |
-| [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
-| [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
-
 ## [Constraints](constraints/)
 
 Position, rotation, and transform constraints that enforce spatial relationships between objects: follow, aim, distance clamp, drag, path follow, camera bounds.
@@ -244,7 +248,7 @@ Position, rotation, and transform constraints that enforce spatial relationships
 | [Bone Aim](constraints/boneAim.md) | `boneAim` | canvas | Aim bone at target position |
 | [Camera Follow](constraints/cameraFollow.md) | `cameraFollow` | shared | Smoothly follow target with deadzone and lookahead |
 | [Camera Bounds](constraints/cameraBounds.md) | `cameraBounds` | shared | Clamp camera position and zoom to bounds |
-| [Draggable](constraints/draggable.md) | `draggable` | shared | Enable drag interaction with optional axis lock and bounds |
+| [Draggable](constraints/draggable.md) | `draggable` | shared | Wrap a DOM element or canvas object as draggable, with optional inertia. Outputs current position + drag state + velocity, suitable for driving any downstream graph node. Set `direction` to lock to an axis. |
 | [Scroll Constraint](constraints/scroll.md) | `scroll` | shared | Scrollable container with bounds and momentum |
 | [Scroll Bar](constraints/scrollBar.md) | `scrollBar` | shared | Scroll bar indicator that tracks scroll position |
 | [Path Follow](constraints/pathFollow.md) | `pathFollow` | shared | Follow a path curve at given progress |
@@ -266,6 +270,22 @@ Point distribution generators: grid, circle, linear, random, fibonacci spiral, p
 | [Instance Stagger Compute](distribution/instanceStaggerCompute.md) | `instanceStaggerCompute` | canvas | Per-instance staggered offset/scale animation. Proves Mat4 pipeline works for non-text domains. |
 | [Instance Apply](distribution/instanceApply.md) | `instanceApply` | canvas | F264 Phase 2: Writes Mat4TransformBundle per-instance transforms to GeneratorNode clone STNs via SceneTransformNode.setPose. Decomposes 4×4 → 2D pose per clone — full port contract flow, no imperative HeadlessObject mutation. |
 
+## [Procedural](procedural/)
+
+Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Inertia](procedural/inertia.md) | `inertia` | shared | F334 — exponential-decay tween. Animates a value from `from` under throw physics with a starting velocity. Optional snap targets land the natural rest position on the nearest snap value while preserving the decel curve. Use as a standalone "throw a property" driver independent of drag. |
+| [Wiggle](procedural/wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
+| [Noise](procedural/noise.md) | `noise` | shared | Multi-octave simplex noise |
+| [Spring](procedural/spring.md) | `spring` | shared | Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value). |
+| [Oscillator](procedural/oscillator.md) | `oscillator` | shared | Periodic wave generator (sine, triangle, square, sawtooth) |
+| [Modulate](procedural/modulate.md) | `modulate` | shared | Remap value through a piecewise-linear curve. Defaults to replace composition. |
+| [Ring (Delay)](procedural/ring.md) | `ring` | shared | Ring buffer delay — output a past value. Defaults to replace composition. |
+| [Random](procedural/random.md) | `random` | shared | Seeded random value per frame. Uniform or gaussian distribution. |
+| [Stagger Driver](procedural/staggerDriver.md) | `staggerDriver` | shared | Index-based wave propagation. Uses ForEach element context for per-instance offset. |
+
 ## [Integration](integration/)
 
 Graph composition and data flow: ForEach stamping, scene composition, parameter store read/write, float/value sources.
@@ -281,21 +301,6 @@ Graph composition and data flow: ForEach stamping, scene composition, parameter 
 | [For Each](integration/forEach.md) | `forEach` | shared | Stamp a preset per target object. Stamped nodes are read-only. |
 | [Scene](integration/sceneGraph.md) | `sceneGraph` | canvas | Composable scene root — encapsulates an entire .fmtion scene as a single node with promoted ports. |
 | [Dirty Trigger](integration/dirtyTrigger.md) | `dirtyTrigger` | shared | External dirtying entry point. No-op evaluate — triggers downstream re-evaluation. |
-
-## [Procedural](procedural/)
-
-Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Wiggle](procedural/wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
-| [Noise](procedural/noise.md) | `noise` | shared | Multi-octave simplex noise |
-| [Spring](procedural/spring.md) | `spring` | shared | Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value). |
-| [Oscillator](procedural/oscillator.md) | `oscillator` | shared | Periodic wave generator (sine, triangle, square, sawtooth) |
-| [Modulate](procedural/modulate.md) | `modulate` | shared | Remap value through a piecewise-linear curve. Defaults to replace composition. |
-| [Ring (Delay)](procedural/ring.md) | `ring` | shared | Ring buffer delay — output a past value. Defaults to replace composition. |
-| [Random](procedural/random.md) | `random` | shared | Seeded random value per frame. Uniform or gaussian distribution. |
-| [Stagger Driver](procedural/staggerDriver.md) | `staggerDriver` | shared | Index-based wave propagation. Uses ForEach element context for per-instance offset. |
 
 ## [Effects](effects/)
 
