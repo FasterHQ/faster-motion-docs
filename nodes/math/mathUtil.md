@@ -4,7 +4,7 @@
 **Category:** math  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.).
+Single Float→Float math operation. Picks unary (`abs`, `round`, `sqrt`, ...) or binary (`add`, `subtract`, `multiply`) ops; binary ops use `value` + `b`. Range ops (`clamp`, `normalize`) use `value` + `min` + `max`.
 
 ## Inputs
 

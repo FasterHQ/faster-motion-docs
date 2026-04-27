@@ -4,23 +4,32 @@
 **Category:** inputs  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Pointer velocity magnitude (-1 to 1)
+Per-frame pointer velocity. One node emits five outputs in parallel — wire whichever fits.
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `mouseX` | `float` | Mouse X |
+| `mouseY` | `float` | Mouse Y |
+
 
 ## Outputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `value` | `float` | Value |
+| `valueX` | `float` | Value X (centered) |
+| `valueY` | `float` | Value Y (centered) |
+| `absoluteX` | `float` | Absolute X |
+| `absoluteY` | `float` | Absolute Y |
+| `magnitude` | `float` | Magnitude |
 
 
 ## Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `axis` | enum | `"x"` | Axis. Options: `x`, `y` |
 | `sensitivity` | float | `1` | Sensitivity (min: 0.01) |
+| `smoothing` | float | `0` | Smoothing (min: 0, max: 1) |
+| `decay` | float | `0` | Decay (min: 0, max: 1) |
 

@@ -4,7 +4,7 @@
 **Category:** animation  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Playback sequencer — self-advancing or externally driven (scroll, parameter)
+Playback clock that emits a 0..1 `progress` over `duration` seconds. Self-advances when `autoplay`; can be externally driven by `play` / `pause` / `seek` pulses or a `progress` input.
 
 ## Inputs
 
@@ -15,6 +15,7 @@ Playback sequencer — self-advancing or externally driven (scroll, parameter)
 | `pause` | `float` | Pause |
 | `seek` | `float` | Seek |
 | `gate` | `float` | Gate |
+| `reset` | `float` | Reset |
 
 
 ## Outputs

@@ -10,45 +10,37 @@
  *   - nodes/README.md (master index)
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
+import { execFileSync } from 'child_process';
 
 const FM_ROOT = join(dirname(new URL(import.meta.url).pathname), '../../faster-motion');
 const DOCS_ROOT = join(dirname(new URL(import.meta.url).pathname), '..');
 const METADATA_PATH = join(FM_ROOT, 'src/core/NodeMetadata.ts');
 
-// ── Read & parse NodeMetadata.ts ──────────────────────────────────────────
+// ── Load NODE_METADATA via tsx ────────────────────────────────────────────
+// Replaces a fragile regex/Function() preprocessor that broke on TypeScript
+// type assertions (`as const`), unbalanced brackets inside string literals,
+// and arbitrary computed initializers (e.g. `Array.from(...)`). tsx executes
+// the real .ts file, so any expression the FM source can compile we get
+// back as a real JS value.
 
-const source = readFileSync(METADATA_PATH, 'utf-8');
-
-// Extract the array literal from `export const NODE_METADATA: NodeTypeDescriptor[] = [ ... ];`
-const startMarker = 'export const NODE_METADATA: NodeTypeDescriptor[] = [';
-const startIdx = source.indexOf(startMarker);
-if (startIdx === -1) throw new Error('Could not find NODE_METADATA in source');
-
-// Find matching closing bracket
-let depth = 0;
-let arrayStart = -1;
-for (let i = startIdx + startMarker.length - 1; i < source.length; i++) {
-  if (source[i] === '[') { depth++; if (arrayStart === -1) arrayStart = i; }
-  if (source[i] === ']') { depth--; if (depth === 0) { var arrayEnd = i + 1; break; } }
-}
-
-let arrayStr = source.slice(arrayStart, arrayEnd);
-
-// Clean up TypeScript artifacts for eval:
-// - Remove single-line comments (// ...)
-arrayStr = arrayStr.replace(/\/\/[^\n]*/g, '');
-// - Remove Infinity/-Infinity (not valid JSON, replace with large number)
-arrayStr = arrayStr.replace(/-?Infinity/g, '99999');
-// - Wrap unquoted keys in quotes for JSON
-// Actually, let's use Function() to evaluate it as JS since it uses JS object literals
-const evalStr = `return ${arrayStr}`;
 let nodes;
 try {
-  nodes = new Function(evalStr)();
+  const stdout = execFileSync(
+    'npx',
+    ['--no-install', 'tsx', '--eval',
+      // FM is a CJS package (no "type": "module"), so tsx's dynamic
+      // import returns `{ default: { NODE_METADATA, ... } }`. Read
+      // through `default` and fall back to the named export for forward
+      // compat if/when FM flips to ESM.
+      `import('${METADATA_PATH}').then(m => process.stdout.write(JSON.stringify((m.default && m.default.NODE_METADATA) || m.NODE_METADATA)))`,
+    ],
+    { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'inherit'], maxBuffer: 32 * 1024 * 1024 },
+  );
+  nodes = JSON.parse(stdout);
 } catch (e) {
-  console.error('Failed to parse NODE_METADATA:', e.message);
+  console.error('Failed to load NODE_METADATA via tsx:', e.message);
   process.exit(1);
 }
 

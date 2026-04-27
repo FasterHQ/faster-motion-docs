@@ -1,8 +1,46 @@
 # Node Reference
 
-All 255 graph node types available in Faster Motion.
+All 265 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
+
+## [Inputs](inputs/)
+
+Nodes that read external signals into the graph: DOM events, mouse position, scroll progress, keyboard input, time, and other browser/device inputs.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Scroll Input](inputs/scrollInput.md) | `scrollInput` | dom | Scroll progress (0-1) from page scroll position |
+| [Time Input](inputs/timeInput.md) | `timeInput` | shared | Elapsed time to normalized progress (0-1) |
+| [Mouse Input](inputs/mouseInput.md) | `mouseInput` | dom | Pointer position (0-1) on selected axis |
+| [Mouse Velocity](inputs/mouseVelocity.md) | `mouseVelocity` | dom | Per-frame pointer velocity. One node emits five outputs in parallel — wire whichever fits. |
+| [Distance Input](inputs/distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
+| [Drag Input](inputs/dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
+| [Scroll Event](inputs/scrollEvent.md) | `scrollEvent` | shared | F349 — edge-pulse detector on a 0..1 progress signal. Emits 1-frame pulses on threshold crossings: `entered` (forward across startThreshold), `left` (forward across endThreshold), `enteredBack` (backward across endThreshold), `leftBack` (backward across startThreshold). Pair with `pulseTween` and/or `parameterAction(set/toggle)` to recover trigger-mode toggleActions semantics, or with `parameterAction(set, amount=1)` on `entered` only to recover an observe-once latch. |
+| [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect. |
+| [Pin](inputs/pin.md) | `pin` | shared | F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnchorNode) + progress; runs the 3-state lifecycle: BEFORE (progress ≤ 0) = element natural inside spacer; PINNED (0 < progress < 1) = element position:fixed at viewport top; AFTER (progress ≥ 1) = element at bottom of spacer via padding-top. Spacer + handle ownership lives on PinAnchorNode (loader-emitted). Subsumes scrollPin. |
+| [Pointer](inputs/pointer.md) | `pointer` | dom | Tracks pointer position over an element. One node emits all coordinate spaces in parallel — wire whichever output the consumer needs. |
+| [Observer](inputs/observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
+| [Pulse Counter](inputs/pulseCounter.md) | `pulseCounter` | shared | Pulse-driven integer counter with optional wrap. Each rising edge of `pulse` advances `index` by `step`; rising edge of `reset` returns `index` to `start`. With `wrap=true`, output is folded into [start, start+max) via positive modulo (so negative steps wrap correctly). |
+| [Threshold Pulse](inputs/thresholdPulse.md) | `thresholdPulse` | shared | Emits a single-frame pulse when `value` crosses `threshold`. `mode` chooses semantics: `edge` (default) fires once per crossing then suppresses until value drops below `threshold - hysteresis` and re-crosses; `auto` fires periodically paced by `cooldownMs` for as long as value stays past threshold. `direction` selects rising / falling / both. Continuous comparator output `isAbove` is raw (not gated). First-frame above-threshold does NOT fire (cold-start state-snap). |
+| [Latch](inputs/latch.md) | `latch` | shared | Sample-and-hold on rising-edge `pulse`. Captures the live `value` at the pulse moment and freezes it on `held`. |
+| [Latch (2D)](inputs/latch2D.md) | `latch2D` | shared | Atomic sample-and-hold for a scalar X+Y pair. On rising-edge `pulse`, captures both axes from the SAME frame. |
+| [Latch (Vec2)](inputs/latchVec2.md) | `latchVec2` | shared | Vec2 sample-and-hold. Both components captured atomically on the rising-edge `pulse`. See `latch` for the float variant. |
+| [Pulse Router](inputs/pulseRouter.md) | `pulseRouter` | shared | Demultiplex one pulse to one of `count` output channels by integer `index`. Rising edge on `pulse` produces a single-frame spike on `out{Math.round(index)}`; out-of-range follows `defaultRoute` (set to -1 to drop). |
+| [Accumulate Pulse](inputs/accumulatePulse.md) | `accumulatePulse` | shared | Integrates `value` per frame and emits a `pulse` each time the running total reaches `threshold`, then subtracts threshold from the accumulator (overshoot carries forward). `maxBacklog` clamps post-fire overshoot so a one-frame burst cannot queue an unbounded backlog. |
+| [Random Index](inputs/randomIndex.md) | `randomIndex` | shared | Sister of `pulseCounter`: picks a random integer in [0, count) on each rising-edge `pulse`. Pair with `pulseRouter` for non-rhythmic dispatch where round-robin reads as too mechanical. Deterministic — uses a seeded mulberry32 PRNG so seek + replay produce identical sequences. |
+| [Random Float](inputs/randomFloat.md) | `randomFloat` | shared | Picks a uniform random float in [`min`, `max`) on each rising-edge `pulse` and holds it until the next pulse. Wire into a tween's `to` for per-spawn variety (random rotation, scale variance, fall distance). |
+| [Pulse Dispatch](inputs/pulseDispatch.md) | `pulseDispatch` | shared | One pulse in, one of N channels out per pulse. `strategy` picks the dispatch rule. Replaces the accumulator + counter + router triplet. |
+| [Event Listener](inputs/eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |
+| [Keyboard Listener](inputs/keyboardListener.md) | `keyboardListener` | dom | Keyboard key press/release to graph signal |
+| [Text Input](inputs/textInput.md) | `textInput` | canvas | Interactive text field with cursor and selection |
+| [Hover](inputs/hover.md) | `hover` | shared | mouseenter/mouseleave with smooth 0→1 transition over duration. |
+| [DOM Query Size](inputs/domQuerySize.md) | `domQuerySize` | shared | Counts DOM elements matching a CSS selector at bind time. Pairs with forEach-driven cluster math: feed `count` into a singleton expression that needs to know N (e.g. dock cluster bounds) so the graph-side N stays in lockstep with the DOM-side icon count — author no longer has to keep a hardcoded `N` in sync with the HTML. |
+| [Distance](inputs/distance.md) | `distance` | shared | Mouse-to-element-rect proximity. Outputs 0 (far) to 1 (touching) with falloff. |
+| [Scroll Progress](inputs/scrollProgress.md) | `scrollProgress` | dom | Outputs normalized scroll position [0, 1]. Drive text/instance animations from scroll. |
+| [Mouse Progress](inputs/mouseProgress.md) | `mouseProgress` | shared | Outputs normalized mouse position [0, 1] relative to a target element or viewport. |
+| [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
+| [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
 
 ## [Animation](animation/)
 
@@ -12,24 +50,24 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 |------|------|---------|-------------|
 | [Scroll To](animation/scrollTo.md) | `scrollTo` | shared | F337 — animated scroll-to. Trigger-launched tween over the scroller's scrollTop. Resolves the target Y from a CSS selector (or "top" / "bottom") at trigger time, lerps from current scroll through the configured ease, outputs a `value` to feed a domPropertyWrite(scrollTop). Pure-graph; no imperative API. |
 | [Bool Tween](animation/boolTween.md) | `boolTween` | shared | Smoothly tween a 0..1 progress toward a bool target over a fixed duration. Used to drive DOM animations from bool parameters (hover/click toggles). Emits linear progress so downstream multiKeyframe can carry the ease curve. |
-| [Timeline](animation/timeline.md) | `timeline` | shared | Playback sequencer — self-advancing or externally driven (scroll, parameter) |
+| [Timeline](animation/timeline.md) | `timeline` | shared | Playback clock that emits a 0..1 `progress` over `duration` seconds. Self-advances when `autoplay`; can be externally driven by `play` / `pause` / `seek` pulses or a `progress` input. |
 | [Seamless Playhead](animation/seamlessPlayhead.md) | `seamlessPlayhead` | shared | Pure-math playhead for seamless infinite loops. Maps progress + iteration to a rawSequence-equivalent playhead time; slideOffset nudges playhead by one spacing-unit per step (keyboard / autoplay step). |
 | [Carousel Slide Local Time](animation/carouselSlideLocalTime.md) | `carouselSlideLocalTime` | shared | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
 | [Carousel Autoplay](animation/carouselAutoplay.md) | `carouselAutoplay` | shared | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
 | [Carousel Keyboard Nav](animation/carouselKeyboardNav.md) | `carouselKeyboardNav` | shared | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
 | [Carousel Wrap Counter](animation/carouselWrapCounter.md) | `carouselWrapCounter` | shared | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
-| [Pulse Tween](animation/pulseTween.md) | `pulseTween` | shared | F349 — one-shot 0→1 clock controlled by event pulses. Each input is rising-edge-detected: `play` advances toward 1, `reverse` advances toward 0, `restart` resets to 0 and plays forward, `pause` freezes, `resume` un-freezes. Output `progress` is the eased value; `playing` is 1 while advancing. Maps the GSAP `toggleActions` model onto graph ports. Distinct from the stateless `tween` interpolator (which is a pure function of input progress) — pulseTween OWNS the progress. |
-| [Tween](animation/tween.md) | `tween` | shared | A→B interpolation with easing — stateless, pure function of progress |
+| [Pulse Tween](animation/pulseTween.md) | `pulseTween` | shared | F349 — one-shot 0→1 clock controlled by event pulses. Each input is rising-edge-detected: `play` advances toward 1, `reverse` advances toward 0, `restart` resets to 0 and plays forward, `pause` freezes, `resume` un-freezes. Output `progress` is the eased value; `playing` is 1 while advancing. Maps the toggle-actions model (play / reverse / pause / resume / restart on independent rising-edge inputs) onto graph ports. Distinct from the stateless `tween` interpolator (which is a pure function of input progress) — pulseTween OWNS the progress. |
+| [Tween](animation/tween.md) | `tween` | shared | Stateless A→B interpolation with easing — pure function of `progress`. |
 | [Keyframe](animation/keyframe.md) | `keyframe` | shared | Multi-stop interpolation with per-segment easing |
 | [Stagger](animation/stagger.md) | `stagger` | shared | Per-element timing offset using Element Context (index, count) |
-| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space |
+| [Color Tween](animation/colorTween.md) | `colorTween` | shared | Perceptually uniform color interpolation in OKLab space. Emits a packed `color` bundle for direct wiring, plus individual r/g/b channels for legacy consumers. |
 | [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
 | [Clip Registry](animation/clipRegistry.md) | `clipRegistry` | shared | F342: graph-native publisher of AnimationClip references by id. One dynamic output port per clip (clip_${id}) carries the live AnimationClip reference. Replaces imperative TPN/OPE bind(clip) seams with port-routed clip identity. |
 | [Bone Clip Eval](animation/boneClipEval.md) | `boneClipEval` | shared | F342: evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Replaces TimelinePoseNode. Reads clip from a wired ClipRegistry port and rest baseline from a wired SkeletonSource port — no imperative bind(clip). |
 | [State Transforms Mux](animation/stateTransformsMux.md) | `stateTransformsMux` | shared | F345: selects an SM layer's active state's transforms by id. Reads currentStateId from LayerAdvanceNode + per-state transforms from dynamic transforms_${stateId} input ports wired from per-state evaluator nodes; outputs the active state's transforms. Replaces PoseEvalNode's imperative layer.getCurrentState().clip read. |
 | [State Anim Eval](animation/stateAnimEval.md) | `stateAnimEval` | shared | F345: evaluates a single SM animation state's clip at progress and outputs a transforms map. Reads clip from a wired ClipRegistry port. The downstream StateTransformsMux selects the active state's output by currentStateId. Replaces PoseEvalNode's imperative state.clip read. |
 | [Object Clip Eval](animation/objectClipEval.md) | `objectClipEval` | shared | F342: evaluates an AnimationClip's object tracks at progress and outputs an absolute pose AttributeBundle (per-object x/y/rotation/scale/opacity + extended scalar props + text strings). Replaces ObjectPoseEvalNode's Timeline-only bindClip path. Reads clip + rest from typed ports; no imperative bindClip. |
-| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires directly into DOMColorWriteNode.color. Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
+| [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires into a `domPoseWrite` color-typed property port. Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
 | [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
 | [Clip Path](animation/clipPath.md) | `clipPath` | shared | Keyframed polygon clip-path with structured point data. Interpolates between polygon keyframe stops — outputs typed ClipPathPoints for visual per-point editing in FVE. |
 | [Multi Keyframe](animation/multiKeyframe.md) | `multiKeyframe` | shared | Multi-channel keyframe interpolation — one progress input, N float outputs with per-channel per-segment easing. Channels defined in params, output ports created dynamically. |
@@ -76,39 +114,6 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Variant Stagger Animation](text/variantStaggerAnimation.md) | `variantStaggerAnimation` | shared | Fan a compound across N indexed DOM elements where each child has UNIQUE from/to values on shared channels. Per-child variation sibling of F324 staggerAnimation (which requires uniform values). Use for mouse-driven dispersals, hover-chaos grids, card-spread layouts, per-icon flutter — any "N siblings, same channels, different ranges". Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw). |
 | [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
 
-## [Boundary](boundary/)
-
-Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribute writes, color writes, stagger writes, data writes.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Object Position](boundary/objectPosition.md) | `objectPosition` | canvas | Read world position of a scene object |
-| [Position Write](boundary/positionWrite.md) | `positionWrite` | canvas | Write world-space position to a scene object |
-| [Transform Read](boundary/transformRead.md) | `transformRead` | canvas | Read full transform (position + rotation + scale) of a scene object |
-| [Transform Write](boundary/transformWrite.md) | `transformWrite` | canvas | Write full transform to a scene object |
-| [Property Write](boundary/propertyWrite.md) | `propertyWrite` | canvas | Write a float value to any object property |
-| [Data Write](boundary/dataWrite.md) | `dataWrite` | canvas | Write any-typed value to a canvas object property |
-| [DOM Property Write](boundary/domPropertyWrite.md) | `domPropertyWrite` | dom | Write a float value to a CSS property, transform, attribute, or textContent on a DOM element |
-| [Stagger Write](boundary/staggerWrite.md) | `staggerWrite` | dom | Batched stagger animation — one node handles all elements matching a selector with per-element timing offset |
-| [DOM Dock To](boundary/domDockTo.md) | `domDockTo` | shared | Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY. |
-| [DOM Indexed Dock](boundary/domIndexedDock.md) | `domIndexedDock` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. Sibling to domDockTo (which docks onto a static target). Used for typewriter cursors, scanning highlights, focus rings, and any "park X on the active item in a sequence" effect. |
-| [DOM String Write](boundary/domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
-| [DOM Stage Preset](boundary/domStagePreset.md) | `domStagePreset` | shared | One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup. |
-| [DOM Color Write](boundary/domColorWrite.md) | `domColorWrite` | dom | Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input. |
-| [Scene Transform](boundary/sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
-| [Object Property Read](boundary/objectPropertyRead.md) | `objectPropertyRead` | canvas | Read a runtime object property (bidirectional binding read side). |
-| [Layout Compute](boundary/layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
-| [Mask Sync](boundary/maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
-| [Camera](boundary/camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
-| [Switch Gate](boundary/switchGate.md) | `switchGate` | shared | Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node. |
-| [Clip Path Write](boundary/clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
-| [DOM Pose Write](boundary/domPoseWrite.md) | `domPoseWrite` | shared | Write multiple float values to CSS properties on a single DOM element. Transform components route through the accumulator, other properties go through DOMBatcher. |
-| [DOM Attribute Read](boundary/domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM value from an element at bind time and outputs it as a string. `readMode: attribute` (default) reads via getAttribute — SVG d/viewBox/points, data-* attributes, aria-* attributes. `readMode: textContent` reads el.textContent — used for i18n-friendly text animations where the translatable string lives in the DOM. Static read. Boundary counterpart to DOMStringWriteNode. |
-| [DOM String Array Read](boundary/domStringArrayRead.md) | `domStringArrayRead` | shared | Reads textContent (or an attribute) from EVERY element matching a selector, emits the results as a stringArray. Purpose: i18n-friendly multi-source text animations — the HTML owns every translatable string, the .fmtion carries only the recipe. Static read at bind time via querySelectorAll; document-order matches. |
-| [Scene Render](boundary/sceneRender.md) | `sceneRender` | canvas | F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2. |
-| [Bone Render](boundary/boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
-| [Additive Property Write](boundary/additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |
-
 ## [State machine](state-machine/)
 
 State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.
@@ -142,6 +147,38 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [SM Post Advance](state-machine/smPostAdvance.md) | `smPostAdvance` | canvas | Post-advance coordinator — trigger consumption, reset maps application, solver reset signal. Runs after all layers complete. |
 | [SM Audio Binding](state-machine/smAudioBinding.md) | `smAudioBinding` | canvas | Reads frequency data from audio tracks, applies temporal smoothing, outputs parameter values for audio-reactive animations. |
 
+## [Boundary](boundary/)
+
+Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribute writes, color writes, stagger writes, data writes.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Object Position](boundary/objectPosition.md) | `objectPosition` | canvas | Read world position of a scene object |
+| [Position Write](boundary/positionWrite.md) | `positionWrite` | canvas | Write world-space position to a scene object |
+| [Transform Read](boundary/transformRead.md) | `transformRead` | canvas | Read full transform (position + rotation + scale) of a scene object |
+| [Transform Write](boundary/transformWrite.md) | `transformWrite` | canvas | Write full transform to a scene object |
+| [Property Write](boundary/propertyWrite.md) | `propertyWrite` | canvas | Write a float value to any object property |
+| [Data Write](boundary/dataWrite.md) | `dataWrite` | canvas | Write any-typed value to a canvas object property |
+| [DOM Property Write](boundary/domPropertyWrite.md) | `domPropertyWrite` | dom | Write a float value to a CSS property, transform, attribute, or textContent on a DOM element |
+| [Stagger Write](boundary/staggerWrite.md) | `staggerWrite` | dom | Batched stagger animation — one node handles all elements matching a selector with per-element timing offset |
+| [DOM Dock To](boundary/domDockTo.md) | `domDockTo` | shared | Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY. |
+| [DOM Indexed Dock](boundary/domIndexedDock.md) | `domIndexedDock` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. Sibling to domDockTo (which docks onto a static target). Used for typewriter cursors, scanning highlights, focus rings, and any "park X on the active item in a sequence" effect. |
+| [DOM String Write](boundary/domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
+| [DOM Stage Preset](boundary/domStagePreset.md) | `domStagePreset` | shared | One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup. |
+| [Scene Transform](boundary/sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
+| [Object Property Read](boundary/objectPropertyRead.md) | `objectPropertyRead` | canvas | Read a runtime object property (bidirectional binding read side). |
+| [Layout Compute](boundary/layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
+| [Mask Sync](boundary/maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
+| [Camera](boundary/camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
+| [Switch Gate](boundary/switchGate.md) | `switchGate` | shared | Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node. |
+| [Clip Path Write](boundary/clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
+| [DOM Pose Write](boundary/domPoseWrite.md) | `domPoseWrite` | shared | Boundary node: writes one or more float values to CSS properties on a target DOM element. Pick which properties to expose via the picker — each becomes an input port wired from upstream tweens / latches / math. |
+| [DOM Attribute Read](boundary/domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM value from an element at bind time and outputs it as a string. `readMode: attribute` (default) reads via getAttribute — SVG d/viewBox/points, data-* attributes, aria-* attributes. `readMode: textContent` reads el.textContent — used for i18n-friendly text animations where the translatable string lives in the DOM. Static read. Boundary counterpart to DOMStringWriteNode. |
+| [DOM String Array Read](boundary/domStringArrayRead.md) | `domStringArrayRead` | shared | Reads textContent (or an attribute) from EVERY element matching a selector, emits the results as a stringArray. Purpose: i18n-friendly multi-source text animations — the HTML owns every translatable string, the .fmtion carries only the recipe. Static read at bind time via querySelectorAll; document-order matches. |
+| [Scene Render](boundary/sceneRender.md) | `sceneRender` | canvas | F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2. |
+| [Bone Render](boundary/boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
+| [Additive Property Write](boundary/additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |
+
 ## [Paths](paths/)
 
 Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, boolean ops, wiggle path, round corners, repeater, conform, and more.
@@ -172,33 +209,6 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Merge Paths](paths/mergePaths.md) | `mergePaths` | shared | Boolean ops (union/intersect/subtract/exclude) via clipper2. |
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 | [Morph Path Animation](paths/morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |
-
-## [Inputs](inputs/)
-
-Nodes that read external signals into the graph: DOM events, mouse position, scroll progress, keyboard input, time, and other browser/device inputs.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Scroll Input](inputs/scrollInput.md) | `scrollInput` | dom | Scroll progress (0-1) from page scroll position |
-| [Time Input](inputs/timeInput.md) | `timeInput` | shared | Elapsed time to normalized progress (0-1) |
-| [Mouse Input](inputs/mouseInput.md) | `mouseInput` | dom | Pointer position (0-1) on selected axis |
-| [Mouse Velocity](inputs/mouseVelocity.md) | `mouseVelocity` | dom | Pointer velocity magnitude (-1 to 1) |
-| [Distance Input](inputs/distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
-| [Drag Input](inputs/dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
-| [Scroll Event](inputs/scrollEvent.md) | `scrollEvent` | shared | F349 — edge-pulse detector on a 0..1 progress signal. Emits 1-frame pulses on threshold crossings: `entered` (forward across startThreshold), `left` (forward across endThreshold), `enteredBack` (backward across endThreshold), `leftBack` (backward across startThreshold). Pair with `pulseTween` and/or `parameterAction(set/toggle)` to recover trigger-mode toggleActions semantics, or with `parameterAction(set, amount=1)` on `entered` only to recover an observe-once latch. |
-| [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect. |
-| [Pin](inputs/pin.md) | `pin` | shared | F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnchorNode) + progress; runs the 3-state lifecycle: BEFORE (progress ≤ 0) = element natural inside spacer; PINNED (0 < progress < 1) = element position:fixed at viewport top; AFTER (progress ≥ 1) = element at bottom of spacer via padding-top. Spacer + handle ownership lives on PinAnchorNode (loader-emitted). Subsumes scrollPin. |
-| [Pointer](inputs/pointer.md) | `pointer` | dom | Track pointer position — outputs x, y, normalized, isInside |
-| [Observer](inputs/observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
-| [Event Listener](inputs/eventListener.md) | `eventListener` | dom | DOM event to graph signal (click, hover, etc.) |
-| [Keyboard Listener](inputs/keyboardListener.md) | `keyboardListener` | dom | Keyboard key press/release to graph signal |
-| [Text Input](inputs/textInput.md) | `textInput` | canvas | Interactive text field with cursor and selection |
-| [Hover](inputs/hover.md) | `hover` | shared | mouseenter/mouseleave with smooth 0→1 transition over duration. |
-| [Distance](inputs/distance.md) | `distance` | shared | Mouse-to-element-rect proximity. Outputs 0 (far) to 1 (touching) with falloff. |
-| [Scroll Progress](inputs/scrollProgress.md) | `scrollProgress` | dom | Outputs normalized scroll position [0, 1]. Drive text/instance animations from scroll. |
-| [Mouse Progress](inputs/mouseProgress.md) | `mouseProgress` | shared | Outputs normalized mouse position [0, 1] relative to a target element or viewport. |
-| [Keyframe Progress](inputs/keyframeProgress.md) | `keyframeProgress` | shared | Reads a parameter value and outputs it as progress. Wire from ParameterStoreNode or SM output for timeline-driven animations. |
-| [Canvas Pointer](inputs/canvasPointer.md) | `canvasPointer` | shared | Canvas-level pointer event source — outputs normalized pointer position, down/up flags, and hold state. |
 
 ## [Skeleton](skeleton/)
 
@@ -235,7 +245,7 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
 | [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
 | [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.). |
+| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Single Float→Float math operation. Picks unary (`abs`, `round`, `sqrt`, ...) or binary (`add`, `subtract`, `multiply`) ops; binary ops use `value` + `b`. Range ops (`clamp`, `normalize`) use `value` + `min` + `max`. |
 | [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
 | [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
 | [Float Array Pick](math/floatArrayPick.md) | `floatArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects. |

@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-26",
+  "_generatedAt": "2026-04-27",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 255,
+  "_nodeCount": 265,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -63,10 +63,21 @@
         "pin",
         "pointer",
         "observer",
+        "pulseCounter",
+        "thresholdPulse",
+        "latch",
+        "latch2D",
+        "latchVec2",
+        "pulseRouter",
+        "accumulatePulse",
+        "randomIndex",
+        "randomFloat",
+        "pulseDispatch",
         "eventListener",
         "keyboardListener",
         "textInput",
         "hover",
+        "domQuerySize",
         "distance",
         "scrollProgress",
         "mouseProgress",
@@ -172,7 +183,6 @@
         "domIndexedDock",
         "domStringWrite",
         "domStagePreset",
-        "domColorWrite",
         "sceneTransform",
         "objectPropertyRead",
         "layoutCompute",
@@ -560,36 +570,75 @@
       "displayName": "Mouse Velocity",
       "category": "inputs",
       "context": "dom",
-      "description": "Pointer velocity magnitude (-1 to 1)",
-      "inputs": [],
+      "description": "Per-frame pointer velocity. One node emits five outputs in parallel — wire whichever fits.",
+      "inputs": [
+        {
+          "name": "mouseX",
+          "type": "float",
+          "label": "Mouse X"
+        },
+        {
+          "name": "mouseY",
+          "type": "float",
+          "label": "Mouse Y"
+        }
+      ],
       "outputs": [
         {
-          "name": "value",
+          "name": "valueX",
           "type": "float",
-          "label": "Value"
+          "label": "Value X (centered)"
+        },
+        {
+          "name": "valueY",
+          "type": "float",
+          "label": "Value Y (centered)"
+        },
+        {
+          "name": "absoluteX",
+          "type": "float",
+          "label": "Absolute X"
+        },
+        {
+          "name": "absoluteY",
+          "type": "float",
+          "label": "Absolute Y"
+        },
+        {
+          "name": "magnitude",
+          "type": "float",
+          "label": "Magnitude"
         }
       ],
       "parameters": [
-        {
-          "key": "axis",
-          "label": "Axis",
-          "type": "enum",
-          "options": [
-            "x",
-            "y"
-          ]
-        },
         {
           "key": "sensitivity",
           "label": "Sensitivity",
           "type": "float",
           "min": 0.01,
           "step": 0.1
+        },
+        {
+          "key": "smoothing",
+          "label": "Smoothing",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "decay",
+          "label": "Decay",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
         }
       ],
       "defaults": {
-        "axis": "x",
-        "sensitivity": 1
+        "sensitivity": 1,
+        "smoothing": 0,
+        "decay": 0
       },
       "dynamicPorts": false
     },
@@ -1223,12 +1272,12 @@
         }
       ],
       "defaults": {
-        "minX": 99999,
-        "maxX": 99999,
-        "minY": 99999,
-        "maxY": 99999,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "minZoom": 0,
-        "maxZoom": 99999
+        "maxZoom": null
       },
       "dynamicPorts": false
     },
@@ -2956,7 +3005,7 @@
       "displayName": "Pointer",
       "category": "inputs",
       "context": "dom",
-      "description": "Track pointer position — outputs x, y, normalized, isInside",
+      "description": "Tracks pointer position over an element. One node emits all coordinate spaces in parallel — wire whichever output the consumer needs.",
       "inputs": [],
       "outputs": [
         {
@@ -2980,6 +3029,16 @@
           "label": "Norm Y"
         },
         {
+          "name": "centeredX",
+          "type": "float",
+          "label": "Centered X"
+        },
+        {
+          "name": "centeredY",
+          "type": "float",
+          "label": "Centered Y"
+        },
+        {
           "name": "isInside",
           "type": "float",
           "label": "Inside"
@@ -2989,17 +3048,7 @@
         {
           "key": "selector",
           "label": "Element",
-          "type": "string"
-        },
-        {
-          "key": "normalize",
-          "label": "Mode",
-          "type": "enum",
-          "options": [
-            "centered",
-            "normalized",
-            "pixels"
-          ]
+          "type": "elementSelector"
         },
         {
           "key": "smoothing",
@@ -3011,8 +3060,7 @@
         }
       ],
       "defaults": {
-        "selector": "",
-        "normalize": "normalized"
+        "selector": ""
       },
       "dynamicPorts": false
     },
@@ -3403,7 +3451,7 @@
       "displayName": "Timeline",
       "category": "animation",
       "context": "shared",
-      "description": "Playback sequencer — self-advancing or externally driven (scroll, parameter)",
+      "description": "Playback clock that emits a 0..1 `progress` over `duration` seconds. Self-advances when `autoplay`; can be externally driven by `play` / `pause` / `seek` pulses or a `progress` input.",
       "inputs": [
         {
           "name": "progress",
@@ -3429,6 +3477,11 @@
           "name": "gate",
           "type": "float",
           "label": "Gate"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
         }
       ],
       "outputs": [
@@ -3798,7 +3851,7 @@
       "displayName": "Pulse Tween",
       "category": "animation",
       "context": "shared",
-      "description": "F349 — one-shot 0→1 clock controlled by event pulses. Each input is rising-edge-detected: `play` advances toward 1, `reverse` advances toward 0, `restart` resets to 0 and plays forward, `pause` freezes, `resume` un-freezes. Output `progress` is the eased value; `playing` is 1 while advancing. Maps the GSAP `toggleActions` model onto graph ports. Distinct from the stateless `tween` interpolator (which is a pure function of input progress) — pulseTween OWNS the progress.",
+      "description": "F349 — one-shot 0→1 clock controlled by event pulses. Each input is rising-edge-detected: `play` advances toward 1, `reverse` advances toward 0, `restart` resets to 0 and plays forward, `pause` freezes, `resume` un-freezes. Output `progress` is the eased value; `playing` is 1 while advancing. Maps the toggle-actions model (play / reverse / pause / resume / restart on independent rising-edge inputs) onto graph ports. Distinct from the stateless `tween` interpolator (which is a pure function of input progress) — pulseTween OWNS the progress.",
       "inputs": [
         {
           "name": "play",
@@ -3858,16 +3911,569 @@
       },
       "dynamicPorts": false
     },
+    "pulseCounter": {
+      "displayName": "Pulse Counter",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Pulse-driven integer counter with optional wrap. Each rising edge of `pulse` advances `index` by `step`; rising edge of `reset` returns `index` to `start`. With `wrap=true`, output is folded into [start, start+max) via positive modulo (so negative steps wrap correctly).",
+      "inputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "start",
+          "label": "Start",
+          "type": "int"
+        },
+        {
+          "key": "step",
+          "label": "Step",
+          "type": "int"
+        },
+        {
+          "key": "wrap",
+          "label": "Wrap",
+          "type": "bool"
+        },
+        {
+          "key": "max",
+          "label": "Wrap Range",
+          "type": "int",
+          "min": 1
+        }
+      ],
+      "defaults": {
+        "start": 0,
+        "step": 1,
+        "wrap": true,
+        "max": 10
+      },
+      "dynamicPorts": false
+    },
+    "thresholdPulse": {
+      "displayName": "Threshold Pulse",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Emits a single-frame pulse when `value` crosses `threshold`. `mode` chooses semantics: `edge` (default) fires once per crossing then suppresses until value drops below `threshold - hysteresis` and re-crosses; `auto` fires periodically paced by `cooldownMs` for as long as value stays past threshold. `direction` selects rising / falling / both. Continuous comparator output `isAbove` is raw (not gated). First-frame above-threshold does NOT fire (cold-start state-snap).",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "threshold",
+          "type": "float",
+          "label": "Threshold"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "isAbove",
+          "type": "float",
+          "label": "Is Above"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "mode",
+          "label": "Mode",
+          "type": "enum",
+          "options": [
+            "edge",
+            "auto"
+          ]
+        },
+        {
+          "key": "direction",
+          "label": "Direction",
+          "type": "enum",
+          "options": [
+            "rising",
+            "falling",
+            "both"
+          ]
+        },
+        {
+          "key": "hysteresis",
+          "label": "Hysteresis",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        },
+        {
+          "key": "cooldownMs",
+          "label": "Cooldown (ms)",
+          "type": "float",
+          "min": 0,
+          "step": 10
+        }
+      ],
+      "defaults": {
+        "direction": "rising",
+        "hysteresis": 0,
+        "cooldownMs": 0,
+        "mode": "edge"
+      },
+      "dynamicPorts": false
+    },
+    "latch": {
+      "displayName": "Latch",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Sample-and-hold on rising-edge `pulse`. Captures the live `value` at the pulse moment and freezes it on `held`.",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "held",
+          "type": "float",
+          "label": "Held"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "initial",
+          "label": "Initial",
+          "type": "float"
+        }
+      ],
+      "defaults": {
+        "initial": 0
+      },
+      "dynamicPorts": false
+    },
+    "latch2D": {
+      "displayName": "Latch (2D)",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Atomic sample-and-hold for a scalar X+Y pair. On rising-edge `pulse`, captures both axes from the SAME frame.",
+      "inputs": [
+        {
+          "name": "valueX",
+          "type": "float",
+          "label": "Value X"
+        },
+        {
+          "name": "valueY",
+          "type": "float",
+          "label": "Value Y"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "heldX",
+          "type": "float",
+          "label": "Held X"
+        },
+        {
+          "name": "heldY",
+          "type": "float",
+          "label": "Held Y"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "initialX",
+          "label": "Initial X",
+          "type": "float"
+        },
+        {
+          "key": "initialY",
+          "label": "Initial Y",
+          "type": "float"
+        }
+      ],
+      "defaults": {
+        "initialX": 0,
+        "initialY": 0
+      },
+      "dynamicPorts": false
+    },
+    "latchVec2": {
+      "displayName": "Latch (Vec2)",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Vec2 sample-and-hold. Both components captured atomically on the rising-edge `pulse`. See `latch` for the float variant.",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "vec2",
+          "label": "Value"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "held",
+          "type": "vec2",
+          "label": "Held"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "initialX",
+          "label": "Initial X",
+          "type": "float"
+        },
+        {
+          "key": "initialY",
+          "label": "Initial Y",
+          "type": "float"
+        }
+      ],
+      "defaults": {
+        "initialX": 0,
+        "initialY": 0
+      },
+      "dynamicPorts": false
+    },
+    "pulseRouter": {
+      "displayName": "Pulse Router",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Demultiplex one pulse to one of `count` output channels by integer `index`. Rising edge on `pulse` produces a single-frame spike on `out{Math.round(index)}`; out-of-range follows `defaultRoute` (set to -1 to drop).",
+      "inputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "count",
+          "label": "Channels",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "defaultRoute",
+          "label": "Default Route",
+          "type": "int",
+          "min": -1
+        }
+      ],
+      "defaults": {
+        "count": 1,
+        "defaultRoute": -1
+      },
+      "dynamicPorts": true
+    },
+    "accumulatePulse": {
+      "displayName": "Accumulate Pulse",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Integrates `value` per frame and emits a `pulse` each time the running total reaches `threshold`, then subtracts threshold from the accumulator (overshoot carries forward). `maxBacklog` clamps post-fire overshoot so a one-frame burst cannot queue an unbounded backlog.",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "total",
+          "type": "float",
+          "label": "Total"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "threshold",
+          "label": "Threshold",
+          "type": "float",
+          "min": 0.001,
+          "step": 1
+        },
+        {
+          "key": "maxBacklog",
+          "label": "Max Backlog",
+          "type": "float",
+          "min": 0,
+          "step": 0.5
+        }
+      ],
+      "defaults": {
+        "threshold": 100,
+        "maxBacklog": 1.5
+      },
+      "dynamicPorts": false
+    },
+    "randomIndex": {
+      "displayName": "Random Index",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Sister of `pulseCounter`: picks a random integer in [0, count) on each rising-edge `pulse`. Pair with `pulseRouter` for non-rhythmic dispatch where round-robin reads as too mechanical. Deterministic — uses a seeded mulberry32 PRNG so seek + replay produce identical sequences.",
+      "inputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "count",
+          "label": "Count",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "seed",
+          "label": "Seed",
+          "type": "int"
+        },
+        {
+          "key": "avoidRepeat",
+          "label": "Avoid Repeat",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "count": 4,
+        "seed": 1,
+        "avoidRepeat": false
+      },
+      "dynamicPorts": false
+    },
+    "randomFloat": {
+      "displayName": "Random Float",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Picks a uniform random float in [`min`, `max`) on each rising-edge `pulse` and holds it until the next pulse. Wire into a tween's `to` for per-spawn variety (random rotation, scale variance, fall distance).",
+      "inputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "min",
+          "label": "Min",
+          "type": "float"
+        },
+        {
+          "key": "max",
+          "label": "Max",
+          "type": "float"
+        },
+        {
+          "key": "seed",
+          "label": "Seed",
+          "type": "int"
+        }
+      ],
+      "defaults": {
+        "min": 0,
+        "max": 1,
+        "seed": 1
+      },
+      "dynamicPorts": false
+    },
+    "pulseDispatch": {
+      "displayName": "Pulse Dispatch",
+      "category": "inputs",
+      "context": "shared",
+      "description": "One pulse in, one of N channels out per pulse. `strategy` picks the dispatch rule. Replaces the accumulator + counter + router triplet.",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "strategy",
+          "label": "Strategy",
+          "type": "enum",
+          "options": [
+            "roundRobin",
+            "random",
+            "sequential"
+          ]
+        },
+        {
+          "key": "threshold",
+          "label": "Threshold",
+          "type": "float",
+          "min": 0.001,
+          "step": 0.01
+        },
+        {
+          "key": "maxBacklog",
+          "label": "Max Backlog",
+          "type": "float",
+          "min": 0,
+          "step": 0.5
+        },
+        {
+          "key": "count",
+          "label": "Channels",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "defaultRoute",
+          "label": "Default Route",
+          "type": "int",
+          "min": -1
+        },
+        {
+          "key": "seed",
+          "label": "Seed",
+          "type": "int"
+        },
+        {
+          "key": "avoidRepeat",
+          "label": "Avoid Repeat",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "strategy": "roundRobin",
+        "threshold": 0.07,
+        "maxBacklog": 1.5,
+        "count": 1,
+        "defaultRoute": -1,
+        "seed": 1,
+        "avoidRepeat": false
+      },
+      "dynamicPorts": true
+    },
     "tween": {
       "displayName": "Tween",
       "category": "animation",
       "context": "shared",
-      "description": "A→B interpolation with easing — stateless, pure function of progress",
+      "description": "Stateless A→B interpolation with easing — pure function of `progress`.",
       "inputs": [
         {
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "from",
+          "type": "float",
+          "label": "From (input)"
+        },
+        {
+          "name": "to",
+          "type": "float",
+          "label": "To (input)"
         }
       ],
       "outputs": [
@@ -3891,7 +4497,7 @@
         {
           "key": "ease",
           "label": "Easing",
-          "type": "string"
+          "type": "easingCurve"
         }
       ],
       "defaults": {
@@ -3992,15 +4598,45 @@
       "displayName": "Color Tween",
       "category": "animation",
       "context": "shared",
-      "description": "Perceptually uniform color interpolation in OKLab space",
+      "description": "Perceptually uniform color interpolation in OKLab space. Emits a packed `color` bundle for direct wiring, plus individual r/g/b channels for legacy consumers.",
       "inputs": [
         {
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "fromColor",
+          "type": "color",
+          "label": "From Color (input)"
+        },
+        {
+          "name": "toColor",
+          "type": "color",
+          "label": "To Color (input)"
+        },
+        {
+          "name": "hueOffset",
+          "type": "float",
+          "label": "Hue Offset (deg)"
+        },
+        {
+          "name": "saturation",
+          "type": "float",
+          "label": "Saturation"
+        },
+        {
+          "name": "alpha",
+          "type": "float",
+          "label": "Alpha"
         }
       ],
       "outputs": [
+        {
+          "name": "color",
+          "type": "color",
+          "label": "Color"
+        },
         {
           "name": "r",
           "type": "float",
@@ -4021,63 +4657,41 @@
         {
           "key": "fromColor",
           "label": "From Color",
-          "type": "string"
+          "type": "colorString"
         },
         {
           "key": "toColor",
           "label": "To Color",
-          "type": "string"
+          "type": "colorString"
+        },
+        {
+          "key": "ease",
+          "label": "Easing",
+          "type": "easingCurve"
+        },
+        {
+          "key": "saturation",
+          "label": "Saturation",
+          "type": "float",
+          "min": 0,
+          "max": 3,
+          "step": 0.05
+        },
+        {
+          "key": "alpha",
+          "label": "Alpha",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.05
         }
       ],
       "defaults": {
         "fromColor": "#000000",
-        "toColor": "#ffffff"
-      },
-      "dynamicPorts": false
-    },
-    "domColorWrite": {
-      "displayName": "DOM Color Write",
-      "category": "boundary",
-      "context": "dom",
-      "description": "Write rgb() color to a DOM element CSS property. F293 Phase 7: accepts a single color-typed input.",
-      "inputs": [
-        {
-          "name": "color",
-          "type": "color",
-          "label": "Color"
-        }
-      ],
-      "outputs": [],
-      "parameters": [
-        {
-          "key": "selector",
-          "label": "Target",
-          "type": "elementSelector"
-        },
-        {
-          "key": "propertyName",
-          "label": "Property",
-          "type": "enum",
-          "options": [
-            "color",
-            "backgroundColor",
-            "borderColor",
-            "borderTopColor",
-            "borderRightColor",
-            "borderBottomColor",
-            "borderLeftColor",
-            "outlineColor",
-            "textDecorationColor",
-            "caretColor",
-            "accentColor",
-            "fill",
-            "stroke"
-          ]
-        }
-      ],
-      "defaults": {
-        "selector": "",
-        "propertyName": "color"
+        "toColor": "#ffffff",
+        "ease": "linear",
+        "saturation": 1,
+        "alpha": 1
       },
       "dynamicPorts": false
     },
@@ -7990,7 +8604,7 @@
       "displayName": "Math Utility",
       "category": "math",
       "context": "shared",
-      "description": "Typed Float→Float math operation (abs, round, clamp, normalize, add, etc.).",
+      "description": "Single Float→Float math operation. Picks unary (`abs`, `round`, `sqrt`, ...) or binary (`add`, `subtract`, `multiply`) ops; binary ops use `value` + `b`. Range ops (`clamp`, `normalize`) use `value` + `min` + `max`.",
       "inputs": [
         {
           "name": "value",
@@ -10036,7 +10650,7 @@
       "displayName": "Color Keyframe",
       "category": "animation",
       "context": "shared",
-      "description": "Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires directly into DOMColorWriteNode.color. Keyframes are `{ time, value, ease? }` where value is a CSS color string.",
+      "description": "Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires into a `domPoseWrite` color-typed property port. Keyframes are `{ time, value, ease? }` where value is a CSS color string.",
       "inputs": [
         {
           "name": "progress",
@@ -10197,7 +10811,7 @@
       "displayName": "DOM Pose Write",
       "category": "boundary",
       "context": "shared",
-      "description": "Write multiple float values to CSS properties on a single DOM element. Transform components route through the accumulator, other properties go through DOMBatcher.",
+      "description": "Boundary node: writes one or more float values to CSS properties on a target DOM element. Pick which properties to expose via the picker — each becomes an input port wired from upstream tweens / latches / math.",
       "inputs": [],
       "outputs": [],
       "parameters": [
@@ -10387,6 +11001,31 @@
       "defaults": {
         "selector": "",
         "duration": 250
+      },
+      "dynamicPorts": false
+    },
+    "domQuerySize": {
+      "displayName": "DOM Query Size",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Counts DOM elements matching a CSS selector at bind time. Pairs with forEach-driven cluster math: feed `count` into a singleton expression that needs to know N (e.g. dock cluster bounds) so the graph-side N stays in lockstep with the DOM-side icon count — author no longer has to keep a hardcoded `N` in sync with the HTML.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
+        }
+      ],
+      "defaults": {
+        "selector": ""
       },
       "dynamicPorts": false
     },

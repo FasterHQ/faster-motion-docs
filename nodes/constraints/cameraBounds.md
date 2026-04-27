@@ -27,10 +27,10 @@ Clamp camera position and zoom to bounds
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `minX` | float | `99999` | Min X |
-| `maxX` | float | `99999` | Max X |
-| `minY` | float | `99999` | Min Y |
-| `maxY` | float | `99999` | Max Y |
+| `minX` | float | `null` | Min X |
+| `maxX` | float | `null` | Max X |
+| `minY` | float | `null` | Min Y |
+| `maxY` | float | `null` | Max Y |
 | `minZoom` | float | `0` | Min Zoom (min: 0) |
-| `maxZoom` | float | `99999` | Max Zoom (min: 0) |
+| `maxZoom` | float | `null` | Max Zoom (min: 0) |
 

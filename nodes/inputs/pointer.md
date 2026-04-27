@@ -4,7 +4,7 @@
 **Category:** inputs  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Track pointer position — outputs x, y, normalized, isInside
+Tracks pointer position over an element. One node emits all coordinate spaces in parallel — wire whichever output the consumer needs.
 
 ## Inputs
 
@@ -18,6 +18,8 @@ _No inputs._
 | `y` | `float` | Y |
 | `normalizedX` | `float` | Norm X |
 | `normalizedY` | `float` | Norm Y |
+| `centeredX` | `float` | Centered X |
+| `centeredY` | `float` | Centered Y |
 | `isInside` | `float` | Inside |
 
 
@@ -25,7 +27,6 @@ _No inputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `""` | Element |
-| `normalize` | enum | `"normalized"` | Mode. Options: `centered`, `normalized`, `pixels` |
+| `selector` | elementSelector | `""` | Element |
 | `smoothing` | float | `—` | Smoothing (min: 0, max: 0.99) |
 

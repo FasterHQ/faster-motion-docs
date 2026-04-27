@@ -5,7 +5,7 @@
 **Context:** Shared — works in both DOM and canvas graphs  
 **Dynamic Ports:** Yes — ports may be added/removed at runtime  
 
-Write multiple float values to CSS properties on a single DOM element. Transform components route through the accumulator, other properties go through DOMBatcher.
+Boundary node: writes one or more float values to CSS properties on a target DOM element. Pick which properties to expose via the picker — each becomes an input port wired from upstream tweens / latches / math.
 
 ## Inputs
 

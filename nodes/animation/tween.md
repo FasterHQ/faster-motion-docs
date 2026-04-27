@@ -4,13 +4,15 @@
 **Category:** animation  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-A→B interpolation with easing — stateless, pure function of progress
+Stateless A→B interpolation with easing — pure function of `progress`.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
 | `progress` | `float` | Progress |
+| `from` | `float` | From (input) |
+| `to` | `float` | To (input) |
 
 
 ## Outputs
@@ -26,5 +28,5 @@ A→B interpolation with easing — stateless, pure function of progress
 |-----------|------|---------|-------------|
 | `from` | float | `0` | From |
 | `to` | float | `1` | To |
-| `ease` | string | `"linear"` | Easing |
+| `ease` | easingCurve | `"linear"` | Easing |
 
