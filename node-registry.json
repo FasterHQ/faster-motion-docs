@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-04-28",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 267,
+  "_nodeCount": 268,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -224,6 +224,7 @@
         "coverageGroup",
         "textApply",
         "splitText",
+        "splitShape",
         "counter",
         "textSequence",
         "textRevealAnimation",
@@ -10970,6 +10971,58 @@
       "defaults": {
         "selector": "",
         "mode": "words"
+      },
+      "dynamicPorts": false
+    },
+    "splitShape": {
+      "displayName": "Split Shape",
+      "category": "text",
+      "context": "shared",
+      "description": "Setup-only DOM shape splitter — fractures the path / polygon source shapes inside an `<svg>` into N polygon fragments at bind time, so per-piece animations (translate, rotate, scale, opacity) can target the pieces individually. Runs once: rejection-samples points inside the source-fill region, tessellates with d3-delaunay's Voronoi, boolean-intersects each cell with the union of source paths via `polygon-clipping` so adjacent pieces share their edges exactly (no gaps or overlap). Each fragment gets the class `ft-shatter-piece`. Mirror to `splitText`, but for SVG geometry — drop in any 2-path logo and shatter it into ~100 deterministic pieces without manually pre-fragmenting in a vector editor.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        },
+        {
+          "name": "pieceSelector",
+          "type": "string",
+          "label": "Pieces Selector"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "SVG Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "sourceSelector",
+          "label": "Source Selector",
+          "type": "string"
+        },
+        {
+          "key": "fragments",
+          "label": "Fragments",
+          "type": "int",
+          "min": 4,
+          "step": 1
+        },
+        {
+          "key": "seed",
+          "label": "Seed",
+          "type": "int",
+          "min": 0,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "sourceSelector": "path, polygon",
+        "fragments": 100,
+        "seed": 1337
       },
       "dynamicPorts": false
     },
