@@ -22,6 +22,6 @@ _No outputs._
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `selector` | string | `""` | CSS Selector |
-| `propertyName` | string | `"textContent"` | Property |
+| `propertyName` | cssProperty | `"textContent"` | Property |
 | `writeMode` | enum | `—` | Write Mode. Options: ``, `style`, `attribute`, `textContent` |
 

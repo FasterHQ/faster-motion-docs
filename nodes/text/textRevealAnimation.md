@@ -32,7 +32,7 @@ _No outputs._
 | `stripWhitespace` | bool | `false` | Strip whitespace-only entries |
 | `separator` | string | `—` | Custom separator (overrides granularity) |
 | `writeMode` | enum | `"textContent"` | Write mode. Options: `textContent`, `attribute`, `style` |
-| `propertyName` | string | `"textContent"` | Property name |
+| `propertyName` | cssProperty | `"textContent"` | Property name |
 | `channels` | textRevealChannels | `—` | Channels |
 | `variants` | textRevealVariants | `—` | Variants |
 

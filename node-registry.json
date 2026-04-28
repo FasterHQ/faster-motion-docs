@@ -2098,7 +2098,7 @@
         {
           "key": "propertyName",
           "label": "Property",
-          "type": "string"
+          "type": "cssProperty"
         },
         {
           "key": "cssUnit",
@@ -2883,7 +2883,7 @@
         {
           "key": "propertyName",
           "label": "Property",
-          "type": "string"
+          "type": "cssProperty"
         },
         {
           "key": "writeMode",
@@ -5400,7 +5400,7 @@
         {
           "key": "propertyName",
           "label": "Property Name",
-          "type": "string"
+          "type": "cssProperty"
         },
         {
           "key": "index",
@@ -11327,7 +11327,7 @@
         {
           "key": "propertyName",
           "label": "Property name",
-          "type": "string"
+          "type": "cssProperty"
         },
         {
           "key": "channels",

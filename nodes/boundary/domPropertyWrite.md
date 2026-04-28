@@ -23,6 +23,6 @@ _No outputs._
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `selector` | elementSelector | `""` | CSS Selector |
-| `propertyName` | string | `"opacity"` | Property |
+| `propertyName` | cssProperty | `"opacity"` | Property |
 | `cssUnit` | enum | `"none"` | Unit. Options: `none`, `px`, `%`, `deg`, `rad`, `em`, `rem`, `vw`, `vh` |
 

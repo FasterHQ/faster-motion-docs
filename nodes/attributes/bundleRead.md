@@ -24,6 +24,6 @@ Extract a single float from an AttributeBundle by property name + index
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `propertyName` | string | `""` | Property Name |
+| `propertyName` | cssProperty | `""` | Property Name |
 | `index` | int | `-1` | Index |
 
