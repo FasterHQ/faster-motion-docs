@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-27",
+  "_generatedAt": "2026-04-28",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 265,
+  "_nodeCount": 267,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -164,6 +164,7 @@
         "mathUtil",
         "stringOp",
         "stringEquals",
+        "phaseShift",
         "floatArrayPick",
         "colorArrayPick"
       ]
@@ -178,6 +179,7 @@
         "propertyWrite",
         "dataWrite",
         "domPropertyWrite",
+        "domVariablesWrite",
         "staggerWrite",
         "domDockTo",
         "domIndexedDock",
@@ -1789,15 +1791,29 @@
       ],
       "parameters": [
         {
+          "key": "inputMin",
+          "label": "Input Min",
+          "type": "float"
+        },
+        {
+          "key": "inputMax",
+          "label": "Input Max",
+          "type": "float"
+        },
+        {
+          "key": "outputMin",
+          "label": "Output Min",
+          "type": "float"
+        },
+        {
+          "key": "outputMax",
+          "label": "Output Max",
+          "type": "float"
+        },
+        {
           "key": "curve",
           "label": "Curve",
-          "type": "enum",
-          "options": [
-            "linear",
-            "ease",
-            "easeIn",
-            "easeOut"
-          ]
+          "type": "easingCurve"
         },
         {
           "key": "clamp",
@@ -1807,7 +1823,11 @@
       ],
       "defaults": {
         "curve": "linear",
-        "clamp": true
+        "clamp": true,
+        "inputMin": 0,
+        "inputMax": 1,
+        "outputMin": 0,
+        "outputMax": 1
       },
       "dynamicPorts": false
     },
@@ -2055,12 +2075,17 @@
       "displayName": "DOM Property Write",
       "category": "boundary",
       "context": "dom",
-      "description": "Write a float value to a CSS property, transform, attribute, or textContent on a DOM element",
+      "description": "Write a float value to a single CSS property, transform component, data-attribute, scrollTop/scrollLeft, or textContent on a DOM element. Single-property sibling of `domPoseWrite` — use this when you need to drive ONE value (CSS variable, opacity, scrollTop, etc.); use `domPoseWrite` when you need a batched transform pose (translate / scale / rotate / skew). Custom properties (CSS variables like `--bento-col`) work — pass the full `--name` as the Property field; the runtime calls `el.style.setProperty(name, value + unit)`.",
       "inputs": [
         {
           "name": "value",
           "type": "float",
           "label": "Value"
+        },
+        {
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
         }
       ],
       "outputs": [],
@@ -2068,7 +2093,7 @@
         {
           "key": "selector",
           "label": "CSS Selector",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "propertyName",
@@ -2099,16 +2124,21 @@
       },
       "dynamicPorts": false
     },
-    "staggerWrite": {
-      "displayName": "Stagger Write",
+    "domVariablesWrite": {
+      "displayName": "DOM Variables Write",
       "category": "boundary",
-      "context": "dom",
-      "description": "Batched stagger animation — one node handles all elements matching a selector with per-element timing offset",
+      "context": "shared",
+      "description": "Batched CSS-custom-property writer with per-variable remap built in. Takes a single shared input value and fans it out to N CSS variables (`--foo`) on one element, with each variable carrying its own input/output range, unit, easing curve, and clamp. Replaces the common `1 source → N remap → N domPropertyWrite` chain — collapses to a single node in author view.",
       "inputs": [
         {
-          "name": "progress",
+          "name": "value",
           "type": "float",
-          "label": "Progress"
+          "label": "Value"
+        },
+        {
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
         }
       ],
       "outputs": [],
@@ -2116,40 +2146,48 @@
         {
           "key": "selector",
           "label": "CSS Selector",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
-          "key": "propertyName",
-          "label": "Property",
-          "type": "string"
+          "key": "properties",
+          "label": "Variables",
+          "type": "domVariablesChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "properties": {}
+      },
+      "dynamicPorts": false
+    },
+    "staggerWrite": {
+      "displayName": "Stagger Write",
+      "category": "boundary",
+      "context": "dom",
+      "description": "Batched per-element stagger writer, multi-channel. One node animates N CSS properties across the elements matching a selector, with a shared per-element stagger window. F358: each property is one channel in the `channels` map — add as many as you want (e.g. `rotateX` + `color` + `opacity`) and they all share the same selector, totalStagger, staggerOrder, and progress driver. Replaces the older \"two staggerWrites with the same selector and one property each\" pattern with a single node.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
         },
         {
-          "key": "cssUnit",
-          "label": "Unit",
-          "type": "enum",
-          "options": [
-            "none",
-            "px",
-            "%",
-            "deg",
-            "vw",
-            "vh"
-          ]
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
         },
         {
-          "key": "from",
-          "label": "From",
-          "type": "float"
-        },
-        {
-          "key": "to",
-          "label": "To",
-          "type": "float"
-        },
-        {
-          "key": "ease",
-          "label": "Easing",
-          "type": "string"
+          "key": "channels",
+          "label": "Channels",
+          "type": "staggerChannels"
         },
         {
           "key": "totalStagger",
@@ -2174,11 +2212,7 @@
       ],
       "defaults": {
         "selector": "",
-        "propertyName": "opacity",
-        "cssUnit": "none",
-        "from": 0,
-        "to": 1,
-        "ease": "linear",
+        "channels": {},
         "totalStagger": 0.3,
         "staggerOrder": "start"
       },
@@ -2246,7 +2280,7 @@
       "displayName": "Scroll Trigger",
       "category": "inputs",
       "context": "dom",
-      "description": "Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect.",
+      "description": "Track an element's position relative to the scroll viewport — outputs progress (0..1), direction (±1), velocity (px/s), isInView (0/1), and pin geometry. Edges control when progress starts and ends, expressed as `<elementEdge> <viewportEdge>` pairs (\"top bottom\" = element top reaches viewport bottom; \"bottom top\" = element bottom reaches viewport top). When `pin: true` is authored, the loader emits a PinAnchor sibling and wires `flowTop` automatically so progress measures through the spacer rather than the pinned rect.",
       "inputs": [
         {
           "name": "flowTop",
@@ -2290,7 +2324,7 @@
         {
           "key": "selector",
           "label": "Trigger Element",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "startEdge",
@@ -2305,19 +2339,38 @@
         {
           "key": "scroller",
           "label": "Scroll Container",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "invert",
           "label": "Invert Progress",
           "type": "bool"
+        },
+        {
+          "key": "pin",
+          "label": "Pin",
+          "type": "bool"
+        },
+        {
+          "key": "pinSpacing",
+          "label": "Pin Spacing",
+          "type": "bool"
+        },
+        {
+          "key": "pinTarget",
+          "label": "Pin Target",
+          "type": "elementSelector"
         }
       ],
       "defaults": {
         "selector": "",
         "startEdge": "top bottom",
         "endEdge": "bottom top",
-        "invert": false
+        "invert": false,
+        "pin": false,
+        "pinSpacing": true,
+        "pinTarget": "",
+        "scroller": ""
       },
       "dynamicPorts": false
     },
@@ -10812,7 +10865,13 @@
       "category": "boundary",
       "context": "shared",
       "description": "Boundary node: writes one or more float values to CSS properties on a target DOM element. Pick which properties to expose via the picker — each becomes an input port wired from upstream tweens / latches / math.",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
+        }
+      ],
       "outputs": [],
       "parameters": [
         {
@@ -10877,24 +10936,29 @@
       "displayName": "Split Text",
       "category": "text",
       "context": "canvas",
-      "description": "Setup-only DOM text splitter — splits target element into spans (words/chars/lines).",
+      "description": "Setup-only DOM text splitter — wraps every word / character / line of the target element's text content in its own `<span>` so per-piece animations (rotateX, opacity, color, position) can target the pieces individually. Runs once at bind time; the spans persist for the page lifetime. Each span gets a class based on the split mode: `ft-split-word`, `ft-split-char`, or `ft-split-line` — use these in downstream selectors (e.g. `.headline .ft-split-char` for `staggerWrite`).",
       "inputs": [],
       "outputs": [
         {
           "name": "count",
           "type": "float",
           "label": "Count"
+        },
+        {
+          "name": "pieceSelector",
+          "type": "string",
+          "label": "Pieces Selector"
         }
       ],
       "parameters": [
         {
           "key": "selector",
-          "label": "Selector",
-          "type": "string"
+          "label": "Target",
+          "type": "elementSelector"
         },
         {
           "key": "mode",
-          "label": "Mode",
+          "label": "Split Mode",
           "type": "enum",
           "options": [
             "words",
@@ -11026,6 +11090,53 @@
       ],
       "defaults": {
         "selector": ""
+      },
+      "dynamicPorts": false
+    },
+    "phaseShift": {
+      "displayName": "Phase Shift",
+      "category": "math",
+      "context": "shared",
+      "description": "Per-clone phase shift of a shared 0..1 progress signal. Computes `(progress + index/count) % 1`, wrapping the result into [0, 1) so it can drive any node that consumes a normalized progress (staggerWrite, multiKeyframe, propertyAnimation). Replaces the inline `((node('progress') + ($index / node('count'))) % 1)` expression that recurs in any forEach-instanced template that needs each clone to ride a different phase of one shared clock.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        },
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "index",
+          "label": "Index (baseline)",
+          "type": "float"
+        },
+        {
+          "key": "count",
+          "label": "Count (baseline)",
+          "type": "float"
+        }
+      ],
+      "defaults": {
+        "index": 0,
+        "count": 1
       },
       "dynamicPorts": false
     },

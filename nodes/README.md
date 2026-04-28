@@ -1,6 +1,6 @@
 # Node Reference
 
-All 265 graph node types available in Faster Motion.
+All 267 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -17,7 +17,7 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Distance Input](inputs/distanceInput.md) | `distanceInput` | dom | Mouse distance to target (0 = at target, 1 = beyond radius) |
 | [Drag Input](inputs/dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
 | [Scroll Event](inputs/scrollEvent.md) | `scrollEvent` | shared | F349 — edge-pulse detector on a 0..1 progress signal. Emits 1-frame pulses on threshold crossings: `entered` (forward across startThreshold), `left` (forward across endThreshold), `enteredBack` (backward across endThreshold), `leftBack` (backward across startThreshold). Pair with `pulseTween` and/or `parameterAction(set/toggle)` to recover trigger-mode toggleActions semantics, or with `parameterAction(set, amount=1)` on `entered` only to recover an observe-once latch. |
-| [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect. |
+| [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track an element's position relative to the scroll viewport — outputs progress (0..1), direction (±1), velocity (px/s), isInView (0/1), and pin geometry. Edges control when progress starts and ends, expressed as `<elementEdge> <viewportEdge>` pairs ("top bottom" = element top reaches viewport bottom; "bottom top" = element bottom reaches viewport top). When `pin: true` is authored, the loader emits a PinAnchor sibling and wires `flowTop` automatically so progress measures through the spacer rather than the pinned rect. |
 | [Pin](inputs/pin.md) | `pin` | shared | F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnchorNode) + progress; runs the 3-state lifecycle: BEFORE (progress ≤ 0) = element natural inside spacer; PINNED (0 < progress < 1) = element position:fixed at viewport top; AFTER (progress ≥ 1) = element at bottom of spacer via padding-top. Spacer + handle ownership lives on PinAnchorNode (loader-emitted). Subsumes scrollPin. |
 | [Pointer](inputs/pointer.md) | `pointer` | dom | Tracks pointer position over an element. One node emits all coordinate spaces in parallel — wire whichever output the consumer needs. |
 | [Observer](inputs/observer.md) | `observer` | dom | Detect gestures (wheel, touch, pointer, scroll) — outputs deltas |
@@ -90,7 +90,7 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Coverage Range](text/coverageRange.md) | `coverageRange` | shared | Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes. |
 | [Coverage Group](text/coverageGroup.md) | `coverageGroup` | shared | F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle. |
 | [Text Apply](text/textApply.md) | `textApply` | canvas | Pure passthrough: forwards per-character Mat4 transforms to output port for SRN consumption. Follows SkinnedPathDeformNode pattern (F264). |
-| [Split Text](text/splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — splits target element into spans (words/chars/lines). |
+| [Split Text](text/splitText.md) | `splitText` | canvas | Setup-only DOM text splitter — wraps every word / character / line of the target element's text content in its own `<span>` so per-piece animations (rotateX, opacity, color, position) can target the pieces individually. Runs once at bind time; the spans persist for the page lifetime. Each span gets a class based on the split mode: `ft-split-word`, `ft-split-char`, or `ft-split-line` — use these in downstream selectors (e.g. `.headline .ft-split-char` for `staggerWrite`). |
 | [Counter](text/counter.md) | `counter` | shared | Animated number counter — interpolates min→max with formatting (decimals, separator, template). |
 | [Text Sequence](text/textSequence.md) | `textSequence` | canvas | Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array. |
 | [Text Reveal](text/textRevealAnimation.md) | `textRevealAnimation` | shared | Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type. OPTIONAL `channels` + `variants` (same shape as variantStaggerAnimation) declare per-source side effects — e.g. a `color` channel with three hex values cycles the color at actual word boundaries regardless of word length or language. Each channel expands to one arrayPick + one writer; no more authoring colorKeyframe with hand-tuned times that drift across languages. |
@@ -113,6 +113,39 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Stagger Animation](text/staggerAnimation.md) | `staggerAnimation` | shared | Fan a single animation template across N indexed DOM elements with per-child stagger offsets. Selector template uses `{i}` as the per-child index placeholder (e.g. `.card:nth-child({i})`, `.dot[data-i="{i}"]`). Inner `each` is a propertyAnimation template — keyframes get shifted into each child's slot window at load time. Generic counterpart to F323 textStaggerAnimation (which is splitText-specific); use this for pre-existing DOM elements like card grids, list items, icon rows, dot indicators, wave / ripple effects. Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw) — no runtime class. |
 | [Variant Stagger Animation](text/variantStaggerAnimation.md) | `variantStaggerAnimation` | shared | Fan a compound across N indexed DOM elements where each child has UNIQUE from/to values on shared channels. Per-child variation sibling of F324 staggerAnimation (which requires uniform values). Use for mouse-driven dispersals, hover-chaos grids, card-spread layouts, per-icon flutter — any "N siblings, same channels, different ranges". Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw). |
 | [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
+
+## [Boundary](boundary/)
+
+Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribute writes, color writes, stagger writes, data writes.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Object Position](boundary/objectPosition.md) | `objectPosition` | canvas | Read world position of a scene object |
+| [Position Write](boundary/positionWrite.md) | `positionWrite` | canvas | Write world-space position to a scene object |
+| [Transform Read](boundary/transformRead.md) | `transformRead` | canvas | Read full transform (position + rotation + scale) of a scene object |
+| [Transform Write](boundary/transformWrite.md) | `transformWrite` | canvas | Write full transform to a scene object |
+| [Property Write](boundary/propertyWrite.md) | `propertyWrite` | canvas | Write a float value to any object property |
+| [Data Write](boundary/dataWrite.md) | `dataWrite` | canvas | Write any-typed value to a canvas object property |
+| [DOM Property Write](boundary/domPropertyWrite.md) | `domPropertyWrite` | dom | Write a float value to a single CSS property, transform component, data-attribute, scrollTop/scrollLeft, or textContent on a DOM element. Single-property sibling of `domPoseWrite` — use this when you need to drive ONE value (CSS variable, opacity, scrollTop, etc.); use `domPoseWrite` when you need a batched transform pose (translate / scale / rotate / skew). Custom properties (CSS variables like `--bento-col`) work — pass the full `--name` as the Property field; the runtime calls `el.style.setProperty(name, value + unit)`. |
+| [DOM Variables Write](boundary/domVariablesWrite.md) | `domVariablesWrite` | shared | Batched CSS-custom-property writer with per-variable remap built in. Takes a single shared input value and fans it out to N CSS variables (`--foo`) on one element, with each variable carrying its own input/output range, unit, easing curve, and clamp. Replaces the common `1 source → N remap → N domPropertyWrite` chain — collapses to a single node in author view. |
+| [Stagger Write](boundary/staggerWrite.md) | `staggerWrite` | dom | Batched per-element stagger writer, multi-channel. One node animates N CSS properties across the elements matching a selector, with a shared per-element stagger window. F358: each property is one channel in the `channels` map — add as many as you want (e.g. `rotateX` + `color` + `opacity`) and they all share the same selector, totalStagger, staggerOrder, and progress driver. Replaces the older "two staggerWrites with the same selector and one property each" pattern with a single node. |
+| [DOM Dock To](boundary/domDockTo.md) | `domDockTo` | shared | Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY. |
+| [DOM Indexed Dock](boundary/domIndexedDock.md) | `domIndexedDock` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. Sibling to domDockTo (which docks onto a static target). Used for typewriter cursors, scanning highlights, focus rings, and any "park X on the active item in a sequence" effect. |
+| [DOM String Write](boundary/domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
+| [DOM Stage Preset](boundary/domStagePreset.md) | `domStagePreset` | shared | One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup. |
+| [Scene Transform](boundary/sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
+| [Object Property Read](boundary/objectPropertyRead.md) | `objectPropertyRead` | canvas | Read a runtime object property (bidirectional binding read side). |
+| [Layout Compute](boundary/layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
+| [Mask Sync](boundary/maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
+| [Camera](boundary/camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
+| [Switch Gate](boundary/switchGate.md) | `switchGate` | shared | Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node. |
+| [Clip Path Write](boundary/clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
+| [DOM Pose Write](boundary/domPoseWrite.md) | `domPoseWrite` | shared | Boundary node: writes one or more float values to CSS properties on a target DOM element. Pick which properties to expose via the picker — each becomes an input port wired from upstream tweens / latches / math. |
+| [DOM Attribute Read](boundary/domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM value from an element at bind time and outputs it as a string. `readMode: attribute` (default) reads via getAttribute — SVG d/viewBox/points, data-* attributes, aria-* attributes. `readMode: textContent` reads el.textContent — used for i18n-friendly text animations where the translatable string lives in the DOM. Static read. Boundary counterpart to DOMStringWriteNode. |
+| [DOM String Array Read](boundary/domStringArrayRead.md) | `domStringArrayRead` | shared | Reads textContent (or an attribute) from EVERY element matching a selector, emits the results as a stringArray. Purpose: i18n-friendly multi-source text animations — the HTML owns every translatable string, the .fmtion carries only the recipe. Static read at bind time via querySelectorAll; document-order matches. |
+| [Scene Render](boundary/sceneRender.md) | `sceneRender` | canvas | F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2. |
+| [Bone Render](boundary/boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
+| [Additive Property Write](boundary/additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |
 
 ## [State machine](state-machine/)
 
@@ -147,38 +180,6 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [SM Post Advance](state-machine/smPostAdvance.md) | `smPostAdvance` | canvas | Post-advance coordinator — trigger consumption, reset maps application, solver reset signal. Runs after all layers complete. |
 | [SM Audio Binding](state-machine/smAudioBinding.md) | `smAudioBinding` | canvas | Reads frequency data from audio tracks, applies temporal smoothing, outputs parameter values for audio-reactive animations. |
 
-## [Boundary](boundary/)
-
-Scene I/O boundary: read/write object transforms and properties, DOM CSS/attribute writes, color writes, stagger writes, data writes.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Object Position](boundary/objectPosition.md) | `objectPosition` | canvas | Read world position of a scene object |
-| [Position Write](boundary/positionWrite.md) | `positionWrite` | canvas | Write world-space position to a scene object |
-| [Transform Read](boundary/transformRead.md) | `transformRead` | canvas | Read full transform (position + rotation + scale) of a scene object |
-| [Transform Write](boundary/transformWrite.md) | `transformWrite` | canvas | Write full transform to a scene object |
-| [Property Write](boundary/propertyWrite.md) | `propertyWrite` | canvas | Write a float value to any object property |
-| [Data Write](boundary/dataWrite.md) | `dataWrite` | canvas | Write any-typed value to a canvas object property |
-| [DOM Property Write](boundary/domPropertyWrite.md) | `domPropertyWrite` | dom | Write a float value to a CSS property, transform, attribute, or textContent on a DOM element |
-| [Stagger Write](boundary/staggerWrite.md) | `staggerWrite` | dom | Batched stagger animation — one node handles all elements matching a selector with per-element timing offset |
-| [DOM Dock To](boundary/domDockTo.md) | `domDockTo` | shared | Compute additive translate that centers a source DOM element over a target element, scaled by a 0..1 blend. Wire outputs into a domPoseWrite translateX/translateY. |
-| [DOM Indexed Dock](boundary/domIndexedDock.md) | `domIndexedDock` | shared | Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. Sibling to domDockTo (which docks onto a static target). Used for typewriter cursors, scanning highlights, focus rings, and any "park X on the active item in a sequence" effect. |
-| [DOM String Write](boundary/domStringWrite.md) | `domStringWrite` | dom | Write a string value to a DOM element (CSS, SVG attribute, textContent) |
-| [DOM Stage Preset](boundary/domStagePreset.md) | `domStagePreset` | shared | One-shot mount-time CSS writer: perspective / transformStyle on the stage, transformOrigin per slide. Used by the carousel mount-time setup. |
-| [Scene Transform](boundary/sceneTransform.md) | `sceneTransform` | canvas | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
-| [Object Property Read](boundary/objectPropertyRead.md) | `objectPropertyRead` | canvas | Read a runtime object property (bidirectional binding read side). |
-| [Layout Compute](boundary/layoutCompute.md) | `layoutCompute` | canvas | WASM flex layout recompute + animated transitions. |
-| [Mask Sync](boundary/maskSync.md) | `maskSync` | canvas | Mask transform synchronization — world-space mask geometry from source objects. |
-| [Camera](boundary/camera.md) | `camera` | canvas | 2D camera — zoom, pan, rotation, parallax, DOF, color effects, tint, vignette. |
-| [Switch Gate](boundary/switchGate.md) | `switchGate` | shared | Gates parentVisible for one child of a displayMode:switch group. Internal loader-generated node. |
-| [Clip Path Write](boundary/clipPathWrite.md) | `clipPathWrite` | shared | Serializes ClipPathPoints to CSS polygon() and writes to target element clip-path. Dirty-checks the serialized string to skip redundant DOM writes. |
-| [DOM Pose Write](boundary/domPoseWrite.md) | `domPoseWrite` | shared | Boundary node: writes one or more float values to CSS properties on a target DOM element. Pick which properties to expose via the picker — each becomes an input port wired from upstream tweens / latches / math. |
-| [DOM Attribute Read](boundary/domAttributeRead.md) | `domAttributeRead` | shared | Reads a DOM value from an element at bind time and outputs it as a string. `readMode: attribute` (default) reads via getAttribute — SVG d/viewBox/points, data-* attributes, aria-* attributes. `readMode: textContent` reads el.textContent — used for i18n-friendly text animations where the translatable string lives in the DOM. Static read. Boundary counterpart to DOMStringWriteNode. |
-| [DOM String Array Read](boundary/domStringArrayRead.md) | `domStringArrayRead` | shared | Reads textContent (or an attribute) from EVERY element matching a selector, emits the results as a stringArray. Purpose: i18n-friendly multi-source text animations — the HTML owns every translatable string, the .fmtion carries only the recipe. Static read at bind time via querySelectorAll; document-order matches. |
-| [Scene Render](boundary/sceneRender.md) | `sceneRender` | canvas | F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2. |
-| [Bone Render](boundary/boneRender.md) | `boneRender` | canvas | Editor-mode bone debug rendering — draws skeleton overlays in viewport. |
-| [Additive Property Write](boundary/additivePropertyWrite.md) | `additivePropertyWrite` | canvas | F241 additive write boundary — sums multiple driver outputs into a single property without overwriting. |
-
 ## [Paths](paths/)
 
 Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, boolean ops, wiggle path, round corners, repeater, conform, and more.
@@ -210,6 +211,27 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 | [Morph Path Animation](paths/morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |
 
+## [Math](math/)
+
+Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
+| [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
+| [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
+| [Snap Float](math/snapFloat.md) | `snapFloat` | shared | F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style "magnetic" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16). |
+| [Smoothing](math/smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
+| [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
+| [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
+| [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
+| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Single Float→Float math operation. Picks unary (`abs`, `round`, `sqrt`, ...) or binary (`add`, `subtract`, `multiply`) ops; binary ops use `value` + `b`. Range ops (`clamp`, `normalize`) use `value` + `min` + `max`. |
+| [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
+| [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
+| [Phase Shift](math/phaseShift.md) | `phaseShift` | shared | Per-clone phase shift of a shared 0..1 progress signal. Computes `(progress + index/count) % 1`, wrapping the result into [0, 1) so it can drive any node that consumes a normalized progress (staggerWrite, multiKeyframe, propertyAnimation). Replaces the inline `((node('progress') + ($index / node('count'))) % 1)` expression that recurs in any forEach-instanced template that needs each clone to ride a different phase of one shared clock. |
+| [Float Array Pick](math/floatArrayPick.md) | `floatArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects. |
+| [Color Array Pick](math/colorArrayPick.md) | `colorArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\s sourceIndex or variantStagger\s per-child index. |
+
 ## [Skeleton](skeleton/)
 
 Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
@@ -230,26 +252,6 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 | [IK Target](skeleton/ikTarget.md) | `ikTarget` | canvas | Boundary node — bridges scene-object position into IK solve target port. |
 | [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
 | [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
-
-## [Math](math/)
-
-Pure compute nodes: remap ranges, math expressions, utility operations (abs, clamp, round), smoothing, parallax offset, velocity calculation, string operations.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
-| [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
-| [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
-| [Snap Float](math/snapFloat.md) | `snapFloat` | shared | F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style "magnetic" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16). |
-| [Smoothing](math/smoothing.md) | `smoothing` | shared | Exponential smoothing for any float signal — frame-rate independent |
-| [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
-| [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
-| [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
-| [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Single Float→Float math operation. Picks unary (`abs`, `round`, `sqrt`, ...) or binary (`add`, `subtract`, `multiply`) ops; binary ops use `value` + `b`. Range ops (`clamp`, `normalize`) use `value` + `min` + `max`. |
-| [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
-| [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
-| [Float Array Pick](math/floatArrayPick.md) | `floatArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects. |
-| [Color Array Pick](math/colorArrayPick.md) | `colorArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\s sourceIndex or variantStagger\s per-child index. |
 
 ## [Constraints](constraints/)
 

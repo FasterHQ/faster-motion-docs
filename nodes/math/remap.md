@@ -28,6 +28,10 @@ Map a value from one range to another with optional curve
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `curve` | enum | `"linear"` | Curve. Options: `linear`, `ease`, `easeIn`, `easeOut` |
+| `inputMin` | float | `0` | Input Min |
+| `inputMax` | float | `1` | Input Max |
+| `outputMin` | float | `0` | Output Min |
+| `outputMax` | float | `1` | Output Max |
+| `curve` | easingCurve | `"linear"` | Curve |
 | `clamp` | bool | `true` | Clamp |
 

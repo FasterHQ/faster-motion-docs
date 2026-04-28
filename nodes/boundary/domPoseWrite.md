@@ -9,7 +9,10 @@ Boundary node: writes one or more float values to CSS properties on a target DOM
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `selector` | `string` | Selector |
+
 
 ## Outputs
 

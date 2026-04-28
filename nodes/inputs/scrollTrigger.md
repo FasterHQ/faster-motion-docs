@@ -4,7 +4,7 @@
 **Category:** inputs  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Track element visibility during scroll — outputs progress, direction, velocity, isInView, and pin geometry (pinTopOffset) consumed by PinNode. When `pin: true` is authored, the loader wires PinAnchorNode.flowTop into the optional `flowTop` input so progress measures through the spacer (flow position) rather than the pinned element's viewport rect.
+Track an element's position relative to the scroll viewport — outputs progress (0..1), direction (±1), velocity (px/s), isInView (0/1), and pin geometry. Edges control when progress starts and ends, expressed as `<elementEdge> <viewportEdge>` pairs ("top bottom" = element top reaches viewport bottom; "bottom top" = element bottom reaches viewport top). When `pin: true` is authored, the loader emits a PinAnchor sibling and wires `flowTop` automatically so progress measures through the spacer rather than the pinned rect.
 
 ## Inputs
 
@@ -29,9 +29,12 @@ Track element visibility during scroll — outputs progress, direction, velocity
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `""` | Trigger Element |
+| `selector` | elementSelector | `""` | Trigger Element |
 | `startEdge` | string | `"top bottom"` | Start Edge |
 | `endEdge` | string | `"bottom top"` | End Edge |
-| `scroller` | string | `—` | Scroll Container |
+| `scroller` | elementSelector | `""` | Scroll Container |
 | `invert` | bool | `false` | Invert Progress |
+| `pin` | bool | `false` | Pin |
+| `pinSpacing` | bool | `true` | Pin Spacing |
+| `pinTarget` | elementSelector | `""` | Pin Target |
 
