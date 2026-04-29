@@ -4,7 +4,7 @@
 **Category:** math  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Exponential smoothing for any float signal — frame-rate independent
+Frame-rate-independent exponential smoothing on any float signal. The output eases toward the input value at a rate controlled by `smooth` — pass-through at `0` (or below), near-instant at `10`. Useful for taking a noisy / step-y / discrete signal (gate flicks, scroll-velocity, mouse position) and producing a damped, animation-ready curve.
 
 ## Inputs
 
@@ -24,5 +24,5 @@ Exponential smoothing for any float signal — frame-rate independent
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `smooth` | float | `1` | Smooth (min: 0, max: 10) |
+| `smooth` | float | `5` | Response (min: 0, max: 10) |
 

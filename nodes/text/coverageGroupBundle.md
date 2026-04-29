@@ -1,18 +1,19 @@
-# Coverage Group
+# Coverage Group Bundle
 
-**Type:** `coverageGroup`  
+**Type:** `coverageGroupBundle`  
 **Category:** text  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-F356: Per-character transforms scaled by coverage values. Reads x/y/rotation/scaleX/scaleY/opacity from a wired AttributeBundle at slot bundle.objectIds.indexOf(objectId). Outputs Mat4TransformBundle.
+F356: Author-facing compound for a coverage group + N coverage ranges with self-aligning bundle reads. Expands at load to one `coverageGroup` + N `coverageRange` primitives with a shared `bundle` connection — no `bundleRead` intermediaries. Compound: no runtime class.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `coverage` | `attributes` | Coverage |
-| `upstream` | `mat4Bundle` | Upstream |
 | `bundle` | `attributes` | Bundle |
+| `upstream` | `mat4Bundle` | Upstream |
+| `charCount` | `float` | Char Count |
+| `smWritesDone` | `any` | SM Writes Done |
 
 
 ## Outputs

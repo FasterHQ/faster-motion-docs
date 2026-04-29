@@ -4,7 +4,7 @@
 **Category:** inputs  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Pulse-driven integer counter with optional wrap. Each rising edge of `pulse` advances `index` by `step`; rising edge of `reset` returns `index` to `start`. With `wrap=true`, output is folded into [start, start+max) via positive modulo (so negative steps wrap correctly).
+Pulse-driven integer counter with optional wrap-around. Each rising edge of `pulse` advances `index` by `step`; rising edge of `reset` returns `index` to `start`. With `wrap` enabled, output is folded into `[start, start + max)` via positive modulo (negative steps wrap correctly too). The current `index` is published every frame; downstream consumers (`pulseRouter`, expressions, `parameterReadFloat`) read it like any other numeric source.
 
 ## Inputs
 
@@ -27,6 +27,6 @@ Pulse-driven integer counter with optional wrap. Each rising edge of `pulse` adv
 |-----------|------|---------|-------------|
 | `start` | int | `0` | Start |
 | `step` | int | `1` | Step |
-| `wrap` | bool | `true` | Wrap |
+| `wrap` | bool | `true` | Wrap Around |
 | `max` | int | `10` | Wrap Range (min: 1) |
 

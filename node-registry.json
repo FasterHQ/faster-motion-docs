@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-28",
+  "_generatedAt": "2026-04-29",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 268,
+  "_nodeCount": 269,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -222,6 +222,7 @@
         "textWaveCompute",
         "coverageRange",
         "coverageGroup",
+        "coverageGroupBundle",
         "textApply",
         "splitText",
         "splitShape",
@@ -2419,7 +2420,7 @@
       "displayName": "Smoothing",
       "category": "math",
       "context": "shared",
-      "description": "Exponential smoothing for any float signal — frame-rate independent",
+      "description": "Frame-rate-independent exponential smoothing on any float signal. The output eases toward the input value at a rate controlled by `smooth` — pass-through at `0` (or below), near-instant at `10`. Useful for taking a noisy / step-y / discrete signal (gate flicks, scroll-velocity, mouse position) and producing a damped, animation-ready curve.",
       "inputs": [
         {
           "name": "value",
@@ -2437,7 +2438,7 @@
       "parameters": [
         {
           "key": "smooth",
-          "label": "Smooth",
+          "label": "Response",
           "type": "float",
           "min": 0,
           "max": 10,
@@ -2445,7 +2446,7 @@
         }
       ],
       "defaults": {
-        "smooth": 1
+        "smooth": 5
       },
       "dynamicPorts": false
     },
@@ -3122,7 +3123,7 @@
       "displayName": "Observer",
       "category": "inputs",
       "context": "dom",
-      "description": "Detect gestures (wheel, touch, pointer, scroll) — outputs deltas",
+      "description": "Gesture detector — listens for wheel / touch / pointer / scroll events on a target and outputs accumulated deltas. Acts as the FasterMotion equivalent of GSAP's `Observer` plugin: events accumulate internally until the magnitude crosses `tolerance`, at which point the per-frame `deltaX` / `deltaY` outputs spike to the gesture amount for one frame, then reset to 0 next frame. Pair with `thresholdPulse` to convert deltas into discrete pulses, then `pulseCounter` for snap navigation.",
       "inputs": [],
       "outputs": [
         {
@@ -3144,8 +3145,8 @@
       "parameters": [
         {
           "key": "selector",
-          "label": "Element",
-          "type": "string"
+          "label": "Target Element",
+          "type": "elementSelector"
         },
         {
           "key": "eventType",
@@ -3172,8 +3173,8 @@
           "key": "tolerance",
           "label": "Tolerance (px)",
           "type": "float",
-          "min": 0,
-          "max": 100,
+          "min": 1,
+          "max": 200,
           "step": 1
         }
       ],
@@ -3905,7 +3906,7 @@
       "displayName": "Pulse Tween",
       "category": "animation",
       "context": "shared",
-      "description": "F349 — one-shot 0→1 clock controlled by event pulses. Each input is rising-edge-detected: `play` advances toward 1, `reverse` advances toward 0, `restart` resets to 0 and plays forward, `pause` freezes, `resume` un-freezes. Output `progress` is the eased value; `playing` is 1 while advancing. Maps the toggle-actions model (play / reverse / pause / resume / restart on independent rising-edge inputs) onto graph ports. Distinct from the stateless `tween` interpolator (which is a pure function of input progress) — pulseTween OWNS the progress.",
+      "description": "A one-shot 0..1 clock driven by event pulses, not by input progress. Each input is rising-edge-detected: **`play`** advances toward 1, **`reverse`** advances toward 0, **`restart`** resets to 0 and plays forward, **`pause`** freezes the current value, **`resume`** un-freezes. Output `progress` is the eased 0..1 value; `playing` is 1 while advancing. The node OWNS the progress — distinct from the stateless `tween` interpolator (which is a pure function of an input progress source). Use this whenever a transition should be triggered by a discrete event rather than driven by a continuous external clock.",
       "inputs": [
         {
           "name": "play",
@@ -3950,18 +3951,19 @@
           "key": "duration",
           "label": "Duration (sec)",
           "type": "float",
-          "min": 0.001,
-          "step": 0.1
+          "min": 0.05,
+          "max": 10,
+          "step": 0.05
         },
         {
           "key": "ease",
           "label": "Easing",
-          "type": "string"
+          "type": "easingCurve"
         }
       ],
       "defaults": {
         "duration": 1,
-        "ease": "linear"
+        "ease": "easeOutCubic"
       },
       "dynamicPorts": false
     },
@@ -3969,7 +3971,7 @@
       "displayName": "Pulse Counter",
       "category": "inputs",
       "context": "shared",
-      "description": "Pulse-driven integer counter with optional wrap. Each rising edge of `pulse` advances `index` by `step`; rising edge of `reset` returns `index` to `start`. With `wrap=true`, output is folded into [start, start+max) via positive modulo (so negative steps wrap correctly).",
+      "description": "Pulse-driven integer counter with optional wrap-around. Each rising edge of `pulse` advances `index` by `step`; rising edge of `reset` returns `index` to `start`. With `wrap` enabled, output is folded into `[start, start + max)` via positive modulo (negative steps wrap correctly too). The current `index` is published every frame; downstream consumers (`pulseRouter`, expressions, `parameterReadFloat`) read it like any other numeric source.",
       "inputs": [
         {
           "name": "pulse",
@@ -4002,7 +4004,7 @@
         },
         {
           "key": "wrap",
-          "label": "Wrap",
+          "label": "Wrap Around",
           "type": "bool"
         },
         {
@@ -4024,7 +4026,7 @@
       "displayName": "Threshold Pulse",
       "category": "inputs",
       "context": "shared",
-      "description": "Emits a single-frame pulse when `value` crosses `threshold`. `mode` chooses semantics: `edge` (default) fires once per crossing then suppresses until value drops below `threshold - hysteresis` and re-crosses; `auto` fires periodically paced by `cooldownMs` for as long as value stays past threshold. `direction` selects rising / falling / both. Continuous comparator output `isAbove` is raw (not gated). First-frame above-threshold does NOT fire (cold-start state-snap).",
+      "description": "Edge-detector / pulse generator. Watches `value` and fires a single-frame `pulse` when it crosses `threshold`. `mode: edge` (default) fires once per crossing then suppresses until value drops below `threshold − hysteresis` and re-crosses (debounce). `mode: auto` fires periodically paced by `cooldownMs` for as long as value stays past threshold (metronome). `direction` selects rising-only / falling-only / both. Continuous comparator output `isAbove` is raw (1 while past threshold, 0 otherwise) — useful as a gate when you do not want pulse semantics. First-frame past-threshold does NOT fire (cold-start state-snap, prevents spurious init pulses).",
       "inputs": [
         {
           "name": "value",
@@ -4050,6 +4052,12 @@
         }
       ],
       "parameters": [
+        {
+          "key": "threshold",
+          "label": "Threshold",
+          "type": "float",
+          "step": 0.1
+        },
         {
           "key": "mode",
           "label": "Mode",
@@ -4085,6 +4093,7 @@
         }
       ],
       "defaults": {
+        "threshold": 0,
         "direction": "rising",
         "hysteresis": 0,
         "cooldownMs": 0,
@@ -10094,12 +10103,12 @@
       "displayName": "Coverage Range",
       "category": "text",
       "context": "shared",
-      "description": "Per-character coverage window with falloff ramps. Animated offset via coverageTime keyframes. Chainable with blend modes.",
+      "description": "F356: Per-character coverage window with falloff ramps. Reads coverageTime from a wired AttributeBundle at slot bundle.objectIds.indexOf(objectId).",
       "inputs": [
         {
-          "name": "coverageTime",
-          "type": "float",
-          "label": "Coverage Time"
+          "name": "bundle",
+          "type": "attributes",
+          "label": "Bundle"
         },
         {
           "name": "charCount",
@@ -10120,6 +10129,11 @@
         }
       ],
       "parameters": [
+        {
+          "key": "objectId",
+          "label": "Object Id",
+          "type": "string"
+        },
         {
           "key": "modifyFrom",
           "label": "From",
@@ -10181,6 +10195,7 @@
         }
       ],
       "defaults": {
+        "objectId": "",
         "modifyFrom": 0,
         "modifyTo": 1,
         "falloffFrom": 0,
@@ -10195,7 +10210,7 @@
       "displayName": "Coverage Group",
       "category": "text",
       "context": "shared",
-      "description": "F256: Per-character transforms scaled by coverage values. Outputs Mat4TransformBundle.",
+      "description": "F356: Per-character transforms scaled by coverage values. Reads x/y/rotation/scaleX/scaleY/opacity from a wired AttributeBundle at slot bundle.objectIds.indexOf(objectId). Outputs Mat4TransformBundle.",
       "inputs": [
         {
           "name": "coverage",
@@ -10208,34 +10223,9 @@
           "label": "Upstream"
         },
         {
-          "name": "x",
-          "type": "float",
-          "label": "X"
-        },
-        {
-          "name": "y",
-          "type": "float",
-          "label": "Y"
-        },
-        {
-          "name": "rotation",
-          "type": "float",
-          "label": "Rotation"
-        },
-        {
-          "name": "scaleX",
-          "type": "float",
-          "label": "Scale X"
-        },
-        {
-          "name": "scaleY",
-          "type": "float",
-          "label": "Scale Y"
-        },
-        {
-          "name": "opacity",
-          "type": "float",
-          "label": "Opacity"
+          "name": "bundle",
+          "type": "attributes",
+          "label": "Bundle"
         }
       ],
       "outputs": [
@@ -10246,6 +10236,11 @@
         }
       ],
       "parameters": [
+        {
+          "key": "objectId",
+          "label": "Object Id",
+          "type": "string"
+        },
         {
           "key": "flags",
           "label": "Flags",
@@ -10270,10 +10265,94 @@
         }
       ],
       "defaults": {
+        "objectId": "",
         "flags": 63,
         "originX": 0,
         "originY": 0,
         "invertOpacity": false
+      },
+      "dynamicPorts": false
+    },
+    "coverageGroupBundle": {
+      "displayName": "Coverage Group Bundle",
+      "category": "text",
+      "context": "shared",
+      "description": "F356: Author-facing compound for a coverage group + N coverage ranges with self-aligning bundle reads. Expands at load to one `coverageGroup` + N `coverageRange` primitives with a shared `bundle` connection — no `bundleRead` intermediaries. Compound: no runtime class.",
+      "inputs": [
+        {
+          "name": "bundle",
+          "type": "attributes",
+          "label": "Bundle"
+        },
+        {
+          "name": "upstream",
+          "type": "mat4Bundle",
+          "label": "Upstream"
+        },
+        {
+          "name": "charCount",
+          "type": "float",
+          "label": "Char Count"
+        },
+        {
+          "name": "smWritesDone",
+          "type": "any",
+          "label": "SM Writes Done"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "charTransforms",
+          "type": "mat4Bundle",
+          "label": "Char Transforms"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "objectId",
+          "label": "Object Id",
+          "type": "string"
+        },
+        {
+          "key": "flags",
+          "label": "Flags",
+          "type": "int"
+        },
+        {
+          "key": "originX",
+          "label": "Origin X",
+          "type": "float",
+          "step": 1
+        },
+        {
+          "key": "originY",
+          "label": "Origin Y",
+          "type": "float",
+          "step": 1
+        },
+        {
+          "key": "invertOpacity",
+          "label": "Invert Opacity",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "objectId": "",
+        "flags": 63,
+        "originX": 0,
+        "originY": 0,
+        "invertOpacity": false,
+        "ranges": [
+          {
+            "modifyFrom": 0,
+            "modifyTo": 1,
+            "falloffFrom": 0,
+            "falloffTo": 0,
+            "offset": 0,
+            "strength": 1,
+            "blendMode": "add"
+          }
+        ]
       },
       "dynamicPorts": false
     },
