@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-05-01",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 274,
+  "_nodeCount": 281,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -69,6 +69,7 @@
         "latch2D",
         "latchVec2",
         "pulseRouter",
+        "indexedDispatch",
         "accumulatePulse",
         "randomIndex",
         "randomFloat",
@@ -87,7 +88,8 @@
         "scrollProgress",
         "mouseProgress",
         "keyframeProgress",
-        "canvasPointer"
+        "canvasPointer",
+        "bidirectionalSnap"
       ]
     },
     "constraints": {
@@ -152,7 +154,9 @@
         "carouselEffectAnimation",
         "slideSlotAnimation",
         "dockToAnimation",
-        "indexedDockAnimation"
+        "indexedDockAnimation",
+        "clipPathReveal",
+        "sectionAlphaGate"
       ]
     },
     "math": {
@@ -333,6 +337,9 @@
         "smAudioAction",
         "smCallbackAction",
         "smPostAdvance",
+        "smLifecycle",
+        "smAutoStart",
+        "smRandomSource",
         "smAudioBinding"
       ]
     },
@@ -4287,6 +4294,59 @@
       "defaults": {
         "count": 1,
         "defaultRoute": -1
+      },
+      "dynamicPorts": true
+    },
+    "indexedDispatch": {
+      "displayName": "Indexed Dispatch",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Edge dispatcher for an externally-owned integer index. Whenever `index` rises or falls to a different integer, fires a single-frame pulse pair: `exit_out{prev}` for the slot we leave and `enter_out{curr}` for the slot we enter. First evaluate fires only the initial enter (no prior slot exists). Sink-agnostic — routes pulses, not values.",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        },
+        {
+          "name": "direction",
+          "type": "float",
+          "label": "Direction"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "activeIdx",
+          "type": "float",
+          "label": "Active Idx"
+        },
+        {
+          "name": "forwardActive",
+          "type": "float",
+          "label": "Forward"
+        },
+        {
+          "name": "backwardActive",
+          "type": "float",
+          "label": "Backward"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "count",
+          "label": "Channels",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        }
+      ],
+      "defaults": {
+        "count": 1
       },
       "dynamicPorts": true
     },
@@ -13554,6 +13614,76 @@
       "defaults": {},
       "dynamicPorts": false
     },
+    "smLifecycle": {
+      "displayName": "SM Lifecycle",
+      "category": "state-machine",
+      "context": "shared",
+      "description": "Owns the running/stopped state for one state machine. Reads `shouldRun` from the auto-start or external lifecycle source, emits `isRunning` for downstream layer/state nodes. Also the snapshot/restore boundary for hot-reload (F266): stores the full SM execution state (clock, current state ids, clip start times, RNG seed) and reapplies it after a graph rebuild so reloads preserve in-flight animation.",
+      "inputs": [
+        {
+          "name": "shouldRun",
+          "type": "float",
+          "label": "Should Run"
+        },
+        {
+          "name": "shouldReset",
+          "type": "float",
+          "label": "Should Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "isRunning",
+          "type": "float",
+          "label": "Is Running"
+        }
+      ],
+      "parameters": [],
+      "defaults": {},
+      "dynamicPorts": false
+    },
+    "smAutoStart": {
+      "displayName": "SM Auto Start",
+      "category": "state-machine",
+      "context": "shared",
+      "description": "Auto-start latch for a state machine. Defaults `shouldRun` to 1 on construction so the SM begins running on the first frame. `stop()` flips the internal latch to 0, producing a falling edge on `SMLifecycleNode.shouldRun`. The reverse signal (start after stop) lives on the parameter / listener side.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "shouldRun",
+          "type": "float",
+          "label": "Should Run"
+        }
+      ],
+      "parameters": [],
+      "defaults": {},
+      "dynamicPorts": false
+    },
+    "smRandomSource": {
+      "displayName": "SM Random Source",
+      "category": "state-machine",
+      "context": "shared",
+      "description": "Per-SM deterministic Mulberry32 PRNG used by `LayerAdvanceNode` for weighted-random transition selection. Hot path is direct method call (`nextFloat()`) inside the layer's instant-chain inner loop; the `random` output port is updated each frame for FVE display only. Per-SM isolation guarantees that snapshotting one SM and restoring it later produces the identical random sequence regardless of what other SMs consumed in between (F266).",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "random",
+          "type": "float",
+          "label": "Random"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "rngState",
+          "label": "RNG State",
+          "type": "int"
+        }
+      ],
+      "defaults": {
+        "rngState": 0
+      },
+      "dynamicPorts": false
+    },
     "canvasPointer": {
       "displayName": "Canvas Pointer",
       "category": "inputs",
@@ -14430,6 +14560,187 @@
         }
       },
       "dynamicPorts": false
+    },
+    "clipPathReveal": {
+      "displayName": "Clip Path Reveal",
+      "category": "animation",
+      "context": "shared",
+      "description": "Bidirectional CSS clip-path inset reveal. Drives `--clip-top` and `--clip-bottom` CSS variables on `selector` from a 0..1 progress + a forward / backward direction pair, so `clip-path: inset(var(--clip-top) 0 var(--clip-bottom) 0)` rolls open from the bottom up on forward arrival and from the top down on backward arrival. Compound — expands at load to two expression nodes + two `domPropertyWrite` nodes.",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "forward",
+          "type": "float",
+          "label": "Forward"
+        },
+        {
+          "name": "backward",
+          "type": "float",
+          "label": "Backward"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "topPropertyName",
+          "label": "Top Variable",
+          "type": "string"
+        },
+        {
+          "key": "bottomPropertyName",
+          "label": "Bottom Variable",
+          "type": "string"
+        },
+        {
+          "key": "cssUnit",
+          "label": "Unit",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "topPropertyName": "--clip-top",
+        "bottomPropertyName": "--clip-bottom",
+        "cssUnit": "%"
+      },
+      "dynamicPorts": false
+    },
+    "sectionAlphaGate": {
+      "displayName": "Section Alpha Gate",
+      "category": "animation",
+      "context": "shared",
+      "description": "Per-section alpha + z-index gate for layered scroll-snap or carousel slide patterns. Writes `--alpha` (0/1) and `--z` (activeZ / inactiveZ) on `selector` based on whether `myIdx` matches the current `activeIdx`. When `exitPlaying` is wired (typical), the section stays at alpha=1 throughout its own exit fade so the outgoing section doesn't snap to invisible the instant `activeIdx` flips. Compound — expands at load to two expression nodes + two `domPropertyWrite` nodes.",
+      "inputs": [
+        {
+          "name": "activeIdx",
+          "type": "float",
+          "label": "Active Idx"
+        },
+        {
+          "name": "exitPlaying",
+          "type": "float",
+          "label": "Exit Playing"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "myIdx",
+          "label": "My Index",
+          "type": "int",
+          "min": 0
+        },
+        {
+          "key": "activeZ",
+          "label": "Active Z",
+          "type": "int"
+        },
+        {
+          "key": "inactiveZ",
+          "label": "Inactive Z",
+          "type": "int"
+        },
+        {
+          "key": "alphaPropertyName",
+          "label": "Alpha Variable",
+          "type": "string"
+        },
+        {
+          "key": "zPropertyName",
+          "label": "Z Variable",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "myIdx": 0,
+        "activeZ": 100,
+        "inactiveZ": 0,
+        "alphaPropertyName": "--alpha",
+        "zPropertyName": "--z"
+      },
+      "dynamicPorts": false
+    },
+    "bidirectionalSnap": {
+      "displayName": "Bidirectional Snap",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Self-contained wheel-driven discrete-step navigator. Bundles observer + threshold pulses + counter + direction latch + initial-load pulse + indexed dispatcher into one author-facing node. Outputs an integer `activeIdx` that wraps in [0, count), forward / backward latches for direction-aware reveals, and per-section enter / exit pulse pairs (`enter_out{i}`, `exit_out{i}`) fired on every `activeIdx` edge. Compound — expands at load to ~8 primitives.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "activeIdx",
+          "type": "float",
+          "label": "Active Idx"
+        },
+        {
+          "name": "forwardActive",
+          "type": "float",
+          "label": "Forward"
+        },
+        {
+          "name": "backwardActive",
+          "type": "float",
+          "label": "Backward"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "count",
+          "label": "Section Count",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "mountSelector",
+          "label": "Mount Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "threshold",
+          "label": "Wheel Threshold",
+          "type": "float",
+          "min": 1,
+          "step": 1
+        },
+        {
+          "key": "cooldownMs",
+          "label": "Cooldown (ms)",
+          "type": "int",
+          "min": 0,
+          "step": 100
+        },
+        {
+          "key": "tolerance",
+          "label": "Observer Tolerance",
+          "type": "float",
+          "min": 0,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "count": 1,
+        "mountSelector": "",
+        "threshold": 30,
+        "cooldownMs": 1300,
+        "tolerance": 50
+      },
+      "dynamicPorts": true
     }
   }
 }
