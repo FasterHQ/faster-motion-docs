@@ -57,5 +57,4 @@ Per-object transform — reads from objectPose bundle by index, computes world m
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `objectId` | objectPicker | `""` | Object |
-| `objectIndex` | int | `-1` | Object Index |
 

@@ -4,7 +4,7 @@
 **Category:** inputs  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-Gesture detector — listens for wheel / touch / pointer / scroll events on a target and outputs accumulated deltas. Acts as the FasterMotion equivalent of GSAP's `Observer` plugin: events accumulate internally until the magnitude crosses `tolerance`, at which point the per-frame `deltaX` / `deltaY` outputs spike to the gesture amount for one frame, then reset to 0 next frame. Pair with `thresholdPulse` to convert deltas into discrete pulses, then `pulseCounter` for snap navigation.
+Gesture detector — listens for wheel / touch / pointer / scroll events on a target and outputs accumulated deltas. Events accumulate internally until the magnitude crosses `tolerance`, at which point the per-frame `deltaX` / `deltaY` outputs spike to the gesture amount for one frame, then reset to 0 next frame. Pair with `thresholdPulse` to convert deltas into discrete pulses, then `pulseCounter` for snap navigation.
 
 ## Inputs
 

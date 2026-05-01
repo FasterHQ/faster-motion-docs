@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-04-29",
+  "_generatedAt": "2026-05-01",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 269,
+  "_nodeCount": 274,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -72,6 +72,11 @@
         "accumulatePulse",
         "randomIndex",
         "randomFloat",
+        "loadPulse",
+        "directionLatch",
+        "bidirectionalCounter",
+        "pulseDelay",
+        "pulseOr",
         "pulseDispatch",
         "eventListener",
         "keyboardListener",
@@ -3123,7 +3128,7 @@
       "displayName": "Observer",
       "category": "inputs",
       "context": "dom",
-      "description": "Gesture detector — listens for wheel / touch / pointer / scroll events on a target and outputs accumulated deltas. Acts as the FasterMotion equivalent of GSAP's `Observer` plugin: events accumulate internally until the magnitude crosses `tolerance`, at which point the per-frame `deltaX` / `deltaY` outputs spike to the gesture amount for one frame, then reset to 0 next frame. Pair with `thresholdPulse` to convert deltas into discrete pulses, then `pulseCounter` for snap navigation.",
+      "description": "Gesture detector — listens for wheel / touch / pointer / scroll events on a target and outputs accumulated deltas. Events accumulate internally until the magnitude crosses `tolerance`, at which point the per-frame `deltaX` / `deltaY` outputs spike to the gesture amount for one frame, then reset to 0 next frame. Pair with `thresholdPulse` to convert deltas into discrete pulses, then `pulseCounter` for snap navigation.",
       "inputs": [],
       "outputs": [
         {
@@ -4434,6 +4439,209 @@
       },
       "dynamicPorts": false
     },
+    "loadPulse": {
+      "displayName": "Load Pulse",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Fires a single-frame `pulse` on the first graph evaluation, then stays at 0 forever. The graph-native equivalent of \"do this once at startup\". Replaces the common hack of `(time > 0.05 ? 1 : 0)` expression + thresholdPulse rising-edge detector — that pattern silently failed because of thresholdPulse's cold-start rule (first-frame-above-threshold is NOT a rising edge).",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        }
+      ],
+      "parameters": [],
+      "defaults": {},
+      "dynamicPorts": false
+    },
+    "directionLatch": {
+      "displayName": "Direction Latch",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Maintains a ±1 direction value, flipped to +1 on rising-edge `forward` or -1 on rising-edge `backward`. Outputs `direction` (signed) plus `forwardActive` / `backwardActive` (binary 0/1) for use as multipliers in direction-aware animation expressions. Replaces the pulseTween-of-duration-0.001s + sign-extracting expressions hack.",
+      "inputs": [
+        {
+          "name": "forward",
+          "type": "float",
+          "label": "Forward"
+        },
+        {
+          "name": "backward",
+          "type": "float",
+          "label": "Backward"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "direction",
+          "type": "float",
+          "label": "Direction"
+        },
+        {
+          "name": "forwardActive",
+          "type": "float",
+          "label": "Forward Active"
+        },
+        {
+          "name": "backwardActive",
+          "type": "float",
+          "label": "Backward Active"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "initialDirection",
+          "label": "Initial Direction",
+          "type": "enum",
+          "options": [
+            1,
+            -1
+          ]
+        }
+      ],
+      "defaults": {
+        "initialDirection": 1
+      },
+      "dynamicPorts": false
+    },
+    "bidirectionalCounter": {
+      "displayName": "Bidirectional Counter",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Clamped integer counter with separate `increment` and `decrement` inputs. Counter never grows past `max` or below `min` — out-of-range pulses are silently absorbed inside the node, so the visible `value` always reflects bounds. Sister of `pulseCounter`, but bidirectional and clamped. Avoids the `cDn − cUp` two-counter-subtract hack and its over-scroll drift bug at boundaries.",
+      "inputs": [
+        {
+          "name": "increment",
+          "type": "float",
+          "label": "Increment"
+        },
+        {
+          "name": "decrement",
+          "type": "float",
+          "label": "Decrement"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "start",
+          "label": "Start",
+          "type": "int"
+        },
+        {
+          "key": "min",
+          "label": "Min",
+          "type": "int"
+        },
+        {
+          "key": "max",
+          "label": "Max",
+          "type": "int"
+        },
+        {
+          "key": "step",
+          "label": "Step",
+          "type": "int",
+          "min": 1
+        }
+      ],
+      "defaults": {
+        "start": 0,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "dynamicPorts": false
+    },
+    "pulseDelay": {
+      "displayName": "Pulse Delay",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Fires `pulse` exactly `delay` seconds after a rising-edge `trigger`. Graph-native equivalent of `setTimeout(..., delay)`. Single-slot — additional triggers while a pulse is pending are absorbed (matches debounce / one-shot semantics). For per-trigger queuing, compose with `pulseCounter`.",
+      "inputs": [
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        },
+        {
+          "name": "reset",
+          "type": "float",
+          "label": "Reset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "delay",
+          "label": "Delay (s)",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        }
+      ],
+      "defaults": {
+        "delay": 0.2
+      },
+      "dynamicPorts": false
+    },
+    "pulseOr": {
+      "displayName": "Pulse OR",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Fires `pulse=1` for a single frame whenever ANY input pulse has a rising edge. Replaces the boilerplate `Math.max(node('a'), node('b'), …)` expression + thresholdPulse pair authors use to combine multiple trigger sources.",
+      "inputs": [
+        {
+          "name": "a",
+          "type": "float",
+          "label": "A"
+        },
+        {
+          "name": "b",
+          "type": "float",
+          "label": "B"
+        },
+        {
+          "name": "c",
+          "type": "float",
+          "label": "C"
+        },
+        {
+          "name": "d",
+          "type": "float",
+          "label": "D"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        }
+      ],
+      "parameters": [],
+      "defaults": {},
+      "dynamicPorts": false
+    },
     "pulseDispatch": {
       "displayName": "Pulse Dispatch",
       "category": "inputs",
@@ -5045,6 +5253,11 @@
           "name": "weight",
           "type": "float",
           "label": "Weight"
+        },
+        {
+          "name": "restBaseline",
+          "type": "attributes",
+          "label": "Rest Baseline"
         }
       ],
       "outputs": [
@@ -5374,16 +5587,10 @@
           "key": "objectId",
           "label": "Object",
           "type": "objectPicker"
-        },
-        {
-          "key": "objectIndex",
-          "label": "Object Index",
-          "type": "int"
         }
       ],
       "defaults": {
-        "objectId": "",
-        "objectIndex": -1
+        "objectId": ""
       },
       "dynamicPorts": true
     },
@@ -13132,7 +13339,7 @@
       "displayName": "Blend Space 2D Eval",
       "category": "state-machine",
       "context": "canvas",
-      "description": "F266 Phase 3: 2D blend space graph citizen. Serializable and inspectable in FVE. Evaluator stub — 2D blend transform output is still produced by BlendSpace2D.apply() pending extraction of a pure helper (Phase 6+).",
+      "description": "F359 Phase 8: 2D blend space evaluator. Pulls clips from dynamic clip_${animationId} input ports and produces transforms via Delaunay+barycentric (interpolated) or nearest-point (discrete). Grid mode publishes integer frame index on the frameIndex output port.",
       "inputs": [
         {
           "name": "inputX",
@@ -13155,11 +13362,16 @@
           "name": "transforms",
           "type": "any",
           "label": "Transforms"
+        },
+        {
+          "name": "frameIndex",
+          "type": "float",
+          "label": "Frame Index"
         }
       ],
       "parameters": [],
       "defaults": {},
-      "dynamicPorts": false
+      "dynamicPorts": true
     },
     "resetMap": {
       "displayName": "Reset Map",
@@ -13811,7 +14023,7 @@
       "displayName": "Indexed Dock Animation",
       "category": "animation",
       "context": "shared",
-      "description": "Dock a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. One authoring node replaces the canonical `domIndexedDock + domPoseWrite` chain. Used for typewriter cursors, tab underlines, focus rings, onboarding step indicators, carousel page dots — any \"chrome follows active item in a list\" pattern. Authors route offsetX to any CSS property via `channels` (default: translateX px). Compound: expanded into those two primitives at load time — no runtime class.",
+      "description": "Docks a source element onto the Nth child of a list, where N is derived from a 0..1 progress input. As progress advances from 0 → 1, the source jumps from child[0] → child[1] → … → child[count-1] in lockstep with `floor(progress × count)`. The dock measures children's `getBoundingClientRect()` at runtime and parks the source at the most-recently-revealed child's right edge (whitespace children are skipped automatically so cursor-style consumers don't freeze across word breaks). Authors route the computed `offsetX` to any horizontal-offset-driven CSS property via `channels` (default: `translateX` in px). Compound: expands at load time to `domIndexedDock + domPoseWrite` — no runtime class.",
       "inputs": [
         {
           "name": "progress",
@@ -13897,7 +14109,7 @@
       "displayName": "Text Stagger Animation",
       "category": "text",
       "context": "shared",
-      "description": "Split a text element into chars/words/lines and animate each piece with a staggered from→to progression. Collapses the canonical splitText + N× propertyAnimation pattern (16 chars × 3 channels = up to 48 nodes on blur-focus) into one authoring node. Channels map carries mixed float/string types like propertyAnimation. Compound: expands into `splitText` + N× `propertyAnimation` at load time (each per-child PA then expands to mk+pw via the fixed-point loop) — no runtime class.",
+      "description": "Splits a text element into chars / words / lines and animates each piece from a single 0..1 progress signal with staggered start times. One authoring node replaces the splitText + per-piece tween chain. Channels are author-friendly `{from, to, ease, unit}` ranges (numeric) or CSS-fragment ranges (`blur(16px) → blur(0px)`, `inset(0 100% 0 0) → inset(0 0% 0 0)` — the runtime tokenizes numeric tokens and lerps each independently). Compound: expands at load time to `splitText` + 1× `staggerWrite` (continuous mode) — runtime stays at 2 nodes regardless of piece count. Discrete mode (instant flip per piece, typewriter-style) falls back to `splitText` + N× `propertyAnimation` and requires `count` (since N keyframe-shaped children must be emitted up front). `totalStagger` is the fraction of progress consumed by spreading start times across pieces; runtime reads piece count dynamically from splitText, so editing the heading text does not require a graph edit.",
       "inputs": [
         {
           "name": "progress",
@@ -13923,15 +14135,8 @@
           ]
         },
         {
-          "key": "count",
-          "label": "Child Count",
-          "type": "int",
-          "min": 1,
-          "step": 1
-        },
-        {
-          "key": "stagger",
-          "label": "Stagger (per child)",
+          "key": "totalStagger",
+          "label": "Total Stagger",
           "type": "float",
           "min": 0,
           "max": 1,
@@ -13951,8 +14156,15 @@
         },
         {
           "key": "discrete",
-          "label": "Discrete (instant flip per child)",
+          "label": "Discrete — instant flip per piece",
           "type": "bool"
+        },
+        {
+          "key": "count",
+          "label": "Child Count",
+          "type": "int",
+          "min": 1,
+          "step": 1
         },
         {
           "key": "channels",
@@ -13963,8 +14175,7 @@
       "defaults": {
         "selector": "",
         "splitMode": "chars",
-        "count": 1,
-        "stagger": 0.04,
+        "totalStagger": 0.4,
         "staggerFrom": "start",
         "discrete": false,
         "channels": {

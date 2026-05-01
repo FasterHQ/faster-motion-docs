@@ -13,6 +13,7 @@ Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX
 | `progress` | `float` | Progress |
 | `layerRef` | `any` | Layer Ref |
 | `weight` | `float` | Weight |
+| `restBaseline` | `attributes` | Rest Baseline |
 
 
 ## Outputs
