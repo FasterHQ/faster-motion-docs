@@ -19,6 +19,9 @@ Track an element's position relative to the scroll viewport — outputs progress
 |------|------|-------------|
 | `progress` | `float` | Progress |
 | `unclampedProgress` | `float` | Progress (unclamped) |
+| `scrolledPx` | `float` | Scrolled (px, clamped) |
+| `scrolledPxUnclamped` | `float` | Scrolled (px, unclamped) |
+| `windowPx` | `float` | Window Length (px) |
 | `isInView` | `float` | In View |
 | `direction` | `float` | Direction |
 | `velocity` | `float` | Velocity |
@@ -30,11 +33,11 @@ Track an element's position relative to the scroll viewport — outputs progress
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `selector` | elementSelector | `""` | Trigger Element |
-| `startEdge` | string | `"top bottom"` | Start Edge |
-| `endEdge` | string | `"bottom top"` | End Edge |
+| `startEdge` | scrollEdges | `"top bottom"` | Scroll Edges |
 | `scroller` | elementSelector | `""` | Scroll Container |
 | `invert` | bool | `false` | Invert Progress |
 | `pin` | bool | `false` | Pin |
 | `pinSpacing` | bool | `true` | Pin Spacing |
 | `pinTarget` | elementSelector | `""` | Pin Target |
+| `pinZIndex` | string | `""` | Pin Z-Index |
 

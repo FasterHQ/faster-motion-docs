@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-05-01",
+  "_generatedAt": "2026-05-03",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 281,
+  "_nodeCount": 286,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -89,6 +89,8 @@
         "mouseProgress",
         "keyframeProgress",
         "canvasPointer",
+        "modalToggle",
+        "clickStateDispatcher",
         "bidirectionalSnap"
       ]
     },
@@ -150,6 +152,8 @@
         "clipPath",
         "multiKeyframe",
         "propertyAnimation",
+        "scrollTween",
+        "eventTween",
         "clipPathAnimation",
         "carouselEffectAnimation",
         "slideSlotAnimation",
@@ -189,6 +193,7 @@
         "dataWrite",
         "domPropertyWrite",
         "domVariablesWrite",
+        "staggerAnimate",
         "staggerWrite",
         "domDockTo",
         "domIndexedDock",
@@ -1459,12 +1464,17 @@
       "displayName": "Scroll To",
       "category": "animation",
       "context": "shared",
-      "description": "F337 — animated scroll-to. Trigger-launched tween over the scroller's scrollTop. Resolves the target Y from a CSS selector (or \"top\" / \"bottom\") at trigger time, lerps from current scroll through the configured ease, outputs a `value` to feed a domPropertyWrite(scrollTop). Pure-graph; no imperative API.",
+      "description": "F337 — animated scroll-to. Trigger-launched tween over the scroller's scrollTop. Resolves the target Y from a CSS selector (or \"top\" / \"bottom\") at trigger time, or from the dynamic `targetY` input port when wired (takes precedence over the selector). Lerps from current scroll through the configured ease, outputs a `value` to feed a domPropertyWrite(scrollTop). Pure-graph; no imperative API.",
       "inputs": [
         {
           "name": "trigger",
           "type": "float",
           "label": "Trigger"
+        },
+        {
+          "name": "targetY",
+          "type": "float",
+          "label": "Target Y (px)"
         }
       ],
       "outputs": [
@@ -1487,12 +1497,12 @@
       "parameters": [
         {
           "key": "targetSelector",
-          "label": "Target Selector",
-          "type": "string"
+          "label": "Target",
+          "type": "elementSelector"
         },
         {
           "key": "duration",
-          "label": "Duration",
+          "label": "Duration (s)",
           "type": "float",
           "min": 0,
           "step": 0.1
@@ -1500,17 +1510,18 @@
         {
           "key": "ease",
           "label": "Ease",
-          "type": "string"
+          "type": "easingCurve"
         },
         {
           "key": "offsetY",
-          "label": "Offset Y",
-          "type": "float"
+          "label": "Offset Y (px)",
+          "type": "float",
+          "step": 1
         },
         {
           "key": "scroller",
           "label": "Scroller",
-          "type": "string"
+          "type": "elementSelector"
         }
       ],
       "defaults": {
@@ -2174,6 +2185,68 @@
       },
       "dynamicPorts": false
     },
+    "staggerAnimate": {
+      "displayName": "Stagger Animate",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Runtime per-element keyframe-with-stagger writer. Resolves N elements at bind time from a plain CSS selector and applies a multi-channel keyframe template per element with translation-stagger (each element's progress is shifted by `stagger * effectiveIndex(i)`). The runtime backing for the `staggerAnimation` compound — authors usually reach for the compound. Out-of-range progress per element holds the first/last keyframe (same semantics as MultiKeyframeNode).",
+      "inputs": [
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
+        },
+        {
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "stagger",
+          "label": "Stagger",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "staggerFrom",
+          "label": "Stagger From",
+          "type": "enum",
+          "options": [
+            "start",
+            "end",
+            "center",
+            "edges",
+            "random"
+          ]
+        },
+        {
+          "key": "delayOffset",
+          "label": "Delay Offset",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "stagger": 0,
+        "staggerFrom": "start",
+        "delayOffset": 0,
+        "channels": {}
+      },
+      "dynamicPorts": false
+    },
     "staggerWrite": {
       "displayName": "Stagger Write",
       "category": "boundary",
@@ -2314,6 +2387,21 @@
           "label": "Progress (unclamped)"
         },
         {
+          "name": "scrolledPx",
+          "type": "float",
+          "label": "Scrolled (px, clamped)"
+        },
+        {
+          "name": "scrolledPxUnclamped",
+          "type": "float",
+          "label": "Scrolled (px, unclamped)"
+        },
+        {
+          "name": "windowPx",
+          "type": "float",
+          "label": "Window Length (px)"
+        },
+        {
           "name": "isInView",
           "type": "float",
           "label": "In View"
@@ -2342,13 +2430,8 @@
         },
         {
           "key": "startEdge",
-          "label": "Start Edge",
-          "type": "string"
-        },
-        {
-          "key": "endEdge",
-          "label": "End Edge",
-          "type": "string"
+          "label": "Scroll Edges",
+          "type": "scrollEdges"
         },
         {
           "key": "scroller",
@@ -2374,6 +2457,11 @@
           "key": "pinTarget",
           "label": "Pin Target",
           "type": "elementSelector"
+        },
+        {
+          "key": "pinZIndex",
+          "label": "Pin Z-Index",
+          "type": "string"
         }
       ],
       "defaults": {
@@ -2384,6 +2472,7 @@
         "pin": false,
         "pinSpacing": true,
         "pinTarget": "",
+        "pinZIndex": "",
         "scroller": ""
       },
       "dynamicPorts": false
@@ -6286,7 +6375,7 @@
       "displayName": "Event Listener",
       "category": "inputs",
       "context": "dom",
-      "description": "DOM event to graph signal (click, hover, etc.)",
+      "description": "Boundary node — binds a DOM event listener on the target element and emits a graph pulse every frame an event fired. `fired` is 1/0 per frame; `count` is the number of events seen this frame (for click-counting / rapid-fire aggregation). The event queue captures every event between graph ticks, so nothing is dropped on busy frames.",
       "inputs": [],
       "outputs": [
         {
@@ -6304,19 +6393,12 @@
         {
           "key": "target",
           "label": "Target",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "event",
           "label": "Event",
-          "type": "enum",
-          "options": [
-            "click",
-            "mouseenter",
-            "mouseleave",
-            "pointerdown",
-            "pointerup"
-          ]
+          "type": "domEvent"
         }
       ],
       "defaults": {
@@ -11602,7 +11684,7 @@
       "displayName": "Text Sequence",
       "category": "text",
       "context": "canvas",
-      "description": "Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array.",
+      "description": "Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array. `mode` selects the index-from-progress convention: `round` (default) = center-snap with flips at midpoints, item i centered at p=i/(N-1) — aligns with counterAnimation's round(min + p*(max-min)) so a sequence + counter scrubbed by the same progress flip in lockstep (the natural \"scrub through N items\" UX). `floor` = equal-width buckets, item i occupies [i/N, (i+1)/N) — for streamed timelines (typewriter / video-like).",
       "inputs": [
         {
           "name": "progress",
@@ -11627,9 +11709,20 @@
           "label": "Index"
         }
       ],
-      "parameters": [],
+      "parameters": [
+        {
+          "key": "mode",
+          "label": "Index Mode",
+          "type": "enum",
+          "options": [
+            "round",
+            "floor"
+          ]
+        }
+      ],
       "defaults": {
-        "texts": []
+        "texts": [],
+        "mode": "round"
       },
       "dynamicPorts": false
     },
@@ -13787,6 +13880,242 @@
       },
       "dynamicPorts": false
     },
+    "scrollTween": {
+      "displayName": "Scroll Tween",
+      "category": "animation",
+      "context": "shared",
+      "description": "Animate one or more CSS properties on a target element, driven by scroll progress between two edges of a trigger element. Compound: expanded into `scrollTrigger + propertyAnimation` (which itself expands to `multiKeyframe + domPoseWrite`) — no runtime class. Use this in place of manually wiring `scrollTrigger.progress → tween → domPropertyWrite` for every property. Channels accept EITHER the terse `{from, to, cssUnit?, ease?}` shape (hand-authored / AI-generated) OR the standard `{cssUnit?, keyframes: [{time, value, ease?}]}` shape (FVE-edited) — both expand to the same runtime nodes.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Trigger",
+          "type": "elementSelector"
+        },
+        {
+          "key": "target",
+          "label": "Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "startEdge",
+          "label": "Scroll Edges",
+          "type": "scrollEdges"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "propertyAnimationChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "target": "",
+        "startEdge": "top bottom",
+        "endEdge": "bottom top",
+        "channels": {
+          "opacity": {
+            "cssUnit": "none",
+            "keyframes": [
+              {
+                "time": 0,
+                "value": 0
+              },
+              {
+                "time": 1,
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "eventTween": {
+      "displayName": "Event Tween",
+      "category": "animation",
+      "context": "shared",
+      "description": "Time-based tween triggered by a DOM event. `onEvent` starts the play pulse; optional `offEvent` reverses it (e.g. `mouseenter`/`mouseleave` for hover toggles). Compound: expanded into `eventListener + (eventListener?) + pulseTween + propertyAnimation` — no runtime class. Use this in place of CSS transitions when authoring graph-driven interactions. Channels accept EITHER the terse `{from, to, cssUnit?, ease?}` shape (hand-authored / AI-generated) OR the standard `{cssUnit?, keyframes: [{time, value, ease?}]}` shape (FVE-edited).",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "trigger",
+          "label": "Event Source",
+          "type": "elementSelector"
+        },
+        {
+          "key": "target",
+          "label": "Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "onEvent",
+          "label": "On Event",
+          "type": "domEvent"
+        },
+        {
+          "key": "offEvent",
+          "label": "Off Event",
+          "type": "domEvent"
+        },
+        {
+          "key": "duration",
+          "label": "Duration",
+          "type": "float"
+        },
+        {
+          "key": "ease",
+          "label": "Ease",
+          "type": "easingCurve"
+        },
+        {
+          "key": "channels",
+          "label": "Channels",
+          "type": "propertyAnimationChannels"
+        }
+      ],
+      "defaults": {
+        "trigger": "",
+        "target": "",
+        "onEvent": "click",
+        "offEvent": "",
+        "duration": 0.3,
+        "ease": "easeOutCubic",
+        "channels": {
+          "opacity": {
+            "cssUnit": "none",
+            "keyframes": [
+              {
+                "time": 0,
+                "value": 0
+              },
+              {
+                "time": 1,
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "modalToggle": {
+      "displayName": "Modal Toggle",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Open-on-click / close-on-click toggle that latches a 0/1 state and writes it to one or more `data-*` attributes. Compound: expanded into eventListener + pulseOr + latch + domPropertyWrite per open target. Each `openTarget` receives the same attribute write so popup / trigger / backdrop / overlay all flip in sync.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "openTriggers",
+          "label": "Open Triggers",
+          "type": "selectorList"
+        },
+        {
+          "key": "closeTriggers",
+          "label": "Close Triggers",
+          "type": "selectorList"
+        },
+        {
+          "key": "openTargets",
+          "label": "Open Targets",
+          "type": "selectorList"
+        },
+        {
+          "key": "openAttribute",
+          "label": "Attribute",
+          "type": "string"
+        },
+        {
+          "key": "openEvent",
+          "label": "Open Event",
+          "type": "domEvent"
+        },
+        {
+          "key": "closeEvent",
+          "label": "Close Event",
+          "type": "domEvent"
+        },
+        {
+          "key": "cssVarWrites",
+          "label": "CSS Var Writes",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "openTriggers": [],
+        "closeTriggers": [],
+        "openTargets": [],
+        "openAttribute": "data-open",
+        "openEvent": "click",
+        "closeEvent": "click",
+        "cssVarWrites": []
+      },
+      "dynamicPorts": false
+    },
+    "clickStateDispatcher": {
+      "displayName": "Click State Dispatcher",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Click N targets to set a state to one of N values, written to a single attribute on a write target. Compound: expanded into N eventListener + chained-ternary expression + pulseOr + latch + 1 domPropertyWrite. The latch holds the dispatched value, the write puts it on the writeTo target as a `data-*` attribute that CSS can match against. Also exposes `value` (latched float, for downstream graph computation) and `pulse` (rising-edge merged click pulse, for downstream triggers).",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "targets",
+          "label": "Click Targets",
+          "type": "selectorList"
+        },
+        {
+          "key": "values",
+          "label": "Values",
+          "type": "numberList"
+        },
+        {
+          "key": "writeTo",
+          "label": "Write To",
+          "type": "elementSelector"
+        },
+        {
+          "key": "writeAttribute",
+          "label": "Attribute",
+          "type": "string"
+        },
+        {
+          "key": "initial",
+          "label": "Initial Value",
+          "type": "float"
+        },
+        {
+          "key": "event",
+          "label": "Event",
+          "type": "domEvent"
+        }
+      ],
+      "defaults": {
+        "targets": [],
+        "values": [],
+        "writeTo": "",
+        "writeAttribute": "data-active",
+        "initial": 0,
+        "event": "click"
+      },
+      "dynamicPorts": false
+    },
     "clipPathAnimation": {
       "displayName": "Clip Path Animation",
       "category": "animation",
@@ -14217,6 +14546,15 @@
           "type": "string"
         },
         {
+          "key": "mode",
+          "label": "Index Mode",
+          "type": "enum",
+          "options": [
+            "round",
+            "floor"
+          ]
+        },
+        {
           "key": "channels",
           "label": "Channels",
           "type": "textSequenceChannels"
@@ -14225,6 +14563,7 @@
       "defaults": {
         "selector": "",
         "texts": [],
+        "mode": "round",
         "channels": {
           "textContent": {
             "from": "text",
@@ -14324,7 +14663,7 @@
       "displayName": "Stagger Animation",
       "category": "text",
       "context": "shared",
-      "description": "Fan a single animation template across N indexed DOM elements with per-child stagger offsets. Selector template uses `{i}` as the per-child index placeholder (e.g. `.card:nth-child({i})`, `.dot[data-i=\"{i}\"]`). Inner `each` is a propertyAnimation template — keyframes get shifted into each child's slot window at load time. Generic counterpart to F323 textStaggerAnimation (which is splitText-specific); use this for pre-existing DOM elements like card grids, list items, icon rows, dot indicators, wave / ripple effects. Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw) — no runtime class.",
+      "description": "Fan a single animation template across all DOM elements matching a plain CSS selector, with per-element stagger offsets. Element count is resolved at runtime via `querySelectorAll(selector)` — no template language, no `{i}` placeholder, no per-child graph nodes. Inner `each` is a propertyAnimation-shaped template (float / color / string keyframe channels); the runtime evaluates it per element with translation-stagger (each element's progress is shifted by `stagger * effectiveIndex(i)`). Compound: expands to ONE `staggerAnimate` runtime node.",
       "inputs": [
         {
           "name": "progress",
@@ -14335,27 +14674,13 @@
       "outputs": [],
       "parameters": [
         {
-          "key": "selectorTemplate",
-          "label": "Selector Template",
-          "type": "string"
-        },
-        {
-          "key": "count",
-          "label": "Child Count",
-          "type": "int",
-          "min": 1,
-          "step": 1
-        },
-        {
-          "key": "indexBase",
-          "label": "Index Base",
-          "type": "int",
-          "min": 0,
-          "step": 1
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
         },
         {
           "key": "stagger",
-          "label": "Stagger (per child)",
+          "label": "Stagger (per element)",
           "type": "float",
           "min": 0,
           "max": 1,
@@ -14388,9 +14713,7 @@
         }
       ],
       "defaults": {
-        "selectorTemplate": "",
-        "count": 1,
-        "indexBase": 1,
+        "selector": "",
         "stagger": 0.05,
         "staggerFrom": "start",
         "delayOffset": 0,

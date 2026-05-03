@@ -4,7 +4,7 @@
 **Category:** inputs  
 **Context:** DOM — operates on HTML elements via CSS selectors  
 
-DOM event to graph signal (click, hover, etc.)
+Boundary node — binds a DOM event listener on the target element and emits a graph pulse every frame an event fired. `fired` is 1/0 per frame; `count` is the number of events seen this frame (for click-counting / rapid-fire aggregation). The event queue captures every event between graph ticks, so nothing is dropped on busy frames.
 
 ## Inputs
 
@@ -22,6 +22,6 @@ _No inputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `target` | string | `""` | Target |
-| `event` | enum | `"click"` | Event. Options: `click`, `mouseenter`, `mouseleave`, `pointerdown`, `pointerup` |
+| `target` | elementSelector | `""` | Target |
+| `event` | domEvent | `"click"` | Event |
 

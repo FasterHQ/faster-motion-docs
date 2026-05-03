@@ -23,5 +23,6 @@ _No outputs._
 |-----------|------|---------|-------------|
 | `selector` | elementSelector | `""` | Target Selector |
 | `texts` | string | `[]` | Text Sequence |
+| `mode` | enum | `"round"` | Index Mode. Options: `round`, `floor` |
 | `channels` | textSequenceChannels | `{"textContent":{"from":"tex...` | Channels |
 
