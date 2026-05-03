@@ -11684,7 +11684,7 @@
       "displayName": "Text Sequence",
       "category": "text",
       "context": "canvas",
-      "description": "Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array. `mode` selects the index-from-progress convention: `round` (default) = center-snap with flips at midpoints, item i centered at p=i/(N-1) — aligns with counterAnimation's round(min + p*(max-min)) so a sequence + counter scrubbed by the same progress flip in lockstep (the natural \"scrub through N items\" UX). `floor` = equal-width buckets, item i occupies [i/N, (i+1)/N) — for streamed timelines (typewriter / video-like).",
+      "description": "Cycles through a string array based on progress — outputs current text and index. The `texts` input port takes priority over the static `texts` param when wired (from textDecompose or any stringArray source), so the node composes with upstream text-data transforms without losing back-compat for .fmtion files that bake in a static array. `mode` selects the index-from-progress convention: `round` (default) = center-snap with flips at midpoints, item i centered at p=i/(N-1) — aligns with counterAnimation's round(min + p*(max-min)) so a sequence + counter scrubbed by the same progress flip in lockstep. `floor` = equal-width buckets, item i occupies [i/N, (i+1)/N) — for streamed timelines (typewriter / video-like). `cycleMode` selects how progress is mapped across multi-source arrays (where `itemSources` tags each item with its source index, typically wired from textDecompose): `forward` (default) walks the concatenated prefixes linearly, `pingPong` splits progress into S equal windows (S = source count) and runs a triangle 0→1→0 within each window — native author-level \"type then delete then next phrase\" typewriter cycle. With `pingPong` and no `itemSources` wired, falls back to single-source ping-pong over the whole array.",
       "inputs": [
         {
           "name": "progress",
@@ -11695,6 +11695,11 @@
           "name": "texts",
           "type": "stringArray",
           "label": "Texts"
+        },
+        {
+          "name": "itemSources",
+          "type": "floatArray",
+          "label": "Item Sources"
         }
       ],
       "outputs": [
@@ -11718,11 +11723,21 @@
             "round",
             "floor"
           ]
+        },
+        {
+          "key": "cycleMode",
+          "label": "Cycle Mode",
+          "type": "enum",
+          "options": [
+            "forward",
+            "pingPong"
+          ]
         }
       ],
       "defaults": {
         "texts": [],
-        "mode": "round"
+        "mode": "round",
+        "cycleMode": "forward"
       },
       "dynamicPorts": false
     },
@@ -11730,7 +11745,7 @@
       "displayName": "Text Reveal",
       "category": "text",
       "context": "shared",
-      "description": "Compound — progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type. OPTIONAL `channels` + `variants` (same shape as variantStaggerAnimation) declare per-source side effects — e.g. a `color` channel with three hex values cycles the color at actual word boundaries regardless of word length or language. Each channel expands to one arrayPick + one writer; no more authoring colorKeyframe with hand-tuned times that drift across languages.",
+      "description": "Progressively reveals text by character, word, sentence, or line, driven by a progress input. DOM-first: the translatable source lives in the HTML, the .fmtion carries only the animation recipe. `sourceFrom: element` (DEFAULT) reads `selector`.textContent at bind time. `sourceFrom: elements` reads textContent from every element matching `sourcesSelector` and cycles through them in document order (multi-word typewriter). `sourceFrom: param` is an escape hatch for non-translatable copy — prefer element/elements for anything user-facing. Default (char + prefixes + includeEmpty) gives classic typewriter; switch granularity for word/sentence/line reveals under the same node type. `cycleMode: pingPong` (multi-source only) makes each phrase type forward then delete backward before the next phrase begins from empty — native author-level type+delete typewriter cycle, no progress remap needed. OPTIONAL `channels` + `variants` (same shape as variantStaggerAnimation) declare per-source side effects — e.g. a `color` channel with three hex values cycles the color at actual word boundaries regardless of word length or language. Compound: expands to `textDecompose` + `textSequence` + `domStringWrite` (+ optional channel writers) at load time — no runtime class.",
       "inputs": [
         {
           "name": "progress",
@@ -11742,7 +11757,7 @@
       "parameters": [
         {
           "key": "selector",
-          "label": "Target selector (write)",
+          "label": "Target Selector",
           "type": "elementSelector"
         },
         {
@@ -11757,17 +11772,17 @@
         },
         {
           "key": "sourceSelector",
-          "label": "Read selector (defaults to target)",
+          "label": "Read Selector (defaults to target)",
           "type": "elementSelector"
         },
         {
           "key": "sourcesSelector",
-          "label": "Sources selector (N elements)",
+          "label": "Sources Selector (N elements)",
           "type": "elementSelector"
         },
         {
           "key": "source",
-          "label": "Source text",
+          "label": "Source Text",
           "type": "string"
         },
         {
@@ -11793,22 +11808,22 @@
         },
         {
           "key": "includeEmpty",
-          "label": "Start from blank (or between words)",
+          "label": "Start from blank",
           "type": "bool"
         },
         {
           "key": "stripWhitespace",
-          "label": "Strip whitespace-only entries",
+          "label": "Strip Whitespace-Only Entries",
           "type": "bool"
         },
         {
           "key": "separator",
-          "label": "Custom separator (overrides granularity)",
+          "label": "Custom Separator",
           "type": "string"
         },
         {
           "key": "writeMode",
-          "label": "Write mode",
+          "label": "Write Mode",
           "type": "enum",
           "options": [
             "textContent",
@@ -11818,8 +11833,17 @@
         },
         {
           "key": "propertyName",
-          "label": "Property name",
+          "label": "Property Name",
           "type": "cssProperty"
+        },
+        {
+          "key": "cycleMode",
+          "label": "Cycle Mode",
+          "type": "enum",
+          "options": [
+            "forward",
+            "pingPong"
+          ]
         },
         {
           "key": "channels",
@@ -11840,7 +11864,8 @@
         "includeEmpty": true,
         "stripWhitespace": false,
         "writeMode": "textContent",
-        "propertyName": "textContent"
+        "propertyName": "textContent",
+        "cycleMode": "forward"
       },
       "dynamicPorts": false
     },
@@ -12278,7 +12303,7 @@
       "displayName": "Cycle Clock",
       "category": "bundles",
       "context": "canvas",
-      "description": "Accumulates ambient scheduler deltaTime into a cycle progress [0, 1]. Drives time-dependent modifier compute nodes. Supports duration, iterations, ping-pong. No input ports — clock nodes read ambient time directly (F236).",
+      "description": "Accumulates ambient scheduler deltaTime into a normalized 0..1 cycle progress. The canonical \"looping clock\" — drives any consumer that takes a 0..1 progress (textRevealAnimation, propertyAnimation, staggerAnimation) when you want continuous motion not gated by scroll or user input. No input ports: clock nodes read ambient time directly (F236), so they keep ticking even when the rest of the graph is idle.",
       "inputs": [],
       "outputs": [
         {

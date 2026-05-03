@@ -4,7 +4,7 @@
 **Category:** bundles  
 **Context:** Canvas — operates on canvas scene objects, bones, or skeletons  
 
-Accumulates ambient scheduler deltaTime into a cycle progress [0, 1]. Drives time-dependent modifier compute nodes. Supports duration, iterations, ping-pong. No input ports — clock nodes read ambient time directly (F236).
+Accumulates ambient scheduler deltaTime into a normalized 0..1 cycle progress. The canonical "looping clock" — drives any consumer that takes a 0..1 progress (textRevealAnimation, propertyAnimation, staggerAnimation) when you want continuous motion not gated by scroll or user input. No input ports: clock nodes read ambient time directly (F236), so they keep ticking even when the rest of the graph is idle.
 
 ## Inputs
 
