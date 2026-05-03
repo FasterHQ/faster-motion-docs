@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-05-03",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 286,
+  "_nodeCount": 272,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -144,8 +144,6 @@
         "seekRemap",
         "clipRegistry",
         "boneClipEval",
-        "stateTransformsMux",
-        "stateAnimEval",
         "objectClipEval",
         "colorKeyframe",
         "stringKeyframe",
@@ -317,7 +315,6 @@
     "state-machine": {
       "description": "State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.",
       "nodes": [
-        "smPropertyApply",
         "poseEval",
         "blendPose",
         "maskedBlendPose",
@@ -327,25 +324,12 @@
         "gradientDecompose",
         "propertyMask",
         "objectBlend",
-        "objectMaskedBlend",
         "timelineState",
         "remapApply",
-        "smParameterStore",
-        "layerAdvance",
-        "stateApply",
         "blendSpace1DEval",
         "blendDirectEval",
         "blendSpace2DEval",
-        "resetMap",
-        "smHitTest",
-        "listenerAction",
-        "smAudioAction",
-        "smCallbackAction",
-        "smPostAdvance",
-        "smLifecycle",
-        "smAutoStart",
-        "smRandomSource",
-        "smAudioBinding"
+        "stateMachine"
       ]
     },
     "attributes": {
@@ -416,7 +400,9 @@
         "meshSolver",
         "constraintSolver",
         "physicsWorld",
-        "physicsBodyRead"
+        "physicsBody",
+        "physicsStaticBody",
+        "physicsBodyStagger"
       ]
     },
     "deformers": {
@@ -2293,7 +2279,9 @@
             "end",
             "center",
             "edges",
-            "random"
+            "random",
+            "positionY",
+            "positionX"
           ]
         }
       ],
@@ -5205,29 +5193,6 @@
       },
       "dynamicPorts": false
     },
-    "smPropertyApply": {
-      "displayName": "SM Property Apply",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Signal node — SM property writes are done, downstream can read safely",
-      "inputs": [
-        {
-          "name": "chainIn",
-          "type": "any",
-          "label": "Chain In"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "applied",
-          "type": "float",
-          "label": "Applied"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
     "poseEval": {
       "displayName": "Pose Eval",
       "category": "state-machine",
@@ -5518,39 +5483,6 @@
           "name": "pose",
           "type": "attributes",
           "label": "Pose"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "objectMaskedBlend": {
-      "displayName": "Object Masked Blend",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Blend two object pose bundles with per-object mask — unmasked objects pass through from A",
-      "inputs": [
-        {
-          "name": "poseA",
-          "type": "attributes",
-          "label": "Pose A (base)"
-        },
-        {
-          "name": "poseB",
-          "type": "attributes",
-          "label": "Pose B (layer)"
-        },
-        {
-          "name": "weight",
-          "type": "float",
-          "label": "Weight"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "objectPose",
-          "type": "attributes",
-          "label": "Object Pose"
         }
       ],
       "parameters": [],
@@ -5917,94 +5849,6 @@
         {
           "key": "skeletonId",
           "label": "Skeleton Id",
-          "type": "string"
-        }
-      ],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "stateTransformsMux": {
-      "displayName": "State Transforms Mux",
-      "category": "animation",
-      "context": "shared",
-      "description": "F345: selects an SM layer's active state's transforms by id. Reads currentStateId from LayerAdvanceNode + per-state transforms from dynamic transforms_${stateId} input ports wired from per-state evaluator nodes; outputs the active state's transforms. Replaces PoseEvalNode's imperative layer.getCurrentState().clip read.",
-      "inputs": [
-        {
-          "name": "currentStateId",
-          "type": "string",
-          "label": "Current State Id"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "transforms",
-          "type": "any",
-          "label": "Transforms"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "layerId",
-          "label": "Layer Id",
-          "type": "string"
-        },
-        {
-          "key": "role",
-          "label": "Role",
-          "type": "string"
-        },
-        {
-          "key": "stateIds",
-          "label": "State Ids",
-          "type": "string"
-        }
-      ],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "stateAnimEval": {
-      "displayName": "State Anim Eval",
-      "category": "animation",
-      "context": "shared",
-      "description": "F345: evaluates a single SM animation state's clip at progress and outputs a transforms map. Reads clip from a wired ClipRegistry port. The downstream StateTransformsMux selects the active state's output by currentStateId. Replaces PoseEvalNode's imperative state.clip read.",
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "any",
-          "label": "Clip"
-        },
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        },
-        {
-          "name": "weight",
-          "type": "float",
-          "label": "Weight"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "transforms",
-          "type": "any",
-          "label": "Transforms"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "stateId",
-          "label": "State Id",
-          "type": "string"
-        },
-        {
-          "key": "animationId",
-          "label": "Animation Id",
-          "type": "string"
-        },
-        {
-          "key": "role",
-          "label": "Role",
           "type": "string"
         }
       ],
@@ -9216,91 +9060,508 @@
       "displayName": "Physics World",
       "category": "solvers",
       "context": "canvas",
-      "description": "Rigid body physics simulation via Planck.js (Box2D). Lazy-loaded.",
+      "description": "One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time).",
       "inputs": [
         {
-          "name": "subSteps",
-          "type": "float",
-          "label": "Sub Steps"
+          "name": "gravity",
+          "type": "vec2",
+          "label": "Gravity"
         },
         {
-          "name": "gravityX",
+          "name": "timeScale",
           "type": "float",
-          "label": "Gravity X"
+          "label": "Time Scale"
         },
         {
-          "name": "gravityY",
+          "name": "paused",
           "type": "float",
-          "label": "Gravity Y"
+          "label": "Paused"
+        },
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
         }
       ],
       "outputs": [
         {
-          "name": "bodyStates",
+          "name": "world",
           "type": "any",
-          "label": "Body States"
+          "label": "World Handle"
+        },
+        {
+          "name": "frameStepped",
+          "type": "float",
+          "label": "Frame Stepped"
         },
         {
           "name": "bodyCount",
           "type": "float",
           "label": "Body Count"
+        },
+        {
+          "name": "jointCount",
+          "type": "float",
+          "label": "Joint Count"
         }
       ],
       "parameters": [
         {
           "key": "pixelsPerMeter",
-          "label": "Pixels/Meter",
+          "label": "Pixels per Meter",
           "type": "float",
           "min": 1,
-          "max": 1000,
+          "max": 10000,
           "step": 10
+        },
+        {
+          "key": "subSteps",
+          "label": "Sub-Steps per Frame",
+          "type": "int",
+          "min": 1,
+          "max": 16
+        },
+        {
+          "key": "paramGravityX",
+          "label": "Default Gravity X",
+          "type": "float",
+          "step": 100
+        },
+        {
+          "key": "paramGravityY",
+          "label": "Default Gravity Y",
+          "type": "float",
+          "step": 100
+        },
+        {
+          "key": "pauseBelowProgress",
+          "label": "Pause Below Progress",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.05
         }
       ],
       "defaults": {
         "pixelsPerMeter": 100,
-        "bodies": [],
-        "joints": []
+        "subSteps": 4,
+        "paramGravityX": 0,
+        "paramGravityY": 0,
+        "pauseBelowProgress": null
       },
       "dynamicPorts": false
     },
-    "physicsBodyRead": {
-      "displayName": "Physics Body Read",
+    "physicsBody": {
+      "displayName": "Physics Body",
       "category": "solvers",
-      "context": "canvas",
-      "description": "Extract per-body x/y/rotation from PhysicsWorldNode output.",
+      "context": "shared",
+      "description": "One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param). Pose, velocity, and awake state are exposed as typed output ports — wire to `domPropertyWrite` for DOM consumers, to STN inputs for canvas consumers, or to `physicsBodyTransform` for fan-out to multiple consumers.",
       "inputs": [
         {
-          "name": "bodyStates",
+          "name": "world",
           "type": "any",
-          "label": "Body States"
+          "label": "World"
+        },
+        {
+          "name": "enabled",
+          "type": "float",
+          "label": "Enabled"
         }
       ],
       "outputs": [
         {
-          "name": "x",
+          "name": "id",
           "type": "float",
-          "label": "X"
+          "label": "Body ID"
         },
         {
-          "name": "y",
-          "type": "float",
-          "label": "Y"
+          "name": "position",
+          "type": "vec2",
+          "label": "Position"
         },
         {
           "name": "rotation",
           "type": "float",
           "label": "Rotation"
+        },
+        {
+          "name": "linearVelocity",
+          "type": "vec2",
+          "label": "Linear Velocity"
+        },
+        {
+          "name": "angularVelocity",
+          "type": "float",
+          "label": "Angular Velocity"
+        },
+        {
+          "name": "awake",
+          "type": "float",
+          "label": "Awake"
+        },
+        {
+          "name": "x",
+          "type": "float",
+          "label": "X (px)"
+        },
+        {
+          "name": "y",
+          "type": "float",
+          "label": "Y (px)"
+        },
+        {
+          "name": "speed",
+          "type": "float",
+          "label": "Speed (px/s)"
         }
       ],
       "parameters": [
         {
-          "key": "bodyId",
-          "label": "Body",
-          "type": "objectPicker"
+          "key": "bodyKind",
+          "label": "Body Kind",
+          "type": "enum",
+          "options": [
+            "dynamic",
+            "kinematic"
+          ]
+        },
+        {
+          "key": "shape",
+          "label": "Shape",
+          "type": "physicsShape"
+        },
+        {
+          "key": "initialX",
+          "label": "Initial X (px)",
+          "type": "float"
+        },
+        {
+          "key": "initialY",
+          "label": "Initial Y (px)",
+          "type": "float"
+        },
+        {
+          "key": "initialRotation",
+          "label": "Initial Rotation (rad)",
+          "type": "float",
+          "step": 0.01
+        },
+        {
+          "key": "initialVx",
+          "label": "Initial Vx (px/s)",
+          "type": "float"
+        },
+        {
+          "key": "initialVy",
+          "label": "Initial Vy (px/s)",
+          "type": "float"
+        },
+        {
+          "key": "initialAngularVelocity",
+          "label": "Initial Angular Vel (rad/s)",
+          "type": "float",
+          "step": 0.01
+        },
+        {
+          "key": "density",
+          "label": "Density",
+          "type": "float",
+          "min": 0.001,
+          "step": 0.1
+        },
+        {
+          "key": "restitution",
+          "label": "Restitution (Bounciness)",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "friction",
+          "label": "Friction",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "linearDamping",
+          "label": "Linear Damping",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        },
+        {
+          "key": "angularDamping",
+          "label": "Angular Damping",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        },
+        {
+          "key": "lockRotation",
+          "label": "Lock Rotation",
+          "type": "bool"
+        },
+        {
+          "key": "ccd",
+          "label": "Continuous Collision (CCD)",
+          "type": "bool"
         }
       ],
       "defaults": {
-        "bodyId": ""
+        "bodyKind": "dynamic",
+        "shape": {
+          "kind": "circle",
+          "radius": 25
+        },
+        "initialX": 0,
+        "initialY": 0,
+        "initialRotation": 0,
+        "initialVx": 0,
+        "initialVy": 0,
+        "initialAngularVelocity": 0,
+        "density": 1,
+        "restitution": 0.5,
+        "friction": 0.5,
+        "linearDamping": 0,
+        "angularDamping": 0,
+        "lockRotation": false,
+        "ccd": false
+      },
+      "dynamicPorts": false
+    },
+    "physicsStaticBody": {
+      "displayName": "Physics Static Body",
+      "category": "solvers",
+      "context": "shared",
+      "description": "Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "id",
+          "type": "float",
+          "label": "Body ID"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "shape",
+          "label": "Shape",
+          "type": "physicsShape"
+        },
+        {
+          "key": "x",
+          "label": "X (px)",
+          "type": "float"
+        },
+        {
+          "key": "y",
+          "label": "Y (px)",
+          "type": "float"
+        },
+        {
+          "key": "rotation",
+          "label": "Rotation (rad)",
+          "type": "float",
+          "step": 0.01
+        },
+        {
+          "key": "restitution",
+          "label": "Restitution",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "friction",
+          "label": "Friction",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "isSensor",
+          "label": "Sensor (no contact response)",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "shape": {
+          "kind": "box",
+          "width": 100,
+          "height": 20
+        },
+        "x": 0,
+        "y": 0,
+        "rotation": 0,
+        "restitution": 0.5,
+        "friction": 0.5,
+        "isSensor": false
+      },
+      "dynamicPorts": false
+    },
+    "physicsBodyStagger": {
+      "displayName": "Physics Body Stagger",
+      "category": "solvers",
+      "context": "shared",
+      "description": "Runtime-fanout compound — one node = N physicsBody instances + N DOM transform writes. Resolves N elements at bind time from a plain CSS selector and creates one body per element with shared params. Per-element radius via `shape.radiusFromCSS: \"--bd\"` reads each element's CSS variable (same convention `staggerAnimate` uses). Saves ~3N nodes for ball-drop / scatter patterns. For per-element heterogeneity beyond size (different bodyKind / restitution per element), drop down to primitive `physicsBody` + `domPoseWrite` pairs.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        },
+        {
+          "name": "enabled",
+          "type": "float",
+          "label": "Enabled"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "bodyIds",
+          "type": "floatArray",
+          "label": "Body IDs"
+        },
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "shape",
+          "label": "Shape",
+          "type": "physicsShape"
+        },
+        {
+          "key": "initialX",
+          "label": "Initial X",
+          "type": "string"
+        },
+        {
+          "key": "initialY",
+          "label": "Initial Y",
+          "type": "string"
+        },
+        {
+          "key": "initialXSpacing",
+          "label": "X Spacing per Index (px)",
+          "type": "float",
+          "step": 10
+        },
+        {
+          "key": "initialYSpacing",
+          "label": "Y Spacing per Index (px)",
+          "type": "float",
+          "step": 10
+        },
+        {
+          "key": "jitterX",
+          "label": "Jitter X (px)",
+          "type": "float",
+          "min": 0,
+          "step": 10
+        },
+        {
+          "key": "jitterY",
+          "label": "Jitter Y (px)",
+          "type": "float",
+          "min": 0,
+          "step": 10
+        },
+        {
+          "key": "density",
+          "label": "Density",
+          "type": "float",
+          "min": 0.001,
+          "step": 0.1
+        },
+        {
+          "key": "restitution",
+          "label": "Restitution",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "friction",
+          "label": "Friction",
+          "type": "float",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "linearDamping",
+          "label": "Linear Damping",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        },
+        {
+          "key": "angularDamping",
+          "label": "Angular Damping",
+          "type": "float",
+          "min": 0,
+          "step": 0.05
+        },
+        {
+          "key": "lockRotation",
+          "label": "Lock Rotation",
+          "type": "bool"
+        },
+        {
+          "key": "ccd",
+          "label": "CCD",
+          "type": "bool"
+        },
+        {
+          "key": "writeTransform",
+          "label": "Write Transform to Element",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "shape": {
+          "kind": "circle",
+          "radius": 25
+        },
+        "initialX": 0,
+        "initialY": 0,
+        "initialRotation": 0,
+        "initialVx": 0,
+        "initialVy": 0,
+        "density": 1,
+        "restitution": 0.5,
+        "friction": 0.5,
+        "linearDamping": 0,
+        "angularDamping": 0,
+        "lockRotation": false,
+        "ccd": false,
+        "initialXSpacing": 0,
+        "initialYSpacing": 0,
+        "jitterX": 0,
+        "jitterY": 0,
+        "writeTransform": true
       },
       "dynamicPorts": false
     },
@@ -13344,124 +13605,6 @@
       },
       "dynamicPorts": false
     },
-    "smParameterStore": {
-      "displayName": "SM Parameter Store",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Declarative parameter store — one dynamic output port per SM parameter. Receives writes from listeners, drivers, and audio bindings.",
-      "inputs": [
-        {
-          "name": "listenerWrites",
-          "type": "any",
-          "label": "Listener Writes"
-        }
-      ],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": true
-    },
-    "layerAdvance": {
-      "displayName": "Layer Advance",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Per-layer state machine solver — evaluates conditions, advances transitions, outputs current/previous state progress and weights.",
-      "inputs": [
-        {
-          "name": "parentDone",
-          "type": "any",
-          "label": "Parent Done"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "currentStateId",
-          "type": "string",
-          "label": "Current State"
-        },
-        {
-          "name": "currentProgress",
-          "type": "float",
-          "label": "Current Progress"
-        },
-        {
-          "name": "currentWeight",
-          "type": "float",
-          "label": "Current Weight"
-        },
-        {
-          "name": "previousStateId",
-          "type": "string",
-          "label": "Previous State"
-        },
-        {
-          "name": "previousProgress",
-          "type": "float",
-          "label": "Previous Progress"
-        },
-        {
-          "name": "previousWeight",
-          "type": "float",
-          "label": "Previous Weight"
-        },
-        {
-          "name": "isTransitioning",
-          "type": "float",
-          "label": "Is Transitioning"
-        },
-        {
-          "name": "advanced",
-          "type": "float",
-          "label": "Advanced"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": true
-    },
-    "stateApply": {
-      "displayName": "State Apply",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Reads layer state from LayerAdvanceNode, sets animation clip progress and applies state evaluation.",
-      "inputs": [
-        {
-          "name": "currentProgress",
-          "type": "float",
-          "label": "Current Progress"
-        },
-        {
-          "name": "currentWeight",
-          "type": "float",
-          "label": "Current Weight"
-        },
-        {
-          "name": "previousProgress",
-          "type": "float",
-          "label": "Previous Progress"
-        },
-        {
-          "name": "previousWeight",
-          "type": "float",
-          "label": "Previous Weight"
-        },
-        {
-          "name": "layerDone",
-          "type": "any",
-          "label": "Layer Done"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "applied",
-          "type": "float",
-          "label": "Applied"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
     "blendSpace1DEval": {
       "displayName": "Blend Space 1D Eval",
       "category": "state-machine",
@@ -13551,257 +13694,6 @@
       "defaults": {},
       "dynamicPorts": true
     },
-    "resetMap": {
-      "displayName": "Reset Map",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Applies animation reset maps during state transitions — properties animated by only one state get reset values during crossfade.",
-      "inputs": [
-        {
-          "name": "isTransitioning",
-          "type": "float",
-          "label": "Is Transitioning"
-        },
-        {
-          "name": "layerDone",
-          "type": "any",
-          "label": "Layer Done"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "applied",
-          "type": "float",
-          "label": "Applied"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smHitTest": {
-      "displayName": "SM Hit Test",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Translates pointer events + hit object IDs into per-target HitResult map for listener evaluation.",
-      "inputs": [
-        {
-          "name": "pointerDown",
-          "type": "float",
-          "label": "Pointer Down"
-        },
-        {
-          "name": "pointerUp",
-          "type": "float",
-          "label": "Pointer Up"
-        },
-        {
-          "name": "pointerX",
-          "type": "float",
-          "label": "Pointer X"
-        },
-        {
-          "name": "pointerY",
-          "type": "float",
-          "label": "Pointer Y"
-        },
-        {
-          "name": "hitObjectIds",
-          "type": "any",
-          "label": "Hit Object IDs"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "hitResults",
-          "type": "any",
-          "label": "Hit Results"
-        },
-        {
-          "name": "pointerX",
-          "type": "float",
-          "label": "Pointer X"
-        },
-        {
-          "name": "pointerY",
-          "type": "float",
-          "label": "Pointer Y"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "listenerAction": {
-      "displayName": "Listener Action",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Routes listener actions into parameter writes (for SMParameterStoreNode) and side-effect actions (for audio/callback nodes).",
-      "inputs": [
-        {
-          "name": "hitResults",
-          "type": "any",
-          "label": "Hit Results"
-        },
-        {
-          "name": "definition",
-          "type": "any",
-          "label": "Definition"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "parameterWrites",
-          "type": "any",
-          "label": "Parameter Writes"
-        },
-        {
-          "name": "sideEffectActions",
-          "type": "any",
-          "label": "Side Effect Actions"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smAudioAction": {
-      "displayName": "SM Audio Action",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Terminal node for audio side effects — owns HTMLAudioElement cache, handles play/pause/stop actions.",
-      "inputs": [
-        {
-          "name": "actions",
-          "type": "any",
-          "label": "Actions"
-        }
-      ],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smCallbackAction": {
-      "displayName": "SM Callback Action",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Terminal node for stateless one-shot callbacks — dispatches switchCamera, setSkin, openUrl, fireEvent, animationAction.",
-      "inputs": [
-        {
-          "name": "actions",
-          "type": "any",
-          "label": "Actions"
-        }
-      ],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smPostAdvance": {
-      "displayName": "SM Post Advance",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Post-advance coordinator — trigger consumption, reset maps application, solver reset signal. Runs after all layers complete.",
-      "inputs": [
-        {
-          "name": "layersDone",
-          "type": "any",
-          "label": "Layers Done"
-        },
-        {
-          "name": "statesDone",
-          "type": "any",
-          "label": "States Done"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "advanced",
-          "type": "float",
-          "label": "Advanced"
-        },
-        {
-          "name": "resetSolvers",
-          "type": "float",
-          "label": "Reset Solvers"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smLifecycle": {
-      "displayName": "SM Lifecycle",
-      "category": "state-machine",
-      "context": "shared",
-      "description": "Owns the running/stopped state for one state machine. Reads `shouldRun` from the auto-start or external lifecycle source, emits `isRunning` for downstream layer/state nodes. Also the snapshot/restore boundary for hot-reload (F266): stores the full SM execution state (clock, current state ids, clip start times, RNG seed) and reapplies it after a graph rebuild so reloads preserve in-flight animation.",
-      "inputs": [
-        {
-          "name": "shouldRun",
-          "type": "float",
-          "label": "Should Run"
-        },
-        {
-          "name": "shouldReset",
-          "type": "float",
-          "label": "Should Reset"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "isRunning",
-          "type": "float",
-          "label": "Is Running"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smAutoStart": {
-      "displayName": "SM Auto Start",
-      "category": "state-machine",
-      "context": "shared",
-      "description": "Auto-start latch for a state machine. Defaults `shouldRun` to 1 on construction so the SM begins running on the first frame. `stop()` flips the internal latch to 0, producing a falling edge on `SMLifecycleNode.shouldRun`. The reverse signal (start after stop) lives on the parameter / listener side.",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "shouldRun",
-          "type": "float",
-          "label": "Should Run"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "smRandomSource": {
-      "displayName": "SM Random Source",
-      "category": "state-machine",
-      "context": "shared",
-      "description": "Per-SM deterministic Mulberry32 PRNG used by `LayerAdvanceNode` for weighted-random transition selection. Hot path is direct method call (`nextFloat()`) inside the layer's instant-chain inner loop; the `random` output port is updated each frame for FVE display only. Per-SM isolation guarantees that snapshotting one SM and restoring it later produces the identical random sequence regardless of what other SMs consumed in between (F266).",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "random",
-          "type": "float",
-          "label": "Random"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "rngState",
-          "label": "RNG State",
-          "type": "int"
-        }
-      ],
-      "defaults": {
-        "rngState": 0
-      },
-      "dynamicPorts": false
-    },
     "canvasPointer": {
       "displayName": "Canvas Pointer",
       "category": "inputs",
@@ -13848,17 +13740,6 @@
       "parameters": [],
       "defaults": {},
       "dynamicPorts": false
-    },
-    "smAudioBinding": {
-      "displayName": "SM Audio Binding",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Reads frequency data from audio tracks, applies temporal smoothing, outputs parameter values for audio-reactive animations.",
-      "inputs": [],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": true
     },
     "propertyAnimation": {
       "displayName": "Property Animation",
@@ -14196,6 +14077,49 @@
             ]
           }
         ]
+      },
+      "dynamicPorts": false
+    },
+    "stateMachine": {
+      "displayName": "State Machine",
+      "category": "state-machine",
+      "context": "shared",
+      "description": "Author-facing compound for a complete state machine: parameters, layers (states + transitions), listeners, audio bindings, pointer-align targets. Expands at load time into the SM cluster — `smParameterStore` + `layerAdvance` + `stateApply` + `poseEval`/`objectPoseEval`/`blendPose` pose pipeline + `smHitTest` + `listenerAction` + `smAudioAction` + `smCallbackAction` + `smPostAdvance` + `smRandomSource` + `smLifecycle` + `smAutoStart` (~33 primitives for a typical button). Compound: no runtime class. The expansion is loader-internal; authors and AI agents see one node carrying the full SM definition.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "parameters",
+          "label": "Parameters",
+          "type": "smParameters"
+        },
+        {
+          "key": "layers",
+          "label": "Layers",
+          "type": "smLayers"
+        },
+        {
+          "key": "listeners",
+          "label": "Listeners",
+          "type": "smListeners"
+        },
+        {
+          "key": "audioBindings",
+          "label": "Audio Bindings",
+          "type": "smAudioBindings"
+        },
+        {
+          "key": "pointerAlignTargets",
+          "label": "Pointer Align Targets",
+          "type": "smPointerAlignTargets"
+        }
+      ],
+      "defaults": {
+        "parameters": [],
+        "layers": [],
+        "listeners": [],
+        "audioBindings": [],
+        "pointerAlignTargets": []
       },
       "dynamicPorts": false
     },

@@ -1,6 +1,6 @@
 # Node Reference
 
-All 286 graph node types available in Faster Motion.
+All 272 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -73,8 +73,6 @@ Core animation primitives: timelines for playback control, tweens for A→B inte
 | [Seek Remap](animation/seekRemap.md) | `seekRemap` | shared | Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings |
 | [Clip Registry](animation/clipRegistry.md) | `clipRegistry` | shared | F342: graph-native publisher of AnimationClip references by id. One dynamic output port per clip (clip_${id}) carries the live AnimationClip reference. Replaces imperative TPN/OPE bind(clip) seams with port-routed clip identity. |
 | [Bone Clip Eval](animation/boneClipEval.md) | `boneClipEval` | shared | F342: evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Replaces TimelinePoseNode. Reads clip from a wired ClipRegistry port and rest baseline from a wired SkeletonSource port — no imperative bind(clip). |
-| [State Transforms Mux](animation/stateTransformsMux.md) | `stateTransformsMux` | shared | F345: selects an SM layer's active state's transforms by id. Reads currentStateId from LayerAdvanceNode + per-state transforms from dynamic transforms_${stateId} input ports wired from per-state evaluator nodes; outputs the active state's transforms. Replaces PoseEvalNode's imperative layer.getCurrentState().clip read. |
-| [State Anim Eval](animation/stateAnimEval.md) | `stateAnimEval` | shared | F345: evaluates a single SM animation state's clip at progress and outputs a transforms map. Reads clip from a wired ClipRegistry port. The downstream StateTransformsMux selects the active state's output by currentStateId. Replaces PoseEvalNode's imperative state.clip read. |
 | [Object Clip Eval](animation/objectClipEval.md) | `objectClipEval` | shared | F342: evaluates an AnimationClip's object tracks at progress and outputs an absolute pose AttributeBundle (per-object x/y/rotation/scale/opacity + extended scalar props + text strings). Replaces ObjectPoseEvalNode's Timeline-only bindClip path. Reads clip + rest from typed ports; no imperative bindClip. |
 | [Color Keyframe](animation/colorKeyframe.md) | `colorKeyframe` | shared | Multi-stop color interpolation in OKLab space. Outputs a single `color` port (Color {r,g,b,a} 0-1 sRGB) that wires into a `domPoseWrite` color-typed property port. Keyframes are `{ time, value, ease? }` where value is a CSS color string. |
 | [String Keyframe](animation/stringKeyframe.md) | `stringKeyframe` | shared | Multi-stop string interpolation — parses embedded numbers and interpolates each independently. For CSS strings (filter, boxShadow, gradients) where multiple numbers change together. |
@@ -128,42 +126,6 @@ Text animation nodes: split text into characters/words/lines, per-character wave
 | [Stagger Animation](text/staggerAnimation.md) | `staggerAnimation` | shared | Fan a single animation template across all DOM elements matching a plain CSS selector, with per-element stagger offsets. Element count is resolved at runtime via `querySelectorAll(selector)` — no template language, no `{i}` placeholder, no per-child graph nodes. Inner `each` is a propertyAnimation-shaped template (float / color / string keyframe channels); the runtime evaluates it per element with translation-stagger (each element's progress is shifted by `stagger * effectiveIndex(i)`). Compound: expands to ONE `staggerAnimate` runtime node. |
 | [Variant Stagger Animation](text/variantStaggerAnimation.md) | `variantStaggerAnimation` | shared | Fan a compound across N indexed DOM elements where each child has UNIQUE from/to values on shared channels. Per-child variation sibling of F324 staggerAnimation (which requires uniform values). Use for mouse-driven dispersals, hover-chaos grids, card-spread layouts, per-icon flutter — any "N siblings, same channels, different ranges". Compound: expands into N× propertyAnimation at load time (fixed-point loop then expands each to mk+pw). |
 | [Text Scramble Animation](text/textScrambleAnimation.md) | `textScrambleAnimation` | shared | Scramble a single character — cycles through a charset and settles on the original, driven by a 0..1 progress input. Authors pick one or more string write targets via `channels` (textContent, attribute like aria-label / title / data-*, CSS style property, CSS custom var). Compound: expands to `scrambleCompute` + one `domStringWrite` per channel at load time — no runtime class. |
-
-## [State machine](state-machine/)
-
-State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [SM Property Apply](state-machine/smPropertyApply.md) | `smPropertyApply` | canvas | Signal node — SM property writes are done, downstream can read safely |
-| [Pose Eval](state-machine/poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
-| [Blend Pose](state-machine/blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
-| [Masked Blend Pose](state-machine/maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
-| [Animated Parameter](state-machine/animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
-| [Additive Pose Blend](state-machine/additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
-| [Object Pose Eval](state-machine/objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
-| [Gradient Decompose](state-machine/gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
-| [Property Mask](state-machine/propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
-| [Object Blend](state-machine/objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
-| [Object Masked Blend](state-machine/objectMaskedBlend.md) | `objectMaskedBlend` | canvas | Blend two object pose bundles with per-object mask — unmasked objects pass through from A |
-| [Timeline State](state-machine/timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
-| [Remap Apply](state-machine/remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
-| [SM Parameter Store](state-machine/smParameterStore.md) | `smParameterStore` | canvas | Declarative parameter store — one dynamic output port per SM parameter. Receives writes from listeners, drivers, and audio bindings. |
-| [Layer Advance](state-machine/layerAdvance.md) | `layerAdvance` | canvas | Per-layer state machine solver — evaluates conditions, advances transitions, outputs current/previous state progress and weights. |
-| [State Apply](state-machine/stateApply.md) | `stateApply` | canvas | Reads layer state from LayerAdvanceNode, sets animation clip progress and applies state evaluation. |
-| [Blend Space 1D Eval](state-machine/blendSpace1DEval.md) | `blendSpace1DEval` | canvas | F266 Phase 3: pure 1D blend space evaluator. Wraps evaluateBlend1DTransforms(). Inputs: inputValue (axis parameter), progress. Output: per-object transform map blended between adjacent animations. |
-| [Blend Direct Eval](state-machine/blendDirectEval.md) | `blendDirectEval` | canvas | F266 Phase 3: pure direct-blend evaluator. Wraps evaluateBlendDirectTransforms(). Per-animation weight inputs (weight_<id>) drive sequential blend-on-top. Weights from parameters use normalized scale (value/100, clamped 0..1). |
-| [Blend Space 2D Eval](state-machine/blendSpace2DEval.md) | `blendSpace2DEval` | canvas | F359 Phase 8: 2D blend space evaluator. Pulls clips from dynamic clip_${animationId} input ports and produces transforms via Delaunay+barycentric (interpolated) or nearest-point (discrete). Grid mode publishes integer frame index on the frameIndex output port. |
-| [Reset Map](state-machine/resetMap.md) | `resetMap` | canvas | Applies animation reset maps during state transitions — properties animated by only one state get reset values during crossfade. |
-| [SM Hit Test](state-machine/smHitTest.md) | `smHitTest` | canvas | Translates pointer events + hit object IDs into per-target HitResult map for listener evaluation. |
-| [Listener Action](state-machine/listenerAction.md) | `listenerAction` | canvas | Routes listener actions into parameter writes (for SMParameterStoreNode) and side-effect actions (for audio/callback nodes). |
-| [SM Audio Action](state-machine/smAudioAction.md) | `smAudioAction` | canvas | Terminal node for audio side effects — owns HTMLAudioElement cache, handles play/pause/stop actions. |
-| [SM Callback Action](state-machine/smCallbackAction.md) | `smCallbackAction` | canvas | Terminal node for stateless one-shot callbacks — dispatches switchCamera, setSkin, openUrl, fireEvent, animationAction. |
-| [SM Post Advance](state-machine/smPostAdvance.md) | `smPostAdvance` | canvas | Post-advance coordinator — trigger consumption, reset maps application, solver reset signal. Runs after all layers complete. |
-| [SM Lifecycle](state-machine/smLifecycle.md) | `smLifecycle` | shared | Owns the running/stopped state for one state machine. Reads `shouldRun` from the auto-start or external lifecycle source, emits `isRunning` for downstream layer/state nodes. Also the snapshot/restore boundary for hot-reload (F266): stores the full SM execution state (clock, current state ids, clip start times, RNG seed) and reapplies it after a graph rebuild so reloads preserve in-flight animation. |
-| [SM Auto Start](state-machine/smAutoStart.md) | `smAutoStart` | shared | Auto-start latch for a state machine. Defaults `shouldRun` to 1 on construction so the SM begins running on the first frame. `stop()` flips the internal latch to 0, producing a falling edge on `SMLifecycleNode.shouldRun`. The reverse signal (start after stop) lives on the parameter / listener side. |
-| [SM Random Source](state-machine/smRandomSource.md) | `smRandomSource` | shared | Per-SM deterministic Mulberry32 PRNG used by `LayerAdvanceNode` for weighted-random transition selection. Hot path is direct method call (`nextFloat()`) inside the layer's instant-chain inner loop; the `random` output port is updated each frame for FVE display only. Per-SM isolation guarantees that snapshotting one SM and restoring it later produces the identical random sequence regardless of what other SMs consumed in between (F266). |
-| [SM Audio Binding](state-machine/smAudioBinding.md) | `smAudioBinding` | canvas | Reads frequency data from audio tracks, applies temporal smoothing, outputs parameter values for audio-reactive animations. |
 
 ## [Boundary](boundary/)
 
@@ -229,6 +191,28 @@ Path geometry read/write and modifiers: bend, wave, noise deform, trim, offset, 
 | [Merge Paths](paths/mergePaths.md) | `mergePaths` | shared | Boolean ops (union/intersect/subtract/exclude) via clipper2. |
 | [Path Vertex Anim](paths/pathVertexAnim.md) | `pathVertexAnim` | shared | Animates per-vertex offsets along a path over time. |
 | [Morph Path Animation](paths/morphPathAnimation.md) | `morphPathAnimation` | shared | Interpolate an SVG path element from its current d attribute toward a target d, driven by a 0..1 progress input. One authoring node replaces the canonical chain `domAttributeRead(d) → morphCompute(fromPath ← read, toPath) → domPoseWrite(d)` that every SVG morph repeats. Compound: expanded into those three primitives at load time — no runtime class. |
+
+## [State machine](state-machine/)
+
+State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Pose Eval](state-machine/poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
+| [Blend Pose](state-machine/blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
+| [Masked Blend Pose](state-machine/maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
+| [Animated Parameter](state-machine/animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
+| [Additive Pose Blend](state-machine/additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
+| [Object Pose Eval](state-machine/objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
+| [Gradient Decompose](state-machine/gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
+| [Property Mask](state-machine/propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
+| [Object Blend](state-machine/objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
+| [Timeline State](state-machine/timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
+| [Remap Apply](state-machine/remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
+| [Blend Space 1D Eval](state-machine/blendSpace1DEval.md) | `blendSpace1DEval` | canvas | F266 Phase 3: pure 1D blend space evaluator. Wraps evaluateBlend1DTransforms(). Inputs: inputValue (axis parameter), progress. Output: per-object transform map blended between adjacent animations. |
+| [Blend Direct Eval](state-machine/blendDirectEval.md) | `blendDirectEval` | canvas | F266 Phase 3: pure direct-blend evaluator. Wraps evaluateBlendDirectTransforms(). Per-animation weight inputs (weight_<id>) drive sequential blend-on-top. Weights from parameters use normalized scale (value/100, clamped 0..1). |
+| [Blend Space 2D Eval](state-machine/blendSpace2DEval.md) | `blendSpace2DEval` | canvas | F359 Phase 8: 2D blend space evaluator. Pulls clips from dynamic clip_${animationId} input ports and produces transforms via Delaunay+barycentric (interpolated) or nearest-point (discrete). Grid mode publishes integer frame index on the frameIndex output port. |
+| [State Machine](state-machine/stateMachine.md) | `stateMachine` | shared | Author-facing compound for a complete state machine: parameters, layers (states + transitions), listeners, audio bindings, pointer-align targets. Expands at load time into the SM cluster — `smParameterStore` + `layerAdvance` + `stateApply` + `poseEval`/`objectPoseEval`/`blendPose` pose pipeline + `smHitTest` + `listenerAction` + `smAudioAction` + `smCallbackAction` + `smPostAdvance` + `smRandomSource` + `smLifecycle` + `smAutoStart` (~33 primitives for a typical button). Compound: no runtime class. The expansion is loader-internal; authors and AI agents see one node carrying the full SM definition. |
 
 ## [Math](math/)
 
@@ -340,6 +324,20 @@ Graph composition and data flow: ForEach stamping, scene composition, parameter 
 | [Scene](integration/sceneGraph.md) | `sceneGraph` | canvas | Composable scene root — encapsulates an entire .fmtion scene as a single node with promoted ports. |
 | [Dirty Trigger](integration/dirtyTrigger.md) | `dirtyTrigger` | shared | External dirtying entry point. No-op evaluate — triggers downstream re-evaluation. |
 
+## [Solvers](solvers/)
+
+Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Value Solver](solvers/valueSolver.md) | `valueSolver` | shared | Generic float accumulation with temporal feedback. Value moves toward target at given rate. |
+| [Mesh Solver](solvers/meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
+| [Constraint Solver](solvers/constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
+| [Physics World](solvers/physicsWorld.md) | `physicsWorld` | canvas | One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time). |
+| [Physics Body](solvers/physicsBody.md) | `physicsBody` | shared | One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param). Pose, velocity, and awake state are exposed as typed output ports — wire to `domPropertyWrite` for DOM consumers, to STN inputs for canvas consumers, or to `physicsBodyTransform` for fan-out to multiple consumers. |
+| [Physics Static Body](solvers/physicsStaticBody.md) | `physicsStaticBody` | shared | Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim. |
+| [Physics Body Stagger](solvers/physicsBodyStagger.md) | `physicsBodyStagger` | shared | Runtime-fanout compound — one node = N physicsBody instances + N DOM transform writes. Resolves N elements at bind time from a plain CSS selector and creates one body per element with shared params. Per-element radius via `shape.radiusFromCSS: "--bd"` reads each element's CSS variable (same convention `staggerAnimate` uses). Saves ~3N nodes for ball-drop / scatter patterns. For per-element heterogeneity beyond size (different bodyKind / restitution per element), drop down to primitive `physicsBody` + `domPoseWrite` pairs. |
+
 ## [Effects](effects/)
 
 Visual effects: WASM/GPU filter chains, parametric shape generation, glitch computation, FLIP layout animation, and morph path interpolation.
@@ -377,18 +375,6 @@ Media playback: audio tracks with RMS level output, Lottie animation control, DO
 | [Video Effect](media/videoEffect.md) | `videoEffect` | dom | WebGL video effect — wraps VideoEffectController |
 | [Audio Track](media/audioTrack.md) | `audioTrack` | shared | Audio playback with level output for audio-reactive animations |
 | [Video Sync](media/videoSync.md) | `videoSync` | shared | Timeline-to-video playback synchronization. |
-
-## [Solvers](solvers/)
-
-Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Value Solver](solvers/valueSolver.md) | `valueSolver` | shared | Generic float accumulation with temporal feedback. Value moves toward target at given rate. |
-| [Mesh Solver](solvers/meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
-| [Constraint Solver](solvers/constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
-| [Physics World](solvers/physicsWorld.md) | `physicsWorld` | canvas | Rigid body physics simulation via Planck.js (Box2D). Lazy-loaded. |
-| [Physics Body Read](solvers/physicsBodyRead.md) | `physicsBodyRead` | canvas | Extract per-body x/y/rotation from PhysicsWorldNode output. |
 
 ## [Bundles](bundles/)
 

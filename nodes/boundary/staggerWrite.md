@@ -25,5 +25,5 @@ _No outputs._
 | `selector` | elementSelector | `""` | CSS Selector |
 | `channels` | staggerChannels | `{}` | Channels |
 | `totalStagger` | float | `0.3` | Total Stagger (min: 0, max: 1) |
-| `staggerOrder` | enum | `"start"` | Order. Options: `start`, `end`, `center`, `edges`, `random` |
+| `staggerOrder` | enum | `"start"` | Order. Options: `start`, `end`, `center`, `edges`, `random`, `positionY`, `positionX` |
 

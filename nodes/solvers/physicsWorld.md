@@ -4,28 +4,35 @@
 **Category:** solvers  
 **Context:** Canvas — operates on canvas scene objects, bones, or skeletons  
 
-Rigid body physics simulation via Planck.js (Box2D). Lazy-loaded.
+One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time).
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `subSteps` | `float` | Sub Steps |
-| `gravityX` | `float` | Gravity X |
-| `gravityY` | `float` | Gravity Y |
+| `gravity` | `vec2` | Gravity |
+| `timeScale` | `float` | Time Scale |
+| `paused` | `float` | Paused |
+| `progress` | `float` | Progress |
 
 
 ## Outputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `bodyStates` | `any` | Body States |
+| `world` | `any` | World Handle |
+| `frameStepped` | `float` | Frame Stepped |
 | `bodyCount` | `float` | Body Count |
+| `jointCount` | `float` | Joint Count |
 
 
 ## Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `pixelsPerMeter` | float | `100` | Pixels/Meter (min: 1, max: 1000) |
+| `pixelsPerMeter` | float | `100` | Pixels per Meter (min: 1, max: 10000) |
+| `subSteps` | int | `4` | Sub-Steps per Frame (min: 1, max: 16) |
+| `paramGravityX` | float | `0` | Default Gravity X |
+| `paramGravityY` | float | `0` | Default Gravity Y |
+| `pauseBelowProgress` | float | `null` | Pause Below Progress (min: 0, max: 1) |
 
