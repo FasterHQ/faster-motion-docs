@@ -1,7 +1,7 @@
 {
   "_generatedAt": "2026-05-04",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 259,
+  "_nodeCount": 260,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -73,6 +73,7 @@
         "accumulatePulse",
         "randomIndex",
         "randomFloat",
+        "elementCount",
         "loadPulse",
         "directionLatch",
         "bidirectionalCounter",
@@ -4321,6 +4322,36 @@
         "min": 0,
         "max": 1,
         "seed": 1
+      },
+      "dynamicPorts": false
+    },
+    "elementCount": {
+      "displayName": "Element Count",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Emits `document.querySelectorAll(selector).length` as a first-class graph value. Use to eliminate hard-coded `N` literals scattered across `propertyAnimation` channel maxes, `expression` `* (N-1)` math, and `clickStateDispatcher.values[]` arrays — wire `count`/`countMinusOne` into them so adding a matched element auto-rescales the graph. Re-queries each evaluate; cost is one querySelectorAll per Scheduler tick (negligible). Throws on empty selector or absent DOM (faster-motion-runtime/SSR).",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        },
+        {
+          "name": "countMinusOne",
+          "type": "float",
+          "label": "Count − 1"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": ""
       },
       "dynamicPorts": false
     },
