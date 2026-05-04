@@ -12,6 +12,7 @@ Runtime-fanout compound — one node = N physicsBody instances + N DOM transform
 |------|------|-------------|
 | `world` | `any` | World |
 | `enabled` | `float` | Enabled |
+| `progress` | `float` | Progress |
 
 
 ## Outputs
@@ -42,4 +43,5 @@ Runtime-fanout compound — one node = N physicsBody instances + N DOM transform
 | `lockRotation` | bool | `false` | Lock Rotation |
 | `ccd` | bool | `false` | CCD |
 | `writeTransform` | bool | `true` | Write Transform to Element |
+| `resetBelowProgress` | float | `null` | Reset Below Progress (min: 0, max: 1) |
 

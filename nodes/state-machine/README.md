@@ -7,14 +7,7 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [Pose Eval](poseEval.md) | `poseEval` | canvas | Evaluate animation clip bone tracks into a pose bundle (no mutation) |
 | [Blend Pose](blendPose.md) | `blendPose` | canvas | Blend two pose bundles by weight (linear lerp) |
 | [Masked Blend Pose](maskedBlendPose.md) | `maskedBlendPose` | canvas | Blend two pose bundles with bone mask — unmasked bones pass through from A |
-| [Animated Parameter](animatedParameter.md) | `animatedParameter` | shared | Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips. |
-| [Additive Pose Blend](additivePoseBlend.md) | `additivePoseBlend` | shared | Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips). |
-| [Object Pose Eval](objectPoseEval.md) | `objectPoseEval` | canvas | Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props) |
-| [Gradient Decompose](gradientDecompose.md) | `gradientDecompose` | canvas | Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle |
-| [Property Mask](propertyMask.md) | `propertyMask` | canvas | Build per-property animated mask from raw transforms (reset-map pattern) |
 | [Object Blend](objectBlend.md) | `objectBlend` | canvas | Blend two object pose bundles by weight (linear lerp) |
-| [Timeline State](timelineState.md) | `timelineState` | canvas | Animation state node — drives a TimelineNode from state machine layer events. |
-| [Remap Apply](remapApply.md) | `remapApply` | canvas | Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads. |
 | [Blend Space 1D Eval](blendSpace1DEval.md) | `blendSpace1DEval` | canvas | F266 Phase 3: pure 1D blend space evaluator. Wraps evaluateBlend1DTransforms(). Inputs: inputValue (axis parameter), progress. Output: per-object transform map blended between adjacent animations. |
 | [Blend Direct Eval](blendDirectEval.md) | `blendDirectEval` | canvas | F266 Phase 3: pure direct-blend evaluator. Wraps evaluateBlendDirectTransforms(). Per-animation weight inputs (weight_<id>) drive sequential blend-on-top. Weights from parameters use normalized scale (value/100, clamped 0..1). |
 | [Blend Space 2D Eval](blendSpace2DEval.md) | `blendSpace2DEval` | canvas | F359 Phase 8: 2D blend space evaluator. Pulls clips from dynamic clip_${animationId} input ports and produces transforms via Delaunay+barycentric (interpolated) or nearest-point (discrete). Grid mode publishes integer frame index on the frameIndex output port. |

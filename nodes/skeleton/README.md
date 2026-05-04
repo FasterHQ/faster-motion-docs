@@ -5,7 +5,6 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
 | [Skeleton Source](skeletonSource.md) | `skeletonSource` | shared | Graph-native publisher of a Skeleton's rest pose. Loader calls bind(skeleton) once; the source pulls the rest bundle from skeleton.getRestBundle() (snapshot captured by skeleton.markRest() before IK solves). Output flows to APB.restBaseline / rig pose boundary through typed edges. |
-| [Bundle Source](bundleSource.md) | `bundleSource` | shared | Graph-native publisher of an externally-built AttributeBundle. Used for scene-level multi-clip APBs whose rest baseline is computed dynamically (no Skeleton involved). Caller (scene-subgraph) calls bind(bundle) at synthesis time. |
 | [Rest Pose Bone](restPoseBone.md) | `restPoseBone` | shared | Per-bone pure-FK node — reads pose at boneIndex, computes pre-override world matrix from parent. Paired with boneTransform. |
 | [Bone Transform](boneTransform.md) | `boneTransform` | canvas | Per-bone override-apply node — reads rest scalars from sibling restPoseBone, applies override/additive/constraintXform, outputs post-override world matrix |
 | [Bone Collector](boneCollector.md) | `boneCollector` | canvas | Gather per-bone world matrices into AttributeBundle for IK solver |

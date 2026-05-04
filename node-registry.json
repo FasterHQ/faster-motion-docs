@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-05-03",
+  "_generatedAt": "2026-05-04",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 272,
+  "_nodeCount": 259,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -132,19 +132,12 @@
         "boolTween",
         "timeline",
         "seamlessPlayhead",
-        "carouselSlideLocalTime",
-        "carouselAutoplay",
-        "carouselKeyboardNav",
-        "carouselWrapCounter",
         "pulseTween",
         "tween",
         "keyframe",
         "stagger",
         "colorTween",
-        "seekRemap",
-        "clipRegistry",
-        "boneClipEval",
-        "objectClipEval",
+        "animationClip",
         "colorKeyframe",
         "stringKeyframe",
         "clipPath",
@@ -191,15 +184,15 @@
         "dataWrite",
         "domPropertyWrite",
         "domVariablesWrite",
-        "staggerAnimate",
         "staggerWrite",
         "domDockTo",
         "domIndexedDock",
         "domStringWrite",
         "domStagePreset",
-        "sceneTransform",
+        "sceneObject",
+        "group",
+        "sceneGraphContainer",
         "objectPropertyRead",
-        "layoutCompute",
         "maskSync",
         "camera",
         "switchGate",
@@ -207,8 +200,6 @@
         "domPoseWrite",
         "domAttributeRead",
         "domStringArrayRead",
-        "sceneRender",
-        "boneRender",
         "additivePropertyWrite"
       ]
     },
@@ -318,33 +309,17 @@
         "poseEval",
         "blendPose",
         "maskedBlendPose",
-        "animatedParameter",
-        "additivePoseBlend",
-        "objectPoseEval",
-        "gradientDecompose",
-        "propertyMask",
         "objectBlend",
-        "timelineState",
-        "remapApply",
         "blendSpace1DEval",
         "blendDirectEval",
         "blendSpace2DEval",
         "stateMachine"
       ]
     },
-    "attributes": {
-      "description": "AttributeBundle operations: read/write named attributes from bundles, extract single values by property name and index.",
-      "nodes": [
-        "bundleRead",
-        "attributeRead",
-        "attributeWrite"
-      ]
-    },
     "skeleton": {
       "description": "Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.",
       "nodes": [
         "skeletonSource",
-        "bundleSource",
         "restPoseBone",
         "boneTransform",
         "boneCollector",
@@ -365,6 +340,13 @@
         "parameterAction",
         "dataSource",
         "typeCast"
+      ]
+    },
+    "attributes": {
+      "description": "AttributeBundle operations: read/write named attributes from bundles, extract single values by property name and index.",
+      "nodes": [
+        "attributeRead",
+        "attributeWrite"
       ]
     },
     "falloff": {
@@ -402,7 +384,12 @@
         "physicsWorld",
         "physicsBody",
         "physicsStaticBody",
-        "physicsBodyStagger"
+        "physicsBodyStagger",
+        "physicsJoint",
+        "physicsApplyForce",
+        "physicsApplyImpulse",
+        "physicsCollisionPulse",
+        "physicsMouseDrag"
       ]
     },
     "deformers": {
@@ -2171,68 +2158,6 @@
       },
       "dynamicPorts": false
     },
-    "staggerAnimate": {
-      "displayName": "Stagger Animate",
-      "category": "boundary",
-      "context": "shared",
-      "description": "Runtime per-element keyframe-with-stagger writer. Resolves N elements at bind time from a plain CSS selector and applies a multi-channel keyframe template per element with translation-stagger (each element's progress is shifted by `stagger * effectiveIndex(i)`). The runtime backing for the `staggerAnimation` compound — authors usually reach for the compound. Out-of-range progress per element holds the first/last keyframe (same semantics as MultiKeyframeNode).",
-      "inputs": [
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        },
-        {
-          "name": "selector",
-          "type": "string",
-          "label": "Selector"
-        }
-      ],
-      "outputs": [],
-      "parameters": [
-        {
-          "key": "selector",
-          "label": "Selector",
-          "type": "elementSelector"
-        },
-        {
-          "key": "stagger",
-          "label": "Stagger",
-          "type": "float",
-          "min": 0,
-          "max": 1,
-          "step": 0.01
-        },
-        {
-          "key": "staggerFrom",
-          "label": "Stagger From",
-          "type": "enum",
-          "options": [
-            "start",
-            "end",
-            "center",
-            "edges",
-            "random"
-          ]
-        },
-        {
-          "key": "delayOffset",
-          "label": "Delay Offset",
-          "type": "float",
-          "min": 0,
-          "max": 1,
-          "step": 0.01
-        }
-      ],
-      "defaults": {
-        "selector": "",
-        "stagger": 0,
-        "staggerFrom": "start",
-        "delayOffset": 0,
-        "channels": {}
-      },
-      "dynamicPorts": false
-    },
     "staggerWrite": {
       "displayName": "Stagger Write",
       "category": "boundary",
@@ -3814,183 +3739,6 @@
       },
       "dynamicPorts": false
     },
-    "carouselSlideLocalTime": {
-      "displayName": "Carousel Slide Local Time",
-      "category": "animation",
-      "context": "shared",
-      "description": "Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1).",
-      "inputs": [
-        {
-          "name": "playhead",
-          "type": "float",
-          "label": "Playhead"
-        },
-        {
-          "name": "slideIndex",
-          "type": "float",
-          "label": "Slide Index"
-        },
-        {
-          "name": "spacing",
-          "type": "float",
-          "label": "Spacing (s)"
-        },
-        {
-          "name": "duration",
-          "type": "float",
-          "label": "Duration (s)"
-        },
-        {
-          "name": "loopDuration",
-          "type": "float",
-          "label": "Loop Duration (s)"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "slideProgress",
-          "type": "float",
-          "label": "Slide Progress"
-        }
-      ],
-      "parameters": [],
-      "defaults": {
-        "slideIndex": 0,
-        "spacing": 0.1,
-        "duration": 1,
-        "loopDuration": 1
-      },
-      "dynamicPorts": false
-    },
-    "carouselAutoplay": {
-      "displayName": "Carousel Autoplay",
-      "category": "animation",
-      "context": "shared",
-      "description": "Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion.",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "slideOffset",
-          "type": "float",
-          "label": "Slide Offset"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "speed",
-          "label": "Speed (slides/sec)",
-          "type": "float",
-          "min": 0,
-          "step": 0.05
-        },
-        {
-          "key": "pauseOnHover",
-          "label": "Pause on Hover",
-          "type": "bool"
-        },
-        {
-          "key": "hoverSelector",
-          "label": "Hover Selector",
-          "type": "string"
-        },
-        {
-          "key": "respectReducedMotion",
-          "label": "Respect Reduced Motion",
-          "type": "bool"
-        }
-      ],
-      "defaults": {
-        "speed": 0.5,
-        "pauseOnHover": true,
-        "hoverSelector": "",
-        "respectReducedMotion": true
-      },
-      "dynamicPorts": false
-    },
-    "carouselKeyboardNav": {
-      "displayName": "Carousel Keyboard Nav",
-      "category": "animation",
-      "context": "shared",
-      "description": "Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping.",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "iterationOffset",
-          "type": "float",
-          "label": "Iteration Offset"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "prevKey",
-          "label": "Previous Key",
-          "type": "string"
-        },
-        {
-          "key": "nextKey",
-          "label": "Next Key",
-          "type": "string"
-        }
-      ],
-      "defaults": {
-        "prevKey": "ArrowLeft",
-        "nextKey": "ArrowRight"
-      },
-      "dynamicPorts": false
-    },
-    "carouselWrapCounter": {
-      "displayName": "Carousel Wrap Counter",
-      "category": "animation",
-      "context": "shared",
-      "description": "Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops.",
-      "inputs": [
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "iteration",
-          "type": "float",
-          "label": "Iteration"
-        },
-        {
-          "name": "wrappedProgress",
-          "type": "float",
-          "label": "Wrapped Progress"
-        },
-        {
-          "name": "direction",
-          "type": "float",
-          "label": "Direction"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "cooldownFrames",
-          "label": "Cooldown Frames",
-          "type": "int",
-          "min": 0,
-          "max": 60,
-          "step": 1
-        },
-        {
-          "key": "directionWindow",
-          "label": "Direction Window",
-          "type": "int",
-          "min": 1,
-          "max": 15,
-          "step": 1
-        }
-      ],
-      "defaults": {
-        "cooldownFrames": 2,
-        "directionWindow": 3
-      },
-      "dynamicPorts": false
-    },
     "pulseTween": {
       "displayName": "Pulse Tween",
       "category": "animation",
@@ -5282,175 +5030,6 @@
       "defaults": {},
       "dynamicPorts": false
     },
-    "animatedParameter": {
-      "displayName": "Animated Parameter",
-      "category": "state-machine",
-      "context": "shared",
-      "description": "Sample a keyframe track at a progress input and drive a ParameterStoreNode writer port each frame. Joystick-input animation pattern — an autoplay clip keyframes a joystick parameter, which then seeks other clips.",
-      "inputs": [
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "value",
-          "type": "float",
-          "label": "Value"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "targetParameterId",
-          "label": "Parameter ID",
-          "type": "string"
-        },
-        {
-          "key": "duration",
-          "label": "Duration (ms)",
-          "type": "float",
-          "min": 0
-        }
-      ],
-      "defaults": {
-        "targetParameterId": "",
-        "duration": 1000,
-        "keyframes": []
-      },
-      "dynamicPorts": false
-    },
-    "additivePoseBlend": {
-      "displayName": "Additive Pose Blend",
-      "category": "state-machine",
-      "context": "shared",
-      "description": "Combine N pose bundles by summing their deltas from a rest baseline — multi-clip stacking (autoplay plus parameter-seeked clips).",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "pose",
-          "type": "attributes",
-          "label": "Pose"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "poseInputCount",
-          "label": "Pose Input Count",
-          "type": "int",
-          "min": 0
-        }
-      ],
-      "defaults": {
-        "poseInputCount": 0
-      },
-      "dynamicPorts": false
-    },
-    "objectPoseEval": {
-      "displayName": "Object Pose Eval",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Evaluate animation clip object tracks into a pose bundle (x, y, rotation, scaleX, scaleY, opacity + extended props)",
-      "inputs": [
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        },
-        {
-          "name": "layerRef",
-          "type": "any",
-          "label": "Layer Ref"
-        },
-        {
-          "name": "weight",
-          "type": "float",
-          "label": "Weight"
-        },
-        {
-          "name": "restBaseline",
-          "type": "attributes",
-          "label": "Rest Baseline"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "objectPose",
-          "type": "attributes",
-          "label": "Object Pose"
-        },
-        {
-          "name": "transforms",
-          "type": "any",
-          "label": "Transforms"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "gradientDecompose": {
-      "displayName": "Gradient Decompose",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Decompose gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle",
-      "inputs": [
-        {
-          "name": "bundle",
-          "type": "attributes",
-          "label": "Partial Bundle"
-        },
-        {
-          "name": "transforms",
-          "type": "any",
-          "label": "Raw Transforms"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "objectPose",
-          "type": "attributes",
-          "label": "Object Pose"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "propertyMask": {
-      "displayName": "Property Mask",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Build per-property animated mask from raw transforms (reset-map pattern)",
-      "inputs": [
-        {
-          "name": "transforms",
-          "type": "any",
-          "label": "Raw Transforms"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "animMask",
-          "type": "any",
-          "label": "Anim Mask"
-        },
-        {
-          "name": "propIdx",
-          "type": "any",
-          "label": "Prop Index Map"
-        },
-        {
-          "name": "propCount",
-          "type": "any",
-          "label": "Prop Count"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
     "objectBlend": {
       "displayName": "Object Blend",
       "category": "state-machine",
@@ -5489,272 +5068,6 @@
       "defaults": {},
       "dynamicPorts": false
     },
-    "sceneTransform": {
-      "displayName": "Scene Transform",
-      "category": "boundary",
-      "context": "canvas",
-      "description": "Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject",
-      "inputs": [
-        {
-          "name": "parentWorldMatrix",
-          "type": "any",
-          "label": "Parent World Matrix"
-        },
-        {
-          "name": "parentOpacity",
-          "type": "float",
-          "label": "Parent Opacity"
-        },
-        {
-          "name": "parentVisible",
-          "type": "bool",
-          "label": "Parent Visible"
-        },
-        {
-          "name": "smWritesDone",
-          "type": "any",
-          "label": "SM Writes Done"
-        },
-        {
-          "name": "deltaTime",
-          "type": "float",
-          "label": "Delta Time"
-        },
-        {
-          "name": "objectPose",
-          "type": "attributes",
-          "label": "Object Pose"
-        },
-        {
-          "name": "x",
-          "type": "float",
-          "label": "X"
-        },
-        {
-          "name": "y",
-          "type": "float",
-          "label": "Y"
-        },
-        {
-          "name": "rotation",
-          "type": "float",
-          "label": "Rotation"
-        },
-        {
-          "name": "scaleX",
-          "type": "float",
-          "label": "Scale X"
-        },
-        {
-          "name": "scaleY",
-          "type": "float",
-          "label": "Scale Y"
-        },
-        {
-          "name": "opacity",
-          "type": "float",
-          "label": "Opacity"
-        },
-        {
-          "name": "visible",
-          "type": "bool",
-          "label": "Visible"
-        },
-        {
-          "name": "constraintX",
-          "type": "float",
-          "label": "Constraint X"
-        },
-        {
-          "name": "constraintY",
-          "type": "float",
-          "label": "Constraint Y"
-        },
-        {
-          "name": "constraintRotation",
-          "type": "float",
-          "label": "Constraint Rotation"
-        },
-        {
-          "name": "constraintScaleX",
-          "type": "float",
-          "label": "Constraint Scale X"
-        },
-        {
-          "name": "constraintScaleY",
-          "type": "float",
-          "label": "Constraint Scale Y"
-        },
-        {
-          "name": "constraintWorldX",
-          "type": "float",
-          "label": "Constraint World X"
-        },
-        {
-          "name": "constraintWorldY",
-          "type": "float",
-          "label": "Constraint World Y"
-        },
-        {
-          "name": "pathInput",
-          "type": "path",
-          "label": "Path Input"
-        },
-        {
-          "name": "textContent",
-          "type": "any",
-          "label": "Text Content"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "worldMatrix",
-          "type": "any",
-          "label": "World Matrix"
-        },
-        {
-          "name": "restWorldMatrix",
-          "type": "any",
-          "label": "Rest World Matrix"
-        },
-        {
-          "name": "x",
-          "type": "float",
-          "label": "X"
-        },
-        {
-          "name": "y",
-          "type": "float",
-          "label": "Y"
-        },
-        {
-          "name": "rotation",
-          "type": "float",
-          "label": "Rotation"
-        },
-        {
-          "name": "scaleX",
-          "type": "float",
-          "label": "Scale X"
-        },
-        {
-          "name": "scaleY",
-          "type": "float",
-          "label": "Scale Y"
-        },
-        {
-          "name": "opacity",
-          "type": "float",
-          "label": "Opacity"
-        },
-        {
-          "name": "visible",
-          "type": "bool",
-          "label": "Visible"
-        },
-        {
-          "name": "path",
-          "type": "path",
-          "label": "Path"
-        },
-        {
-          "name": "textContent",
-          "type": "any",
-          "label": "Text Content"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "objectId",
-          "label": "Object",
-          "type": "objectPicker"
-        }
-      ],
-      "defaults": {
-        "objectId": ""
-      },
-      "dynamicPorts": true
-    },
-    "bundleRead": {
-      "displayName": "Bundle Read",
-      "category": "attributes",
-      "context": "shared",
-      "description": "Extract a single float from an AttributeBundle by property name + index",
-      "inputs": [
-        {
-          "name": "bundle",
-          "type": "attributes",
-          "label": "Bundle"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "value",
-          "type": "float",
-          "label": "Value"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "propertyName",
-          "label": "Property Name",
-          "type": "cssProperty"
-        },
-        {
-          "key": "index",
-          "label": "Index",
-          "type": "int"
-        }
-      ],
-      "defaults": {
-        "propertyName": "",
-        "index": -1
-      },
-      "dynamicPorts": false
-    },
-    "seekRemap": {
-      "displayName": "Seek Remap",
-      "category": "animation",
-      "context": "shared",
-      "description": "Map a raw parameter value into [0,1] progress for TimelinePoseNode / ObjectPoseEvalNode seek bindings",
-      "inputs": [
-        {
-          "name": "value",
-          "type": "float",
-          "label": "Value"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "inputMin",
-          "label": "Input Min",
-          "type": "float"
-        },
-        {
-          "key": "inputMax",
-          "label": "Input Max",
-          "type": "float"
-        },
-        {
-          "key": "invert",
-          "label": "Invert",
-          "type": "bool"
-        }
-      ],
-      "defaults": {
-        "inputMin": -1,
-        "inputMax": 1,
-        "invert": false
-      },
-      "dynamicPorts": false
-    },
     "skeletonSource": {
       "displayName": "Skeleton Source",
       "category": "skeleton",
@@ -5778,122 +5091,13 @@
       "defaults": {},
       "dynamicPorts": false
     },
-    "bundleSource": {
-      "displayName": "Bundle Source",
-      "category": "skeleton",
-      "context": "shared",
-      "description": "Graph-native publisher of an externally-built AttributeBundle. Used for scene-level multi-clip APBs whose rest baseline is computed dynamically (no Skeleton involved). Caller (scene-subgraph) calls bind(bundle) at synthesis time.",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "bundle",
-          "type": "attributes",
-          "label": "Bundle"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "clipRegistry": {
-      "displayName": "Clip Registry",
+    "animationClip": {
+      "displayName": "Animation Clip",
       "category": "animation",
       "context": "shared",
-      "description": "F342: graph-native publisher of AnimationClip references by id. One dynamic output port per clip (clip_${id}) carries the live AnimationClip reference. Replaces imperative TPN/OPE bind(clip) seams with port-routed clip identity.",
+      "description": "Authoring node for a single timeline-driven clip. params.objectTracks / boneTracks carry per-property keyframes; params.duration sets the clip length. Phase 01a expansion pushes this into the canvas animations array so the existing OCE + clipRegistry derivation produces identical runtime DAG. Use this instead of writing the animations array inline when authoring at the graph level.",
       "inputs": [],
       "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "boneClipEval": {
-      "displayName": "Bone Clip Eval",
-      "category": "animation",
-      "context": "shared",
-      "description": "F342: evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Replaces TimelinePoseNode. Reads clip from a wired ClipRegistry port and rest baseline from a wired SkeletonSource port — no imperative bind(clip).",
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "any",
-          "label": "Clip"
-        },
-        {
-          "name": "restBaseline",
-          "type": "attributes",
-          "label": "Rest Baseline"
-        },
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        },
-        {
-          "name": "weight",
-          "type": "float",
-          "label": "Weight"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "pose",
-          "type": "attributes",
-          "label": "Pose"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "animationId",
-          "label": "Animation Id",
-          "type": "string"
-        },
-        {
-          "key": "skeletonId",
-          "label": "Skeleton Id",
-          "type": "string"
-        }
-      ],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "objectClipEval": {
-      "displayName": "Object Clip Eval",
-      "category": "animation",
-      "context": "shared",
-      "description": "F342: evaluates an AnimationClip's object tracks at progress and outputs an absolute pose AttributeBundle (per-object x/y/rotation/scale/opacity + extended scalar props + text strings). Replaces ObjectPoseEvalNode's Timeline-only bindClip path. Reads clip + rest from typed ports; no imperative bindClip.",
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "any",
-          "label": "Clip"
-        },
-        {
-          "name": "restBaseline",
-          "type": "attributes",
-          "label": "Rest Baseline"
-        },
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        },
-        {
-          "name": "weight",
-          "type": "float",
-          "label": "Weight"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "objectPose",
-          "type": "attributes",
-          "label": "Object Pose"
-        },
-        {
-          "name": "transforms",
-          "type": "any",
-          "label": "Transforms (raw)"
-        }
-      ],
       "parameters": [
         {
           "key": "clipId",
@@ -5901,11 +5105,98 @@
           "type": "string"
         },
         {
-          "key": "animationId",
-          "label": "Animation Id",
+          "key": "name",
+          "label": "Name",
+          "type": "string"
+        },
+        {
+          "key": "duration",
+          "label": "Duration (ms)",
+          "type": "float",
+          "min": 0
+        }
+      ],
+      "defaults": {
+        "clipId": "",
+        "name": "",
+        "duration": 1000
+      },
+      "dynamicPorts": false
+    },
+    "sceneObject": {
+      "displayName": "Scene Object",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Authoring node for one renderable canvas object — rectangle, ellipse, path, image, text, etc. params carry the visual definition (type, transform fields, fill / stroke, properties bag). Phase 01a expansion pushes this into the canvas objects array so Phase 06 derives the matching sceneTransform exactly as for legacy-shape input. Use instead of writing the objects array inline.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "objectId",
+          "label": "Object Id",
+          "type": "string"
+        },
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "string"
+        },
+        {
+          "key": "type",
+          "label": "Shape Type",
+          "type": "string"
+        },
+        {
+          "key": "parentId",
+          "label": "Parent Id",
           "type": "string"
         }
       ],
+      "defaults": {
+        "objectId": "",
+        "name": "",
+        "type": "rectangle"
+      },
+      "dynamicPorts": false
+    },
+    "group": {
+      "displayName": "Group",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Authoring node for a scene-tree group container. Same expansion path as `sceneObject` but with type pinned to `group`. Children are separate `sceneObject` / `group` compounds whose params.parentId references this group; the loader joins parent-child via id at Phase 06 STN parent-resolution.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "objectId",
+          "label": "Object Id",
+          "type": "string"
+        },
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "string"
+        },
+        {
+          "key": "parentId",
+          "label": "Parent Id",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "objectId": "",
+        "name": ""
+      },
+      "dynamicPorts": false
+    },
+    "sceneGraphContainer": {
+      "displayName": "Scene Graph Container",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Singleton authoring marker that requests the standard scene runtime topology — clip-registry-scene, scene-rest-bundle, layout-compute, scene-render, canvas-timeline, per-object STNs, per-clip OCEs, and the scene-graph + animation-subgraph modules. Phase 01a expansion derives the full set from sibling sceneObject / group / animationClip / stateMachine compounds in the same canvas area. Use instead of authoring those runtime nodes by hand — keeps file format slim and runtime topology a function of authoring intent.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [],
       "defaults": {},
       "dynamicPorts": false
     },
@@ -9425,6 +8716,11 @@
           "name": "enabled",
           "type": "float",
           "label": "Enabled"
+        },
+        {
+          "name": "progress",
+          "type": "float",
+          "label": "Progress"
         }
       ],
       "outputs": [
@@ -9537,6 +8833,14 @@
           "key": "writeTransform",
           "label": "Write Transform to Element",
           "type": "bool"
+        },
+        {
+          "key": "resetBelowProgress",
+          "label": "Reset Below Progress",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.05
         }
       ],
       "defaults": {
@@ -9561,7 +8865,388 @@
         "initialYSpacing": 0,
         "jitterX": 0,
         "jitterY": 0,
-        "writeTransform": true
+        "writeTransform": true,
+        "resetBelowProgress": null
+      },
+      "dynamicPorts": false
+    },
+    "physicsJoint": {
+      "displayName": "Physics Joint",
+      "category": "solvers",
+      "context": "shared",
+      "description": "F367 step 5 v2 — one constraint between two bodies. Backed by Rapier ImpulseJointSet. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        },
+        {
+          "name": "bodyA",
+          "type": "float",
+          "label": "Body A ID"
+        },
+        {
+          "name": "bodyB",
+          "type": "float",
+          "label": "Body B ID"
+        },
+        {
+          "name": "enabled",
+          "type": "float",
+          "label": "Enabled"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "id",
+          "type": "float",
+          "label": "Joint ID"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "jointKind",
+          "label": "Joint Kind",
+          "type": "enum",
+          "options": [
+            "distance",
+            "revolute",
+            "prismatic",
+            "weld"
+          ]
+        },
+        {
+          "key": "localAnchorA",
+          "label": "Anchor A (local px)",
+          "type": "string"
+        },
+        {
+          "key": "localAnchorB",
+          "label": "Anchor B (local px)",
+          "type": "string"
+        },
+        {
+          "key": "length",
+          "label": "Length (px) — distance only",
+          "type": "float",
+          "min": 0,
+          "step": 10
+        },
+        {
+          "key": "lowerAngle",
+          "label": "Lower Angle (rad) — revolute only",
+          "type": "float",
+          "step": 0.1
+        },
+        {
+          "key": "upperAngle",
+          "label": "Upper Angle (rad) — revolute only",
+          "type": "float",
+          "step": 0.1
+        },
+        {
+          "key": "lowerTranslation",
+          "label": "Lower Translation (px) — prismatic only",
+          "type": "float"
+        },
+        {
+          "key": "upperTranslation",
+          "label": "Upper Translation (px) — prismatic only",
+          "type": "float"
+        },
+        {
+          "key": "localAxisA",
+          "label": "Axis A — prismatic only",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "jointKind": "distance",
+        "localAnchorA": [
+          0,
+          0
+        ],
+        "localAnchorB": [
+          0,
+          0
+        ],
+        "length": 100,
+        "lowerAngle": null,
+        "upperAngle": null,
+        "lowerTranslation": null,
+        "upperTranslation": null,
+        "localAxisA": [
+          1,
+          0
+        ]
+      },
+      "dynamicPorts": false
+    },
+    "physicsApplyForce": {
+      "displayName": "Physics Apply Force",
+      "category": "solvers",
+      "context": "shared",
+      "description": "F367 step 5 v2 — pulse-triggered continuous force on a body. On the rising edge of `trigger` (last frame ≤ 0, this frame > 0), the engine queues `force` for the next world step. Force in px/s². Held HIGH does NOT continuously apply — only the rising edge fires once. For continuous force, drive `trigger` with a `cycleClock` or rapid pulse train.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        },
+        {
+          "name": "bodyId",
+          "type": "float",
+          "label": "Body ID"
+        },
+        {
+          "name": "force",
+          "type": "vec2",
+          "label": "Force (px/s²)"
+        },
+        {
+          "name": "point",
+          "type": "vec2",
+          "label": "Point (body-local px)"
+        },
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "paramForceX",
+          "label": "Default Force X (px/s²)",
+          "type": "float",
+          "step": 100
+        },
+        {
+          "key": "paramForceY",
+          "label": "Default Force Y (px/s²)",
+          "type": "float",
+          "step": 100
+        },
+        {
+          "key": "paramPointX",
+          "label": "Default Point X (body-local px)",
+          "type": "float",
+          "step": 5
+        },
+        {
+          "key": "paramPointY",
+          "label": "Default Point Y (body-local px)",
+          "type": "float",
+          "step": 5
+        }
+      ],
+      "defaults": {
+        "paramForceX": 0,
+        "paramForceY": 0,
+        "paramPointX": 0,
+        "paramPointY": 0
+      },
+      "dynamicPorts": false
+    },
+    "physicsApplyImpulse": {
+      "displayName": "Physics Apply Impulse",
+      "category": "solvers",
+      "context": "shared",
+      "description": "F367 step 5 v2 — pulse-triggered instantaneous impulse on a body. Same shape as `physicsApplyForce` but applies an instantaneous velocity delta (Δv = impulse/mass) instead of a continuous force across one step. Use for explosions, kicks, projectiles — anything that should change a body's velocity discontinuously.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        },
+        {
+          "name": "bodyId",
+          "type": "float",
+          "label": "Body ID"
+        },
+        {
+          "name": "impulse",
+          "type": "vec2",
+          "label": "Impulse (px/s · kg)"
+        },
+        {
+          "name": "point",
+          "type": "vec2",
+          "label": "Point (body-local px)"
+        },
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "paramImpulseX",
+          "label": "Default Impulse X (px/s · kg)",
+          "type": "float",
+          "step": 10
+        },
+        {
+          "key": "paramImpulseY",
+          "label": "Default Impulse Y (px/s · kg)",
+          "type": "float",
+          "step": 10
+        },
+        {
+          "key": "paramPointX",
+          "label": "Default Point X (body-local px)",
+          "type": "float",
+          "step": 5
+        },
+        {
+          "key": "paramPointY",
+          "label": "Default Point Y (body-local px)",
+          "type": "float",
+          "step": 5
+        }
+      ],
+      "defaults": {
+        "paramImpulseX": 0,
+        "paramImpulseY": 0,
+        "paramPointX": 0,
+        "paramPointY": 0
+      },
+      "dynamicPorts": false
+    },
+    "physicsCollisionPulse": {
+      "displayName": "Physics Collision Pulse",
+      "category": "solvers",
+      "context": "shared",
+      "description": "F367 step 5 v2 — fires a one-frame `pulse: 1.0` on the frame a tracked body collides with another body. Filters by `bodyId` (required) and optionally `withBodyId` (specific second-body); set the `event` param to `start` (contact-begin) or `end` (separate). Composes 1:1 with `pulseTween`, state-machine triggers, and `expression` math for \"ball lands → squash\" or \"two bodies meet → spawn\".",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        },
+        {
+          "name": "bodyId",
+          "type": "float",
+          "label": "Body ID"
+        },
+        {
+          "name": "withBodyId",
+          "type": "float",
+          "label": "With Body ID (optional)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "otherBodyId",
+          "type": "float",
+          "label": "Other Body ID"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "event",
+          "label": "Event",
+          "type": "enum",
+          "options": [
+            "start",
+            "end"
+          ]
+        }
+      ],
+      "defaults": {
+        "event": "start"
+      },
+      "dynamicPorts": false
+    },
+    "physicsMouseDrag": {
+      "displayName": "Physics Mouse Drag",
+      "category": "solvers",
+      "context": "shared",
+      "description": "F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "World"
+        },
+        {
+          "name": "bodyId",
+          "type": "float",
+          "label": "Body ID"
+        },
+        {
+          "name": "pickedBodyIds",
+          "type": "floatArray",
+          "label": "Picked Body IDs"
+        },
+        {
+          "name": "enabled",
+          "type": "float",
+          "label": "Enabled"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "dragging",
+          "type": "float",
+          "label": "Dragging"
+        },
+        {
+          "name": "pointerWorld",
+          "type": "vec2",
+          "label": "Pointer World"
+        },
+        {
+          "name": "releasedVelocity",
+          "type": "vec2",
+          "label": "Released Velocity"
+        },
+        {
+          "name": "pickedBodyId",
+          "type": "float",
+          "label": "Picked Body ID"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Drag Surface Selector",
+          "type": "string"
+        },
+        {
+          "key": "stiffness",
+          "label": "Spring Stiffness",
+          "type": "float",
+          "min": 0,
+          "step": 50
+        },
+        {
+          "key": "damping",
+          "label": "Spring Damping",
+          "type": "float",
+          "min": 0,
+          "step": 5
+        },
+        {
+          "key": "pickElementsSelector",
+          "label": "Pick Elements Selector",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "body",
+        "stiffness": 80,
+        "damping": 12,
+        "pickElementsSelector": ""
       },
       "dynamicPorts": false
     },
@@ -11059,23 +10744,6 @@
       },
       "dynamicPorts": false
     },
-    "layoutCompute": {
-      "displayName": "Layout Compute",
-      "category": "boundary",
-      "context": "canvas",
-      "description": "WASM flex layout recompute + animated transitions.",
-      "inputs": [
-        {
-          "name": "smWritesDone",
-          "type": "any",
-          "label": "SM Writes Done"
-        }
-      ],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
     "videoSync": {
       "displayName": "Video Sync",
       "category": "media",
@@ -11360,29 +11028,6 @@
           "name": "path",
           "type": "path",
           "label": "Path"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "timelineState": {
-      "displayName": "Timeline State",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Animation state node — drives a TimelineNode from state machine layer events.",
-      "inputs": [
-        {
-          "name": "progress",
-          "type": "float",
-          "label": "Progress"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "pose",
-          "type": "attributes",
-          "label": "Pose"
         }
       ],
       "parameters": [],
@@ -12421,63 +12066,6 @@
       "defaults": {
         "targetObjectId": ""
       },
-      "dynamicPorts": false
-    },
-    "remapApply": {
-      "displayName": "Remap Apply",
-      "category": "state-machine",
-      "context": "canvas",
-      "description": "Side-effect node for nested artboard remap bindings — ordering anchor between SM writes and downstream coverage reads.",
-      "inputs": [
-        {
-          "name": "smWritesDone",
-          "type": "any",
-          "label": "SM Writes Done"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "remapped",
-          "type": "any",
-          "label": "Remapped"
-        }
-      ],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "sceneRender": {
-      "displayName": "Scene Render",
-      "category": "boundary",
-      "context": "canvas",
-      "description": "F232 renderer-agnostic scene boundary writer — draws all registered objects via Rust/WASM WebGL2.",
-      "inputs": [
-        {
-          "name": "smWritesDone",
-          "type": "any",
-          "label": "SM Writes Done"
-        }
-      ],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
-      "dynamicPorts": false
-    },
-    "boneRender": {
-      "displayName": "Bone Render",
-      "category": "boundary",
-      "context": "canvas",
-      "description": "Editor-mode bone debug rendering — draws skeleton overlays in viewport.",
-      "inputs": [
-        {
-          "name": "poseReady",
-          "type": "any",
-          "label": "Pose Ready"
-        }
-      ],
-      "outputs": [],
-      "parameters": [],
-      "defaults": {},
       "dynamicPorts": false
     },
     "additivePropertyWrite": {
