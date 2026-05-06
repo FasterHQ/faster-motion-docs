@@ -30,8 +30,8 @@ F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `select
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `"body"` | Drag Surface Selector |
+| `selector` | elementSelector | `"body"` | Drag Surface Selector |
 | `stiffness` | float | `80` | Spring Stiffness (min: 0) |
 | `damping` | float | `12` | Spring Damping (min: 0) |
-| `pickElementsSelector` | string | `""` | Pick Elements Selector |
+| `pickElementsSelector` | elementSelector | `""` | Pick Elements Selector |
 

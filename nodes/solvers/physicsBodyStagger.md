@@ -13,6 +13,10 @@ Runtime-fanout compound — one node = N physicsBody instances + N DOM transform
 | `world` | `any` | World |
 | `enabled` | `float` | Enabled |
 | `progress` | `float` | Progress |
+| `targetCenterX` | `float` | Target Center X (px) |
+| `targetTopY` | `float` | Target Top Y (px) |
+| `targetTopOffset` | `float` | Target Top Offset (px) |
+| `targetMouthWidth` | `float` | Target Mouth Width (px) |
 
 
 ## Outputs
@@ -44,4 +48,5 @@ Runtime-fanout compound — one node = N physicsBody instances + N DOM transform
 | `ccd` | bool | `false` | CCD |
 | `writeTransform` | bool | `true` | Write Transform to Element |
 | `resetBelowProgress` | float | `null` | Reset Below Progress (min: 0, max: 1) |
+| `spawnPattern` | enum | `"explicit"` | Spawn Pattern. Options: `explicit`, `fanFromMouth` |
 

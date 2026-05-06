@@ -18,6 +18,10 @@ Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zo
 | Port | Type | Description |
 |------|------|-------------|
 | `id` | `float` | Body ID |
+| `centerX` | `float` | Center X (px) |
+| `topY` | `float` | Top Y (px) |
+| `bottomY` | `float` | Bottom Y (px) |
+| `mouthWidth` | `float` | Mouth Width (px) |
 
 
 ## Parameters

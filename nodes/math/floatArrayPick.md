@@ -25,5 +25,6 @@ Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, 
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `index` | int | `0` | Index (min: 0) |
 | `fallback` | float | `0` | Fallback (empty array) |
 

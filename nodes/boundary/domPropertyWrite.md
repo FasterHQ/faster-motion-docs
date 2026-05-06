@@ -25,4 +25,5 @@ _No outputs._
 | `selector` | elementSelector | `""` | CSS Selector |
 | `propertyName` | cssProperty | `"opacity"` | Property |
 | `cssUnit` | enum | `"none"` | Unit. Options: `none`, `px`, `%`, `deg`, `rad`, `em`, `rem`, `vw`, `vh` |
+| `template` | string | `""` | Template |
 

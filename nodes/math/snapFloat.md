@@ -4,7 +4,7 @@
 **Category:** math  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style "magnetic" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16).
+Pure 1D nearest-from-list quantizer. Snaps the input to whichever entry of `values` is closest. Empty `values` = passthrough. For magnetic-snap behaviour (eased approach to the snapped target) compose `snapFloat → smoothing(mode:exponential)` — the inlined `smooth` param this node used to expose was a duplicate of SmoothingNode and was removed in the smoothing-family unification.
 
 ## Inputs
 
@@ -25,5 +25,4 @@ F349 — snap an input float to the nearest of N configured values. Optional `sm
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `values` | string | `[]` | Snap Targets |
-| `smooth` | float | `0` | Magnetic Smooth (min: 0, max: 10) |
 

@@ -4,7 +4,6 @@ Iterative solvers: value accumulation, mesh relaxation, distance constraint solv
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
-| [Value Solver](valueSolver.md) | `valueSolver` | shared | Generic float accumulation with temporal feedback. Value moves toward target at given rate. |
 | [Mesh Solver](meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
 | [Constraint Solver](constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
 | [Physics World](physicsWorld.md) | `physicsWorld` | canvas | One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time). |

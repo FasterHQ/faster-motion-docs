@@ -1,6 +1,6 @@
 # Node Reference
 
-All 260 graph node types available in Faster Motion.
+All 271 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
@@ -18,6 +18,11 @@ Nodes that read external signals into the graph: DOM events, mouse position, scr
 | [Drag Input](inputs/dragInput.md) | `dragInput` | dom | Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw. |
 | [Scroll Event](inputs/scrollEvent.md) | `scrollEvent` | shared | F349 — edge-pulse detector on a 0..1 progress signal. Emits 1-frame pulses on threshold crossings: `entered` (forward across startThreshold), `left` (forward across endThreshold), `enteredBack` (backward across endThreshold), `leftBack` (backward across startThreshold). Pair with `pulseTween` and/or `parameterAction(set/toggle)` to recover trigger-mode toggleActions semantics, or with `parameterAction(set, amount=1)` on `entered` only to recover an observe-once latch. |
 | [Scroll Trigger](inputs/scrollTrigger.md) | `scrollTrigger` | dom | Track an element's position relative to the scroll viewport — outputs progress (0..1), direction (±1), velocity (px/s), isInView (0/1), and pin geometry. Edges control when progress starts and ends, expressed as `<elementEdge> <viewportEdge>` pairs ("top bottom" = element top reaches viewport bottom; "bottom top" = element bottom reaches viewport top). When `pin: true` is authored, the loader emits a PinAnchor sibling and wires `flowTop` automatically so progress measures through the spacer rather than the pinned rect. |
+| [Wheel Gesture](inputs/wheelGesture.md) | `wheelGesture` | shared | DOM wheel listener that fires one pulse per noticeable scroll burst with a lockout window — the gesture model used by full-screen scrolljack / slide-deck navigation. Accumulates `deltaY`, fires a single-frame `pulse` once accumulated travel crosses `threshold`, then ignores further wheel events for `lockoutMs` (typically the slide transition duration). Resets the accumulator after `restMs` of idle so a slow scroll doesn't drift toward the threshold. |
+| [Click Pulse](inputs/clickPulse.md) | `clickPulse` | shared | DOM pointer-event listener that emits a single-frame `pulse` per fire on `selector`, with click metadata fan-out — `value` (param-or-wired), `x` / `y` (clientX/Y), and `matchIndex` (which selector match fired). `pulse` is the only pulse-coupled signal; all metadata holds at the last-fire value between pulses, so consumers gate on the rising edge to read fresh data. `eventType` selects between `click` / `dblclick` / `pointerdown` / `contextmenu` / `auxclick` etc. |
+| [Drag Velocity](inputs/dragVelocity.md) | `dragVelocity` | shared | Pointer-drag gesture with continuous per-axis velocity output and post-release inertia. Emits px/sec velocity on each axis (smoothed across pointer samples), magnitude, and an `isDragging` gate. After the pointer is released, velocity decays exponentially over `releaseDecay` so consumers see a natural fling tail. Lighter than `dragInput`: no Draggable wrapper, no progress bounds — pure velocity primitive for fluid-carousel / drag-distortion idioms. |
+| [Slide Router](inputs/slideRouter.md) | `slideRouter` | shared | Gestural N-stage routing with eased transitions. Owns its own discrete-index state and runs an internal eased clock between consecutive indices. Three input triggers (`advance`, `retreat`, `seekTo`) replace the upstream `pulseCounter` chain — wire wheel / click / key gestures directly. Slide count auto-derives from `slidesSelector` (preferred) or is configured manually via `slideCount`. Emits a continuous `currentIndex` (lerped during transition), the latched `discreteIndex`, eased `transitionProgress`, and a `slideActivations` Float[N] channel. |
+| [Slide Deck](inputs/slideDeck.md) | `slideDeck` | shared | Full-screen slide-deck navigation in one node. Bundles wheel input, optional next/prev arrow clicks, optional nav-link clicks (matchIndex → seekTo), and the eased slideRouter. Compound: at load time it expands to `slideRouter` + `wheelGesture` + up to 3 `clickPulse` nodes + `pulseOr` (when 2+ advance sources). Outputs re-export the slideRouter outputs verbatim. Author can still bypass and wire the primitives by hand for one-off cases — slideDeck is purely additive. |
 | [Pin](inputs/pin.md) | `pin` | shared | F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnchorNode) + progress; runs the 3-state lifecycle: BEFORE (progress ≤ 0) = element natural inside spacer; PINNED (0 < progress < 1) = element position:fixed at viewport top; AFTER (progress ≥ 1) = element at bottom of spacer via padding-top. Spacer + handle ownership lives on PinAnchorNode (loader-emitted). Subsumes scrollPin. |
 | [Pointer](inputs/pointer.md) | `pointer` | dom | Tracks pointer position over an element. One node emits all coordinate spaces in parallel — wire whichever output the consumer needs. |
 | [Observer](inputs/observer.md) | `observer` | dom | Gesture detector — listens for wheel / touch / pointer / scroll events on a target and outputs accumulated deltas. Events accumulate internally until the magnitude crosses `tolerance`, at which point the per-frame `deltaX` / `deltaY` outputs spike to the gesture amount for one frame, then reset to 0 next frame. Pair with `thresholdPulse` to convert deltas into discrete pulses, then `pulseCounter` for snap navigation. |
@@ -193,15 +198,17 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Remap](math/remap.md) | `remap` | shared | Map a value from one range to another with optional curve |
 | [Expression](math/expression.md) | `expression` | shared | Evaluate a JavaScript math expression |
 | [Converter](math/converter.md) | `converter` | shared | Value transformation (stringFormat, colorLerp, enumMap, conditional, math) |
-| [Snap Float](math/snapFloat.md) | `snapFloat` | shared | F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style "magnetic" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16). |
-| [Smoothing](math/smoothing.md) | `smoothing` | shared | Frame-rate-independent exponential smoothing on any float signal. The output eases toward the input value at a rate controlled by `smooth` — pass-through at `0` (or below), near-instant at `10`. Useful for taking a noisy / step-y / discrete signal (gate flicks, scroll-velocity, mouse position) and producing a damped, animation-ready curve. |
+| [Snap Float](math/snapFloat.md) | `snapFloat` | shared | Pure 1D nearest-from-list quantizer. Snaps the input to whichever entry of `values` is closest. Empty `values` = passthrough. For magnetic-snap behaviour (eased approach to the snapped target) compose `snapFloat → smoothing(mode:exponential)` — the inlined `smooth` param this node used to expose was a duplicate of SmoothingNode and was removed in the smoothing-family unification. |
+| [Smoothing](math/smoothing.md) | `smoothing` | shared | Temporal lowpass filter for any float signal — picks one of three filter shapes via `mode`. Replaces the old `spring` and `valueSolver` nodes (folded in). For magnetic-snap behaviour compose `snapFloat → smoothing(mode:exponential)`. |
+| [Palette LUT](math/paletteLut.md) | `paletteLut` | shared | Sample a 1D colour palette at position `t` ∈ [0..1] with configurable interpolation (sRGB or perceptually-uniform OKLab) and wrap mode (clamp / repeat / mirror). Stops can be static (param) or dynamically wired via `inputStops` for computed palettes. |
 | [Gate](math/gate.md) | `gate` | shared | Blend a driven value toward a rest value under a 0..1 gate, with optional spring-smoothed threshold crossings |
 | [Parallax](math/parallax.md) | `parallax` | shared | Convert scroll progress to parallax pixel offset |
 | [Velocity](math/velocity.md) | `velocity` | shared | Compute smoothed rate-of-change of any float signal |
+| [Selector Join](math/selectorJoin.md) | `selectorJoin` | shared | Concatenate `prefix` + `suffix` into a single CSS selector string. The canonical helper for composing per-iteration selectors out of a `forEachScope.selector` (prefix) and a static descendant fragment (suffix), replacing the F351 embedded-token form `"$match .child"`. |
 | [Math Utility](math/mathUtil.md) | `mathUtil` | shared | Single Float→Float math operation. Picks unary (`abs`, `round`, `sqrt`, ...) or binary (`add`, `subtract`, `multiply`) ops; binary ops use `value` + `b`. Range ops (`clamp`, `normalize`) use `value` + `min` + `max`. |
 | [String Op](math/stringOp.md) | `stringOp` | shared | Typed String→String operation (uppercase, trim, replace, template, etc.). |
 | [String Equals](math/stringEquals.md) | `stringEquals` | shared | F316: Outputs 1 when both string inputs are non-null and strictly equal, 0 otherwise. Null/undefined always evaluates to 0 (fail-safe). `b` input accepts a literal via setLiteralB() when unwired. |
-| [Phase Shift](math/phaseShift.md) | `phaseShift` | shared | Per-clone phase shift of a shared 0..1 progress signal. Computes `(progress + index/count) % 1`, wrapping the result into [0, 1) so it can drive any node that consumes a normalized progress (staggerWrite, multiKeyframe, propertyAnimation). Replaces the inline `((node('progress') + ($index / node('count'))) % 1)` expression that recurs in any forEach-instanced template that needs each clone to ride a different phase of one shared clock. |
+| [Phase Shift](math/phaseShift.md) | `phaseShift` | shared | Per-clone phase shift of a shared 0..1 progress signal. Computes `(progress + index/count) % 1`, wrapping the result into [0, 1) so it can drive any node that consumes a normalized progress (staggerWrite, multiKeyframe, propertyAnimation). Replaces the inline `((node('progress') + (node('index') / node('count'))) % 1)` expression that recurs in any forEach-instanced template that needs each clone to ride a different phase of one shared clock. |
 | [Float Array Pick](math/floatArrayPick.md) | `floatArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a float. Index is clamped to [0, length-1]. The `array` input port wins when wired (non-empty); otherwise falls back to the `values` param. Fallback float returned when the resolved array is empty. Pair with textDecompose.itemSources (or any float-array source) to drive per-index side effects. |
 | [Color Array Pick](math/colorArrayPick.md) | `colorArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\s sourceIndex or variantStagger\s per-child index. |
 
@@ -225,25 +232,6 @@ Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, 
 | [Bone Mat4 Bundle](skeleton/boneMat4Bundle.md) | `boneMat4Bundle` | canvas | Gathers per-bone 2×3 world matrices from FK chain and promotes to Mat4TransformBundle for composable bone modifiers. |
 | [Bone Jiggle Compute](skeleton/boneJiggleCompute.md) | `boneJiggleCompute` | canvas | Per-bone secondary animation via closed-form damped spring. Composable with other bone modifiers via merge/mask. |
 
-## [Solvers](solvers/)
-
-Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Value Solver](solvers/valueSolver.md) | `valueSolver` | shared | Generic float accumulation with temporal feedback. Value moves toward target at given rate. |
-| [Mesh Solver](solvers/meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
-| [Constraint Solver](solvers/constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
-| [Physics World](solvers/physicsWorld.md) | `physicsWorld` | canvas | One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time). |
-| [Physics Body](solvers/physicsBody.md) | `physicsBody` | shared | One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param). Pose, velocity, and awake state are exposed as typed output ports — wire to `domPropertyWrite` for DOM consumers, to STN inputs for canvas consumers, or to `physicsBodyTransform` for fan-out to multiple consumers. |
-| [Physics Static Body](solvers/physicsStaticBody.md) | `physicsStaticBody` | shared | Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim. |
-| [Physics Body Stagger](solvers/physicsBodyStagger.md) | `physicsBodyStagger` | shared | Runtime-fanout compound — one node = N physicsBody instances + N DOM transform writes. Resolves N elements at bind time from a plain CSS selector and creates one body per element with shared params. Per-element radius via `shape.radiusFromCSS: "--bd"` reads each element's CSS variable (same convention `staggerAnimate` uses). Saves ~3N nodes for ball-drop / scatter patterns. For per-element heterogeneity beyond size (different bodyKind / restitution per element), drop down to primitive `physicsBody` + `domPoseWrite` pairs. |
-| [Physics Joint](solvers/physicsJoint.md) | `physicsJoint` | shared | F367 step 5 v2 — one constraint between two bodies. Backed by Rapier ImpulseJointSet. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger. |
-| [Physics Apply Force](solvers/physicsApplyForce.md) | `physicsApplyForce` | shared | F367 step 5 v2 — pulse-triggered continuous force on a body. On the rising edge of `trigger` (last frame ≤ 0, this frame > 0), the engine queues `force` for the next world step. Force in px/s². Held HIGH does NOT continuously apply — only the rising edge fires once. For continuous force, drive `trigger` with a `cycleClock` or rapid pulse train. |
-| [Physics Apply Impulse](solvers/physicsApplyImpulse.md) | `physicsApplyImpulse` | shared | F367 step 5 v2 — pulse-triggered instantaneous impulse on a body. Same shape as `physicsApplyForce` but applies an instantaneous velocity delta (Δv = impulse/mass) instead of a continuous force across one step. Use for explosions, kicks, projectiles — anything that should change a body's velocity discontinuously. |
-| [Physics Collision Pulse](solvers/physicsCollisionPulse.md) | `physicsCollisionPulse` | shared | F367 step 5 v2 — fires a one-frame `pulse: 1.0` on the frame a tracked body collides with another body. Filters by `bodyId` (required) and optionally `withBodyId` (specific second-body); set the `event` param to `start` (contact-begin) or `end` (separate). Composes 1:1 with `pulseTween`, state-machine triggers, and `expression` math for "ball lands → squash" or "two bodies meet → spawn". |
-| [Physics Mouse Drag](solvers/physicsMouseDrag.md) | `physicsMouseDrag` | shared | F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time. |
-
 ## [Constraints](constraints/)
 
 Position, rotation, and transform constraints that enforce spatial relationships between objects: follow, aim, distance clamp, drag, path follow, camera bounds.
@@ -262,22 +250,58 @@ Position, rotation, and transform constraints that enforce spatial relationships
 | [Scroll Bar](constraints/scrollBar.md) | `scrollBar` | shared | Scroll bar indicator that tracks scroll position |
 | [Path Follow](constraints/pathFollow.md) | `pathFollow` | shared | Follow a path curve at given progress |
 
-## [Procedural](procedural/)
+## [Effects](effects/)
 
-Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.
+Visual effects: WASM/GPU filter chains, parametric shape generation, glitch computation, FLIP layout animation, and morph path interpolation.
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
-| [Inertia](procedural/inertia.md) | `inertia` | shared | F334 — exponential-decay tween. Animates a value from `from` under throw physics with a starting velocity. Optional snap targets land the natural rest position on the nearest snap value while preserving the decel curve. Use as a standalone "throw a property" driver independent of drag. |
-| [Physics 2D](procedural/physics2D.md) | `physics2D` | shared | F335 — single-body 2D ballistic motion. Rising-edge `trigger` launches a body from origin at `velocity` in direction `angle°`, integrates Verlet under constant `gravity` + exponential `friction`. Outputs current `(x, y)` and `(vx, vy)` so downstream graph nodes can drive position, rotation-from-velocity, fade-by-speed, etc. Auto-stops after `duration` seconds. |
-| [Wiggle](procedural/wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
-| [Noise](procedural/noise.md) | `noise` | shared | Multi-octave simplex noise |
-| [Spring](procedural/spring.md) | `spring` | shared | Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value). |
-| [Oscillator](procedural/oscillator.md) | `oscillator` | shared | Periodic wave generator (sine, triangle, square, sawtooth) |
-| [Modulate](procedural/modulate.md) | `modulate` | shared | Remap value through a piecewise-linear curve. Defaults to replace composition. |
-| [Ring (Delay)](procedural/ring.md) | `ring` | shared | Ring buffer delay — output a past value. Defaults to replace composition. |
-| [Random](procedural/random.md) | `random` | shared | Seeded random value per frame. Uniform or gaussian distribution. |
-| [Stagger Driver](procedural/staggerDriver.md) | `staggerDriver` | shared | Index-based wave propagation. Uses ForEach element context for per-instance offset. |
+| [Mesh Attractor](effects/meshAttractor.md) | `meshAttractor` | shared | Fullscreen WebGL mesh with per-vertex displacement driven by up to two mouse attractors. Generates a tessellated 2D silhouette (`round` / `spike` / `blob`) — or accepts a custom `[x0,y0,...]` vertex array for arbitrary shapes (hearts, SVG-imported, text-derived). Falloff curve is selectable (gaussian / linear / smoothstep / inverse-square). F375 channels-driven authoring: every input (mouseX/Y, coef, jump, dist, opacity, colour, …) is a *channel* — author it as a literal value (`{ value: ... }`) for static settings or as a wireable port (`{ port: true, default?: ... }`) to feed it from upstream. Channels not declared in `params.channels` use the per-node default and surface no port handle, so simple cases need no wiring at all. |
+| [Physics Blob](effects/physicsBlob.md) | `physicsBlob` | shared | Soft-body blob silhouette built on a Verlet mass-spring chain. N point particles arranged in a closed circular loop, each connected to its neighbour and skip-1 neighbour by stiff distance-springs, with rest-pose attraction so the shape always recovers. Cursor interaction is a per-particle Gaussian-falloff repulsion. Adjacent particles follow through the spring network, so the silhouette stays C¹-smooth no matter how hard the cursor pulls — no vertex-shader V-cusps. Rendered via Canvas2D as a closed Catmull-Rom curve (converted to cubic Bézier segments) filled with the channel colour. Use this when you want the patrickheng-style smooth-blob feel; use `meshAttractor` when you want fullscreen WebGL mesh distortion of arbitrary geometry. |
+| [Textured Mesh Tile](effects/texturedMeshTile.md) | `texturedMeshTile` | shared | Subdivided WebGL plane that samples a bound `<img>` or `<video>` texture and accepts the same per-attractor vertex displacement as `meshAttractor`. Adds a wireable global `offset` port for velocity-driven shifts (drag-carousel stretch, scroll-velocity skew). Tint port allows `paletteLut.color` to recolour the tile while the texture provides the silhouette. |
+| [Effect Pass](effects/effectPass.md) | `effectPass` | shared | Single-pass shader effect on any `<img>`/`<video>`/`<canvas>` source — driven by the shared `EFFECT_REGISTRY` so 27+ effects are available with no per-effect graph node. Pick the effect by name; the matching shader compiles at bind, and the effect's uniforms become wireable input ports automatically. Includes the post-effect classics (vignette, filmGrain, rgbShift, chromaticAberration, scanlines, glitch, swirl, ripple, halftone, …) and two new ones (`chromaticAberration`, `verticalSlice`) added for fluid-carousel and lens-aberration looks. |
+| [Fluid Sim](effects/fluidSim.md) | `fluidSim` | shared | Lightweight 2D fluid sim — drag injects coloured ink + velocity; the velocity field self-advects and dissipates; the dye flows along the velocity and fades. Renders to a host canvas. Produces the "wet paint trail along drag path" look used by gestural carousels and editorial sites. Requires `EXT_color_buffer_float` for RGBA16F render targets — fails loud on incompatible browsers rather than banding into RGBA8. |
+| [Flip](effects/flip.md) | `flip` | dom | FLIP layout animation — triggered on rising edge |
+| [Glitch Compute](effects/glitchCompute.md) | `glitchCompute` | dom | Stateful random glitch — outputs offset, skew, and opacity |
+| [WASM Effect](effects/wasmEffect.md) | `wasmEffect` | canvas | Procedural noise/distortion texture generation via WASM. |
+| [Parametric Shape](effects/parametricShape.md) | `parametricShape` | canvas | WASM parametric shape generation with dynamic children. |
+| [Particle Emitter](effects/particleEmitter.md) | `particleEmitter` | canvas | Particle system — emit, advance, kill. Outputs per-particle data as AttributeBundle. |
+| [Particle Update](effects/particleUpdate.md) | `particleUpdate` | canvas | Particle update boundary — advances particle state from emitter output each frame. |
+
+## [Solvers](solvers/)
+
+Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Mesh Solver](solvers/meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
+| [Constraint Solver](solvers/constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
+| [Physics World](solvers/physicsWorld.md) | `physicsWorld` | canvas | One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time). |
+| [Physics Body](solvers/physicsBody.md) | `physicsBody` | shared | One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param). Pose, velocity, and awake state are exposed as typed output ports — wire to `domPropertyWrite` for DOM consumers, to STN inputs for canvas consumers, or to `physicsBodyTransform` for fan-out to multiple consumers. |
+| [Physics Static Body](solvers/physicsStaticBody.md) | `physicsStaticBody` | shared | Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim. |
+| [Physics Body Stagger](solvers/physicsBodyStagger.md) | `physicsBodyStagger` | shared | Runtime-fanout compound — one node = N physicsBody instances + N DOM transform writes. Resolves N elements at bind time from a plain CSS selector and creates one body per element with shared params. Per-element radius via `shape.radiusFromCSS: "--bd"` reads each element's CSS variable (same convention `staggerAnimate` uses). Saves ~3N nodes for ball-drop / scatter patterns. For per-element heterogeneity beyond size (different bodyKind / restitution per element), drop down to primitive `physicsBody` + `domPoseWrite` pairs. |
+| [Physics Joint](solvers/physicsJoint.md) | `physicsJoint` | shared | F367 step 5 v2 — one constraint between two bodies. Backed by Rapier ImpulseJointSet. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger. |
+| [Physics Apply Force](solvers/physicsApplyForce.md) | `physicsApplyForce` | shared | F367 step 5 v2 — pulse-triggered continuous force on a body. On the rising edge of `trigger` (last frame ≤ 0, this frame > 0), the engine queues `force` for the next world step. Force in px/s². Held HIGH does NOT continuously apply — only the rising edge fires once. For continuous force, drive `trigger` with a `cycleClock` or rapid pulse train. |
+| [Physics Apply Impulse](solvers/physicsApplyImpulse.md) | `physicsApplyImpulse` | shared | F367 step 5 v2 — pulse-triggered instantaneous impulse on a body. Same shape as `physicsApplyForce` but applies an instantaneous velocity delta (Δv = impulse/mass) instead of a continuous force across one step. Use for explosions, kicks, projectiles — anything that should change a body's velocity discontinuously. |
+| [Physics Collision Pulse](solvers/physicsCollisionPulse.md) | `physicsCollisionPulse` | shared | F367 step 5 v2 — fires a one-frame `pulse: 1.0` on the frame a tracked body collides with another body. Filters by `bodyId` (required) and optionally `withBodyId` (specific second-body); set the `event` param to `start` (contact-begin) or `end` (separate). Composes 1:1 with `pulseTween`, state-machine triggers, and `expression` math for "ball lands → squash" or "two bodies meet → spawn". |
+| [Physics Mouse Drag](solvers/physicsMouseDrag.md) | `physicsMouseDrag` | shared | F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time. |
+
+## [Integration](integration/)
+
+Graph composition and data flow: ForEach stamping, scene composition, parameter store read/write, float/value sources.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Data Read](integration/dataRead.md) | `dataRead` | shared | Read any-typed value from ParameterStore |
+| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input. |
+| [For Each Scope](integration/forEachScope.md) | `forEachScope` | shared | Per-iteration scope source materialised by `expandInstanceNodes` inside every forEach iteration. Replaces the F351 reserved-token substitution mechanism (`$match`, `$index`) with a port-driven model — template-body nodes wire from this node's outputs the same way they wire from any other producer. Authors do NOT write this node by hand; the loader emits one per iteration with constant per-iteration values. |
+| [Float Source](integration/floatSource.md) | `floatSource` | shared | Float value source — reads from connected input or set externally |
+| [Value Source](integration/valueSource.md) | `valueSource` | shared | Externally-set Vec2 value |
+| [Parameter Read](integration/parameterStoreRead.md) | `parameterStoreRead` | shared | Read a float parameter from ParameterStore |
+| [Parameter Write](integration/parameterStoreWrite.md) | `parameterStoreWrite` | shared | Write a float value to ParameterStore |
+| [For Each](integration/forEach.md) | `forEach` | shared | Stamp a preset per target object. Stamped nodes are read-only. |
+| [Scene](integration/sceneGraph.md) | `sceneGraph` | canvas | Composable scene root — encapsulates an entire .fmtion scene as a single node with promoted ports. |
+| [Dirty Trigger](integration/dirtyTrigger.md) | `dirtyTrigger` | shared | External dirtying entry point. No-op evaluate — triggers downstream re-evaluation. |
 
 ## [Distribution](distribution/)
 
@@ -296,21 +320,21 @@ Point distribution generators: grid, circle, linear, random, fibonacci spiral, p
 | [Instance Stagger Compute](distribution/instanceStaggerCompute.md) | `instanceStaggerCompute` | canvas | Per-instance staggered offset/scale animation. Proves Mat4 pipeline works for non-text domains. |
 | [Instance Apply](distribution/instanceApply.md) | `instanceApply` | canvas | F264 Phase 2: Writes Mat4TransformBundle per-instance transforms to GeneratorNode clone STNs via SceneTransformNode.setPose. Decomposes 4×4 → 2D pose per clone — full port contract flow, no imperative HeadlessObject mutation. |
 
-## [Integration](integration/)
+## [Procedural](procedural/)
 
-Graph composition and data flow: ForEach stamping, scene composition, parameter store read/write, float/value sources.
+Time-driven procedural generators: wiggle, noise, oscillator, spring physics, modulate, ring delay, random values, and stagger drivers.
 
 | Node | Type | Context | Description |
 |------|------|---------|-------------|
-| [Data Read](integration/dataRead.md) | `dataRead` | shared | Read any-typed value from ParameterStore |
-| [Parameter Write](integration/parameterWrite.md) | `parameterWrite` | shared | Compute a parameter's next value on a rising-edge trigger. Pure-compute — reads currentValue from a ParameterStore.out_<paramId> input, emits nextValue which the store commits through its writer-fanin input. |
-| [Float Source](integration/floatSource.md) | `floatSource` | shared | Float value source — reads from connected input or set externally |
-| [Value Source](integration/valueSource.md) | `valueSource` | shared | Externally-set Vec2 value |
-| [Parameter Read](integration/parameterStoreRead.md) | `parameterStoreRead` | shared | Read a float parameter from ParameterStore |
-| [Parameter Write](integration/parameterStoreWrite.md) | `parameterStoreWrite` | shared | Write a float value to ParameterStore |
-| [For Each](integration/forEach.md) | `forEach` | shared | Stamp a preset per target object. Stamped nodes are read-only. |
-| [Scene](integration/sceneGraph.md) | `sceneGraph` | canvas | Composable scene root — encapsulates an entire .fmtion scene as a single node with promoted ports. |
-| [Dirty Trigger](integration/dirtyTrigger.md) | `dirtyTrigger` | shared | External dirtying entry point. No-op evaluate — triggers downstream re-evaluation. |
+| [Inertia](procedural/inertia.md) | `inertia` | shared | F334 — exponential-decay tween. Animates a value from `from` under throw physics with a starting velocity. Optional snap targets land the natural rest position on the nearest snap value while preserving the decel curve. Use as a standalone "throw a property" driver independent of drag. |
+| [Physics 2D](procedural/physics2D.md) | `physics2D` | shared | F335 — single-body 2D ballistic motion. Rising-edge `trigger` launches a body from origin at `velocity` in direction `angle°`, integrates Verlet under constant `gravity` + exponential `friction`. Outputs current `(x, y)` and `(vx, vy)` so downstream graph nodes can drive position, rotation-from-velocity, fade-by-speed, etc. Auto-stops after `duration` seconds. |
+| [Wiggle](procedural/wiggle.md) | `wiggle` | shared | AE-style wiggle noise — random displacement |
+| [Noise](procedural/noise.md) | `noise` | shared | Multi-octave simplex noise |
+| [Oscillator](procedural/oscillator.md) | `oscillator` | shared | Periodic wave generator (sine, triangle, square, sawtooth) |
+| [Modulate](procedural/modulate.md) | `modulate` | shared | Remap value through a piecewise-linear curve. Defaults to replace composition. |
+| [Ring (Delay)](procedural/ring.md) | `ring` | shared | Ring buffer delay — output a past value. Defaults to replace composition. |
+| [Random](procedural/random.md) | `random` | shared | Seeded random value per frame. Uniform or gaussian distribution. |
+| [Stagger Driver](procedural/staggerDriver.md) | `staggerDriver` | shared | Index-based wave propagation. Uses ForEach element context for per-instance offset. |
 
 ## [State machine](state-machine/)
 
@@ -326,19 +350,6 @@ State machine evaluation: layer advance, pose blending (linear, masked, weighted
 | [Blend Direct Eval](state-machine/blendDirectEval.md) | `blendDirectEval` | canvas | F266 Phase 3: pure direct-blend evaluator. Wraps evaluateBlendDirectTransforms(). Per-animation weight inputs (weight_<id>) drive sequential blend-on-top. Weights from parameters use normalized scale (value/100, clamped 0..1). |
 | [Blend Space 2D Eval](state-machine/blendSpace2DEval.md) | `blendSpace2DEval` | canvas | F359 Phase 8: 2D blend space evaluator. Pulls clips from dynamic clip_${animationId} input ports and produces transforms via Delaunay+barycentric (interpolated) or nearest-point (discrete). Grid mode publishes integer frame index on the frameIndex output port. |
 | [State Machine](state-machine/stateMachine.md) | `stateMachine` | shared | Author-facing compound for a complete state machine: parameters, layers (states + transitions), listeners, audio bindings, pointer-align targets. Expands at load time into the SM cluster — `smParameterStore` + `layerAdvance` + `stateApply` + `poseEval`/`objectPoseEval`/`blendPose` pose pipeline + `smHitTest` + `listenerAction` + `smAudioAction` + `smCallbackAction` + `smPostAdvance` + `smRandomSource` + `smLifecycle` + `smAutoStart` (~33 primitives for a typical button). Compound: no runtime class. The expansion is loader-internal; authors and AI agents see one node carrying the full SM definition. |
-
-## [Effects](effects/)
-
-Visual effects: WASM/GPU filter chains, parametric shape generation, glitch computation, FLIP layout animation, and morph path interpolation.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Flip](effects/flip.md) | `flip` | dom | FLIP layout animation — triggered on rising edge |
-| [Glitch Compute](effects/glitchCompute.md) | `glitchCompute` | dom | Stateful random glitch — outputs offset, skew, and opacity |
-| [WASM Effect](effects/wasmEffect.md) | `wasmEffect` | canvas | Procedural noise/distortion texture generation via WASM. |
-| [Parametric Shape](effects/parametricShape.md) | `parametricShape` | canvas | WASM parametric shape generation with dynamic children. |
-| [Particle Emitter](effects/particleEmitter.md) | `particleEmitter` | canvas | Particle system — emit, advance, kill. Outputs per-particle data as AttributeBundle. |
-| [Particle Update](effects/particleUpdate.md) | `particleUpdate` | canvas | Particle update boundary — advances particle state from emitter output each frame. |
 
 ## [Falloff](falloff/)
 

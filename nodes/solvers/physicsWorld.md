@@ -14,6 +14,7 @@ One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set th
 | `timeScale` | `float` | Time Scale |
 | `paused` | `float` | Paused |
 | `progress` | `float` | Progress |
+| `pauseUntilStable` | `float` | Pause Until Stable |
 
 
 ## Outputs
@@ -24,6 +25,8 @@ One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set th
 | `frameStepped` | `float` | Frame Stepped |
 | `bodyCount` | `float` | Body Count |
 | `jointCount` | `float` | Joint Count |
+| `isSettled` | `float` | Is Settled |
+| `maxDynamicBodySpeed` | `float` | Max Dynamic Speed (px/s) |
 
 
 ## Parameters
@@ -35,4 +38,6 @@ One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set th
 | `paramGravityX` | float | `0` | Default Gravity X |
 | `paramGravityY` | float | `0` | Default Gravity Y |
 | `pauseBelowProgress` | float | `null` | Pause Below Progress (min: 0, max: 1) |
+| `settleSpeedThreshold` | float | `1` | Settle Speed Threshold (px/s) (min: 0) |
+| `settleFrameCount` | int | `5` | Settle Frame Count (min: 1) |
 

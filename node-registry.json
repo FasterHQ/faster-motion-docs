@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-05-04",
+  "_generatedAt": "2026-05-06",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 260,
+  "_nodeCount": 271,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -60,6 +60,11 @@
         "dragInput",
         "scrollEvent",
         "scrollTrigger",
+        "wheelGesture",
+        "clickPulse",
+        "dragVelocity",
+        "slideRouter",
+        "slideDeck",
         "pin",
         "pointer",
         "observer",
@@ -118,7 +123,6 @@
         "physics2D",
         "wiggle",
         "noise",
-        "spring",
         "oscillator",
         "modulate",
         "ring",
@@ -163,9 +167,11 @@
         "converter",
         "snapFloat",
         "smoothing",
+        "paletteLut",
         "gate",
         "parallax",
         "velocity",
+        "selectorJoin",
         "mathUtil",
         "stringOp",
         "stringEquals",
@@ -209,6 +215,7 @@
       "nodes": [
         "dataRead",
         "parameterWrite",
+        "forEachScope",
         "floatSource",
         "valueSource",
         "parameterStoreRead",
@@ -216,6 +223,22 @@
         "forEach",
         "sceneGraph",
         "dirtyTrigger"
+      ]
+    },
+    "effects": {
+      "description": "Visual effects: WASM/GPU filter chains, parametric shape generation, glitch computation, FLIP layout animation, and morph path interpolation.",
+      "nodes": [
+        "meshAttractor",
+        "physicsBlob",
+        "texturedMeshTile",
+        "effectPass",
+        "fluidSim",
+        "flip",
+        "glitchCompute",
+        "wasmEffect",
+        "parametricShape",
+        "particleEmitter",
+        "particleUpdate"
       ]
     },
     "text": {
@@ -293,17 +316,6 @@
         "videoSync"
       ]
     },
-    "effects": {
-      "description": "Visual effects: WASM/GPU filter chains, parametric shape generation, glitch computation, FLIP layout animation, and morph path interpolation.",
-      "nodes": [
-        "flip",
-        "glitchCompute",
-        "wasmEffect",
-        "parametricShape",
-        "particleEmitter",
-        "particleUpdate"
-      ]
-    },
     "state-machine": {
       "description": "State machine evaluation: layer advance, pose blending (linear, masked, weighted), object pose evaluation, and blend space nodes.",
       "nodes": [
@@ -379,7 +391,6 @@
     "solvers": {
       "description": "Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.",
       "nodes": [
-        "valueSolver",
         "meshSolver",
         "constraintSolver",
         "physicsWorld",
@@ -2114,12 +2125,18 @@
             "vw",
             "vh"
           ]
+        },
+        {
+          "key": "template",
+          "label": "Template",
+          "type": "string"
         }
       ],
       "defaults": {
         "selector": "",
         "propertyName": "opacity",
-        "cssUnit": "none"
+        "cssUnit": "none",
+        "template": ""
       },
       "dynamicPorts": false
     },
@@ -2395,7 +2412,7 @@
       "displayName": "Snap Float",
       "category": "math",
       "context": "shared",
-      "description": "F349 — snap an input float to the nearest of N configured values. Optional `smooth > 0` exponentially eases toward the target snap, frame-rate independent (gives ScrollTrigger-style \"magnetic\" snap behavior). Empty `values` array = passthrough. Linear nearest-neighbor scan; designed for small value lists (≤ 16).",
+      "description": "Pure 1D nearest-from-list quantizer. Snaps the input to whichever entry of `values` is closest. Empty `values` = passthrough. For magnetic-snap behaviour (eased approach to the snapped target) compose `snapFloat → smoothing(mode:exponential)` — the inlined `smooth` param this node used to expose was a duplicate of SmoothingNode and was removed in the smoothing-family unification.",
       "inputs": [
         {
           "name": "value",
@@ -2415,19 +2432,10 @@
           "key": "values",
           "label": "Snap Targets",
           "type": "string"
-        },
-        {
-          "key": "smooth",
-          "label": "Magnetic Smooth",
-          "type": "float",
-          "min": 0,
-          "max": 10,
-          "step": 0.1
         }
       ],
       "defaults": {
-        "values": [],
-        "smooth": 0
+        "values": []
       },
       "dynamicPorts": false
     },
@@ -2435,7 +2443,7 @@
       "displayName": "Smoothing",
       "category": "math",
       "context": "shared",
-      "description": "Frame-rate-independent exponential smoothing on any float signal. The output eases toward the input value at a rate controlled by `smooth` — pass-through at `0` (or below), near-instant at `10`. Useful for taking a noisy / step-y / discrete signal (gate flicks, scroll-velocity, mouse position) and producing a damped, animation-ready curve.",
+      "description": "Temporal lowpass filter for any float signal — picks one of three filter shapes via `mode`. Replaces the old `spring` and `valueSolver` nodes (folded in). For magnetic-snap behaviour compose `snapFloat → smoothing(mode:exponential)`.",
       "inputs": [
         {
           "name": "value",
@@ -2452,16 +2460,993 @@
       ],
       "parameters": [
         {
+          "key": "mode",
+          "label": "Filter Mode",
+          "type": "enum",
+          "options": [
+            "exponential",
+            "spring",
+            "linearApproach"
+          ]
+        },
+        {
           "key": "smooth",
           "label": "Response",
           "type": "float",
           "min": 0,
           "max": 10,
           "step": 0.1
+        },
+        {
+          "key": "rate",
+          "label": "Rate (units/sec)",
+          "type": "float",
+          "min": 0,
+          "max": 1000,
+          "step": 0.1
+        },
+        {
+          "key": "stiffness",
+          "label": "Stiffness",
+          "type": "float",
+          "min": 1,
+          "step": 10
+        },
+        {
+          "key": "damping",
+          "label": "Damping",
+          "type": "float",
+          "min": 0,
+          "step": 1
+        },
+        {
+          "key": "mass",
+          "label": "Mass",
+          "type": "float",
+          "min": 0.01,
+          "step": 0.1
+        },
+        {
+          "key": "posterizeFps",
+          "label": "Posterize FPS",
+          "type": "float",
+          "min": 0,
+          "step": 1
+        },
+        {
+          "key": "compositionMode",
+          "label": "Compose",
+          "type": "enum",
+          "options": [
+            "replace",
+            "add",
+            "multiply"
+          ]
+        },
+        {
+          "key": "subSteps",
+          "label": "Sub-steps",
+          "type": "int",
+          "min": 1,
+          "max": 16,
+          "step": 1
+        },
+        {
+          "key": "initialValue",
+          "label": "Initial Value",
+          "type": "float"
         }
       ],
       "defaults": {
-        "smooth": 5
+        "mode": "exponential",
+        "smooth": 5,
+        "rate": 1,
+        "subSteps": 1,
+        "stiffness": 180,
+        "damping": 12,
+        "mass": 1,
+        "posterizeFps": 0,
+        "compositionMode": "replace"
+      },
+      "dynamicPorts": false
+    },
+    "wheelGesture": {
+      "displayName": "Wheel Gesture",
+      "category": "inputs",
+      "context": "shared",
+      "description": "DOM wheel listener that fires one pulse per noticeable scroll burst with a lockout window — the gesture model used by full-screen scrolljack / slide-deck navigation. Accumulates `deltaY`, fires a single-frame `pulse` once accumulated travel crosses `threshold`, then ignores further wheel events for `lockoutMs` (typically the slide transition duration). Resets the accumulator after `restMs` of idle so a slow scroll doesn't drift toward the threshold.",
+      "inputs": [
+        {
+          "name": "gateInput",
+          "type": "float",
+          "label": "Gate"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "direction",
+          "type": "float",
+          "label": "Direction"
+        },
+        {
+          "name": "accumDelta",
+          "type": "float",
+          "label": "Accumulated Delta"
+        },
+        {
+          "name": "burstMagnitude",
+          "type": "float",
+          "label": "Burst Magnitude"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Listen Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "axis",
+          "label": "Axis",
+          "type": "axisChooser"
+        },
+        {
+          "key": "threshold",
+          "label": "Burst Threshold",
+          "type": "float",
+          "min": 1
+        },
+        {
+          "key": "lockoutMs",
+          "label": "Lockout (ms)",
+          "type": "float",
+          "min": 0
+        },
+        {
+          "key": "restMs",
+          "label": "Idle Reset (ms)",
+          "type": "float",
+          "min": 0
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "threshold": 60,
+        "lockoutMs": 800,
+        "restMs": 250,
+        "axis": "y"
+      },
+      "dynamicPorts": false
+    },
+    "clickPulse": {
+      "displayName": "Click Pulse",
+      "category": "inputs",
+      "context": "shared",
+      "description": "DOM pointer-event listener that emits a single-frame `pulse` per fire on `selector`, with click metadata fan-out — `value` (param-or-wired), `x` / `y` (clientX/Y), and `matchIndex` (which selector match fired). `pulse` is the only pulse-coupled signal; all metadata holds at the last-fire value between pulses, so consumers gate on the rising edge to read fresh data. `eventType` selects between `click` / `dblclick` / `pointerdown` / `contextmenu` / `auxclick` etc.",
+      "inputs": [
+        {
+          "name": "valueInput",
+          "type": "float",
+          "label": "Value (wired)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "x",
+          "type": "float",
+          "label": "X (px)"
+        },
+        {
+          "name": "y",
+          "type": "float",
+          "label": "Y (px)"
+        },
+        {
+          "name": "matchIndex",
+          "type": "float",
+          "label": "Match Index"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "eventType",
+          "label": "Event",
+          "type": "eventTypeChooser"
+        },
+        {
+          "key": "value",
+          "label": "Pulse Value",
+          "type": "float"
+        },
+        {
+          "key": "preventDefault",
+          "label": "Prevent Default",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "value": 0,
+        "eventType": "click",
+        "preventDefault": false
+      },
+      "dynamicPorts": false
+    },
+    "dragVelocity": {
+      "displayName": "Drag Velocity",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Pointer-drag gesture with continuous per-axis velocity output and post-release inertia. Emits px/sec velocity on each axis (smoothed across pointer samples), magnitude, and an `isDragging` gate. After the pointer is released, velocity decays exponentially over `releaseDecay` so consumers see a natural fling tail. Lighter than `dragInput`: no Draggable wrapper, no progress bounds — pure velocity primitive for fluid-carousel / drag-distortion idioms.",
+      "inputs": [
+        {
+          "name": "gateInput",
+          "type": "float",
+          "label": "Gate"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "dx",
+          "type": "float",
+          "label": "dx (px/sec)"
+        },
+        {
+          "name": "dy",
+          "type": "float",
+          "label": "dy (px/sec)"
+        },
+        {
+          "name": "magnitude",
+          "type": "float",
+          "label": "Magnitude (px/sec)"
+        },
+        {
+          "name": "isDragging",
+          "type": "float",
+          "label": "Is Dragging"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Listen Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "sampleSmoothing",
+          "label": "Sample Smoothing",
+          "type": "float",
+          "min": 0,
+          "max": 0.99,
+          "step": 0.05
+        },
+        {
+          "key": "releaseDecay",
+          "label": "Release Decay",
+          "type": "float",
+          "min": 0,
+          "max": 0.99,
+          "step": 0.05
+        },
+        {
+          "key": "pointerCapture",
+          "label": "Pointer Capture",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "sampleSmoothing": 0.7,
+        "releaseDecay": 0.85,
+        "pointerCapture": true
+      },
+      "dynamicPorts": false
+    },
+    "meshAttractor": {
+      "displayName": "Mesh Attractor",
+      "category": "effects",
+      "context": "shared",
+      "description": "Fullscreen WebGL mesh with per-vertex displacement driven by up to two mouse attractors. Generates a tessellated 2D silhouette (`round` / `spike` / `blob`) — or accepts a custom `[x0,y0,...]` vertex array for arbitrary shapes (hearts, SVG-imported, text-derived). Falloff curve is selectable (gaussian / linear / smoothstep / inverse-square). F375 channels-driven authoring: every input (mouseX/Y, coef, jump, dist, opacity, colour, …) is a *channel* — author it as a literal value (`{ value: ... }`) for static settings or as a wireable port (`{ port: true, default?: ... }`) to feed it from upstream. Channels not declared in `params.channels` use the per-node default and surface no port handle, so simple cases need no wiring at all.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "geometrySource",
+          "label": "Geometry",
+          "type": "meshGeometrySource"
+        },
+        {
+          "key": "centreX",
+          "label": "Centre X",
+          "type": "float"
+        },
+        {
+          "key": "centreY",
+          "label": "Centre Y",
+          "type": "float"
+        },
+        {
+          "key": "radius",
+          "label": "Radius (px)",
+          "type": "float"
+        },
+        {
+          "key": "falloffEase",
+          "label": "Falloff Ease",
+          "type": "easingCurve"
+        },
+        {
+          "key": "channels",
+          "label": "Channel Values",
+          "type": "meshAttractorChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "shapeKind": "round",
+        "segmentCount": 96,
+        "spikeCount": 12,
+        "spikeInnerRatio": 0.45,
+        "blobNoiseAmplitude": 0.12,
+        "blobSeed": 1,
+        "centreX": -1,
+        "centreY": -1,
+        "radius": -1,
+        "falloffCurve": "gaussian",
+        "customVertices": null,
+        "channels": {}
+      },
+      "dynamicPorts": true
+    },
+    "physicsBlob": {
+      "displayName": "Physics Blob",
+      "category": "effects",
+      "context": "shared",
+      "description": "Soft-body blob silhouette built on a Verlet mass-spring chain. N point particles arranged in a closed circular loop, each connected to its neighbour and skip-1 neighbour by stiff distance-springs, with rest-pose attraction so the shape always recovers. Cursor interaction is a per-particle Gaussian-falloff repulsion. Adjacent particles follow through the spring network, so the silhouette stays C¹-smooth no matter how hard the cursor pulls — no vertex-shader V-cusps. Rendered via Canvas2D as a closed Catmull-Rom curve (converted to cubic Bézier segments) filled with the channel colour. Use this when you want the patrickheng-style smooth-blob feel; use `meshAttractor` when you want fullscreen WebGL mesh distortion of arbitrary geometry.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "geometrySource",
+          "label": "Rest Shape",
+          "type": "meshGeometrySource"
+        },
+        {
+          "key": "radius",
+          "label": "Radius (px)",
+          "type": "float"
+        },
+        {
+          "key": "stiffness",
+          "label": "Stiffness",
+          "type": "float",
+          "min": 0.05,
+          "max": 1,
+          "step": 0.05
+        },
+        {
+          "key": "damping",
+          "label": "Damping",
+          "type": "float",
+          "min": 0,
+          "max": 0.3,
+          "step": 0.01
+        },
+        {
+          "key": "iterations",
+          "label": "Iterations",
+          "type": "int",
+          "min": 1,
+          "max": 16
+        },
+        {
+          "key": "centreX",
+          "label": "Centre X",
+          "type": "float"
+        },
+        {
+          "key": "centreY",
+          "label": "Centre Y",
+          "type": "float"
+        },
+        {
+          "key": "channels",
+          "label": "Channel Values",
+          "type": "meshAttractorChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "geometrySource": {
+          "kind": "round",
+          "segmentCount": 32
+        },
+        "radius": -1,
+        "stiffness": 0.9,
+        "damping": 0.06,
+        "iterations": 6,
+        "centreX": -1,
+        "centreY": -1,
+        "channels": {}
+      },
+      "dynamicPorts": true
+    },
+    "texturedMeshTile": {
+      "displayName": "Textured Mesh Tile",
+      "category": "effects",
+      "context": "shared",
+      "description": "Subdivided WebGL plane that samples a bound `<img>` or `<video>` texture and accepts the same per-attractor vertex displacement as `meshAttractor`. Adds a wireable global `offset` port for velocity-driven shifts (drag-carousel stretch, scroll-velocity skew). Tint port allows `paletteLut.color` to recolour the tile while the texture provides the silhouette.",
+      "inputs": [
+        {
+          "name": "mouseX",
+          "type": "float",
+          "label": "Mouse X"
+        },
+        {
+          "name": "mouseY",
+          "type": "float",
+          "label": "Mouse Y"
+        },
+        {
+          "name": "coef",
+          "type": "float",
+          "label": "Coef"
+        },
+        {
+          "name": "mouseX2",
+          "type": "float",
+          "label": "Mouse 2 X"
+        },
+        {
+          "name": "mouseY2",
+          "type": "float",
+          "label": "Mouse 2 Y"
+        },
+        {
+          "name": "coef2",
+          "type": "float",
+          "label": "Coef 2"
+        },
+        {
+          "name": "jump",
+          "type": "float",
+          "label": "Jump (px)"
+        },
+        {
+          "name": "dist",
+          "type": "float",
+          "label": "Falloff Sigma (px)"
+        },
+        {
+          "name": "offsetX",
+          "type": "float",
+          "label": "Offset X (px)"
+        },
+        {
+          "name": "offsetY",
+          "type": "float",
+          "label": "Offset Y (px)"
+        },
+        {
+          "name": "tintMix",
+          "type": "float",
+          "label": "Tint Mix"
+        },
+        {
+          "name": "tint",
+          "type": "color",
+          "label": "Tint"
+        },
+        {
+          "name": "opacity",
+          "type": "float",
+          "label": "Opacity"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "textureSelector",
+          "label": "Texture Source",
+          "type": "elementSelector"
+        },
+        {
+          "key": "subdivisions",
+          "label": "Subdivisions",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "centreX",
+          "label": "Centre X",
+          "type": "float"
+        },
+        {
+          "key": "centreY",
+          "label": "Centre Y",
+          "type": "float"
+        },
+        {
+          "key": "width",
+          "label": "Width (px)",
+          "type": "float"
+        },
+        {
+          "key": "height",
+          "label": "Height (px)",
+          "type": "float"
+        },
+        {
+          "key": "falloffEase",
+          "label": "Falloff Ease",
+          "type": "easingCurve"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "textureSelector": "",
+        "subdivisions": 32,
+        "centreX": -1,
+        "centreY": -1,
+        "width": -1,
+        "height": -1,
+        "falloffEase": "easeOutCubic"
+      },
+      "dynamicPorts": false
+    },
+    "effectPass": {
+      "displayName": "Effect Pass",
+      "category": "effects",
+      "context": "shared",
+      "description": "Single-pass shader effect on any `<img>`/`<video>`/`<canvas>` source — driven by the shared `EFFECT_REGISTRY` so 27+ effects are available with no per-effect graph node. Pick the effect by name; the matching shader compiles at bind, and the effect's uniforms become wireable input ports automatically. Includes the post-effect classics (vignette, filmGrain, rgbShift, chromaticAberration, scanlines, glitch, swirl, ripple, halftone, …) and two new ones (`chromaticAberration`, `verticalSlice`) added for fluid-carousel and lens-aberration looks.",
+      "inputs": [
+        {
+          "name": "opacity",
+          "type": "float",
+          "label": "Opacity"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "effect",
+          "label": "Effect",
+          "type": "enum",
+          "options": [
+            "sepia",
+            "grayscale",
+            "invert",
+            "brightness",
+            "contrast",
+            "saturation",
+            "hueShift",
+            "duotone",
+            "vignette",
+            "glitch",
+            "rgbShift",
+            "pixelate",
+            "wave",
+            "ripple",
+            "swirl",
+            "blur",
+            "radialBlur",
+            "motionBlur",
+            "scanlines",
+            "chromaticAberration",
+            "verticalSlice",
+            "filmGrain",
+            "neonGlow",
+            "chromakey",
+            "halftone",
+            "posterize",
+            "sharpen",
+            "emboss",
+            "edgeDetect"
+          ]
+        },
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "sourceSelector",
+          "label": "Source Element",
+          "type": "elementSelector"
+        }
+      ],
+      "defaults": {
+        "effect": "vignette",
+        "selector": "",
+        "sourceSelector": ""
+      },
+      "dynamicPorts": false
+    },
+    "fluidSim": {
+      "displayName": "Fluid Sim",
+      "category": "effects",
+      "context": "shared",
+      "description": "Lightweight 2D fluid sim — drag injects coloured ink + velocity; the velocity field self-advects and dissipates; the dye flows along the velocity and fades. Renders to a host canvas. Produces the \"wet paint trail along drag path\" look used by gestural carousels and editorial sites. Requires `EXT_color_buffer_float` for RGBA16F render targets — fails loud on incompatible browsers rather than banding into RGBA8.",
+      "inputs": [
+        {
+          "name": "splatX",
+          "type": "float",
+          "label": "Splat X"
+        },
+        {
+          "name": "splatY",
+          "type": "float",
+          "label": "Splat Y"
+        },
+        {
+          "name": "splatVx",
+          "type": "float",
+          "label": "Splat Vx (px/sec)"
+        },
+        {
+          "name": "splatVy",
+          "type": "float",
+          "label": "Splat Vy (px/sec)"
+        },
+        {
+          "name": "splatColor",
+          "type": "color",
+          "label": "Splat Colour"
+        },
+        {
+          "name": "splatStrength",
+          "type": "float",
+          "label": "Splat Strength"
+        },
+        {
+          "name": "splatRadius",
+          "type": "float",
+          "label": "Splat Radius (px)"
+        },
+        {
+          "name": "velocityDissipation",
+          "type": "float",
+          "label": "Velocity Dissipation"
+        },
+        {
+          "name": "dyeDissipation",
+          "type": "float",
+          "label": "Dye Dissipation"
+        },
+        {
+          "name": "opacity",
+          "type": "float",
+          "label": "Opacity"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "simResolution",
+          "label": "Sim Resolution",
+          "type": "int",
+          "min": 32,
+          "max": 1024
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "simResolution": 256
+      },
+      "dynamicPorts": false
+    },
+    "slideRouter": {
+      "displayName": "Slide Router",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Gestural N-stage routing with eased transitions. Owns its own discrete-index state and runs an internal eased clock between consecutive indices. Three input triggers (`advance`, `retreat`, `seekTo`) replace the upstream `pulseCounter` chain — wire wheel / click / key gestures directly. Slide count auto-derives from `slidesSelector` (preferred) or is configured manually via `slideCount`. Emits a continuous `currentIndex` (lerped during transition), the latched `discreteIndex`, eased `transitionProgress`, and a `slideActivations` Float[N] channel.",
+      "inputs": [
+        {
+          "name": "advance",
+          "type": "float",
+          "label": "Advance"
+        },
+        {
+          "name": "retreat",
+          "type": "float",
+          "label": "Retreat"
+        },
+        {
+          "name": "seekTo",
+          "type": "float",
+          "label": "Seek To"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "currentIndex",
+          "type": "float",
+          "label": "Current Index"
+        },
+        {
+          "name": "discreteIndex",
+          "type": "float",
+          "label": "Discrete Index"
+        },
+        {
+          "name": "transitionProgress",
+          "type": "float",
+          "label": "Transition Progress"
+        },
+        {
+          "name": "slideActivations",
+          "type": "floatArray",
+          "label": "Slide Activations"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "slidesSelector",
+          "label": "Slides Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "slideCount",
+          "label": "Slide Count (manual)",
+          "type": "int",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "transitionDurationMs",
+          "label": "Transition Duration (ms)",
+          "type": "float",
+          "min": 1
+        },
+        {
+          "key": "transitionEase",
+          "label": "Transition Ease",
+          "type": "easingCurve"
+        },
+        {
+          "key": "wrap",
+          "label": "Wrap",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "slidesSelector": "",
+        "transitionDurationMs": 800,
+        "transitionEase": "easeInOutCubic",
+        "wrap": false
+      },
+      "dynamicPorts": false
+    },
+    "slideDeck": {
+      "displayName": "Slide Deck",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Full-screen slide-deck navigation in one node. Bundles wheel input, optional next/prev arrow clicks, optional nav-link clicks (matchIndex → seekTo), and the eased slideRouter. Compound: at load time it expands to `slideRouter` + `wheelGesture` + up to 3 `clickPulse` nodes + `pulseOr` (when 2+ advance sources). Outputs re-export the slideRouter outputs verbatim. Author can still bypass and wire the primitives by hand for one-off cases — slideDeck is purely additive.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "currentIndex",
+          "type": "float",
+          "label": "Current Index"
+        },
+        {
+          "name": "discreteIndex",
+          "type": "float",
+          "label": "Discrete Index"
+        },
+        {
+          "name": "transitionProgress",
+          "type": "float",
+          "label": "Transition Progress"
+        },
+        {
+          "name": "slideActivations",
+          "type": "floatArray",
+          "label": "Slide Activations"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "slidesSelector",
+          "label": "Slides Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "navLinkSelector",
+          "label": "Nav Links",
+          "type": "elementSelector"
+        },
+        {
+          "key": "nextArrowSelector",
+          "label": "Next Arrow",
+          "type": "elementSelector"
+        },
+        {
+          "key": "prevArrowSelector",
+          "label": "Prev Arrow",
+          "type": "elementSelector"
+        },
+        {
+          "key": "wheelEnabled",
+          "label": "Wheel Input",
+          "type": "bool"
+        },
+        {
+          "key": "wheelAxis",
+          "label": "Wheel Axis",
+          "type": "axisChooser"
+        },
+        {
+          "key": "wheelThreshold",
+          "label": "Wheel Burst Threshold",
+          "type": "float",
+          "min": 1
+        },
+        {
+          "key": "wheelLockoutMs",
+          "label": "Wheel Lockout (ms)",
+          "type": "float",
+          "min": 0
+        },
+        {
+          "key": "wheelRestMs",
+          "label": "Wheel Idle Reset (ms)",
+          "type": "float",
+          "min": 0
+        },
+        {
+          "key": "transitionDurationMs",
+          "label": "Transition Duration (ms)",
+          "type": "float",
+          "min": 1
+        },
+        {
+          "key": "transitionEase",
+          "label": "Transition Ease",
+          "type": "easingCurve"
+        },
+        {
+          "key": "wrap",
+          "label": "Wrap",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "slidesSelector": "",
+        "navLinkSelector": "",
+        "nextArrowSelector": "",
+        "prevArrowSelector": "",
+        "wheelEnabled": true,
+        "wheelAxis": "y",
+        "wheelThreshold": 60,
+        "wheelLockoutMs": 850,
+        "wheelRestMs": 250,
+        "transitionDurationMs": 800,
+        "transitionEase": "easeInOutCubic",
+        "wrap": false
+      },
+      "dynamicPorts": false
+    },
+    "paletteLut": {
+      "displayName": "Palette LUT",
+      "category": "math",
+      "context": "shared",
+      "description": "Sample a 1D colour palette at position `t` ∈ [0..1] with configurable interpolation (sRGB or perceptually-uniform OKLab) and wrap mode (clamp / repeat / mirror). Stops can be static (param) or dynamically wired via `inputStops` for computed palettes.",
+      "inputs": [
+        {
+          "name": "t",
+          "type": "float",
+          "label": "Position"
+        },
+        {
+          "name": "inputStops",
+          "type": "floatArray",
+          "label": "Stops (wired)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "color",
+          "type": "color",
+          "label": "Colour"
+        },
+        {
+          "name": "r",
+          "type": "float",
+          "label": "R"
+        },
+        {
+          "name": "g",
+          "type": "float",
+          "label": "G"
+        },
+        {
+          "name": "b",
+          "type": "float",
+          "label": "B"
+        },
+        {
+          "name": "a",
+          "type": "float",
+          "label": "A"
+        },
+        {
+          "name": "colorHex",
+          "type": "string",
+          "label": "Hex"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "stops",
+          "label": "Palette Stops",
+          "type": "colorPaletteStops"
+        },
+        {
+          "key": "wrapMode",
+          "label": "Wrap Mode",
+          "type": "enum",
+          "options": [
+            "clamp",
+            "repeat",
+            "mirror"
+          ]
+        },
+        {
+          "key": "interpolationMode",
+          "label": "Interpolation",
+          "type": "enum",
+          "options": [
+            "srgb",
+            "oklab"
+          ]
+        }
+      ],
+      "defaults": {
+        "stops": [],
+        "wrapMode": "clamp",
+        "interpolationMode": "srgb"
       },
       "dynamicPorts": false
     },
@@ -2945,7 +3930,7 @@
         },
         {
           "name": "glyphPositions",
-          "type": "attribute",
+          "type": "attributes",
           "label": "Glyph Positions"
         },
         {
@@ -4122,6 +5107,79 @@
         "defaultRoute": -1
       },
       "dynamicPorts": true
+    },
+    "forEachScope": {
+      "displayName": "For Each Scope",
+      "category": "integration",
+      "context": "shared",
+      "description": "Per-iteration scope source materialised by `expandInstanceNodes` inside every forEach iteration. Replaces the F351 reserved-token substitution mechanism (`$match`, `$index`) with a port-driven model — template-body nodes wire from this node's outputs the same way they wire from any other producer. Authors do NOT write this node by hand; the loader emits one per iteration with constant per-iteration values.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
+        },
+        {
+          "name": "index",
+          "type": "float",
+          "label": "Index"
+        },
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        }
+      ],
+      "parameters": [],
+      "defaults": {
+        "selector": "",
+        "index": 0,
+        "count": 0
+      },
+      "dynamicPorts": true
+    },
+    "selectorJoin": {
+      "displayName": "Selector Join",
+      "category": "math",
+      "context": "shared",
+      "description": "Concatenate `prefix` + `suffix` into a single CSS selector string. The canonical helper for composing per-iteration selectors out of a `forEachScope.selector` (prefix) and a static descendant fragment (suffix), replacing the F351 embedded-token form `\"$match .child\"`.",
+      "inputs": [
+        {
+          "name": "prefix",
+          "type": "string",
+          "label": "Prefix"
+        },
+        {
+          "name": "suffix",
+          "type": "string",
+          "label": "Suffix"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "selector",
+          "type": "string",
+          "label": "Selector"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "prefix",
+          "label": "Prefix",
+          "type": "string"
+        },
+        {
+          "key": "suffix",
+          "label": "Suffix",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "dynamicPorts": false
     },
     "indexedDispatch": {
       "displayName": "Indexed Dispatch",
@@ -6070,76 +7128,6 @@
       },
       "dynamicPorts": false
     },
-    "spring": {
-      "displayName": "Spring",
-      "category": "procedural",
-      "context": "shared",
-      "description": "Damped spring physics — smooth follow with overshoot. Defaults to replace composition (spring IS the value).",
-      "inputs": [
-        {
-          "name": "baseValue",
-          "type": "float",
-          "label": "Target"
-        },
-        {
-          "name": "time",
-          "type": "float",
-          "label": "Time"
-        },
-        {
-          "name": "deltaTime",
-          "type": "float",
-          "label": "Delta Time"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "result",
-          "type": "float",
-          "label": "Result"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "stiffness",
-          "label": "Stiffness",
-          "type": "float",
-          "min": 1,
-          "step": 10
-        },
-        {
-          "key": "damping",
-          "label": "Damping",
-          "type": "float",
-          "min": 0,
-          "step": 1
-        },
-        {
-          "key": "mass",
-          "label": "Mass",
-          "type": "float",
-          "min": 0.01,
-          "step": 0.1
-        },
-        {
-          "key": "compositionMode",
-          "label": "Compose",
-          "type": "enum",
-          "options": [
-            "add",
-            "replace",
-            "multiply"
-          ]
-        }
-      ],
-      "defaults": {
-        "stiffness": 180,
-        "damping": 12,
-        "mass": 1,
-        "compositionMode": "replace"
-      },
-      "dynamicPorts": false
-    },
     "oscillator": {
       "displayName": "Oscillator",
       "category": "procedural",
@@ -7972,70 +8960,6 @@
       },
       "dynamicPorts": false
     },
-    "valueSolver": {
-      "displayName": "Value Solver",
-      "category": "solvers",
-      "context": "shared",
-      "description": "Generic float accumulation with temporal feedback. Value moves toward target at given rate.",
-      "inputs": [
-        {
-          "name": "subSteps",
-          "type": "float",
-          "label": "Sub Steps"
-        },
-        {
-          "name": "target",
-          "type": "float",
-          "label": "Target"
-        },
-        {
-          "name": "rate",
-          "type": "float",
-          "label": "Rate"
-        },
-        {
-          "name": "initialValue",
-          "type": "float",
-          "label": "Initial Value"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "value",
-          "type": "float",
-          "label": "Value"
-        }
-      ],
-      "parameters": [
-        {
-          "key": "initialValue",
-          "label": "Initial Value",
-          "type": "float"
-        },
-        {
-          "key": "rate",
-          "label": "Rate",
-          "type": "float",
-          "min": 0,
-          "max": 100,
-          "step": 0.1
-        },
-        {
-          "key": "subSteps",
-          "label": "Sub Steps",
-          "type": "int",
-          "min": 1,
-          "max": 16,
-          "step": 1
-        }
-      ],
-      "defaults": {
-        "initialValue": 0,
-        "rate": 1,
-        "subSteps": 1
-      },
-      "dynamicPorts": false
-    },
     "meshSolver": {
       "displayName": "Mesh Solver",
       "category": "solvers",
@@ -8403,6 +9327,11 @@
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "pauseUntilStable",
+          "type": "float",
+          "label": "Pause Until Stable"
         }
       ],
       "outputs": [
@@ -8425,6 +9354,16 @@
           "name": "jointCount",
           "type": "float",
           "label": "Joint Count"
+        },
+        {
+          "name": "isSettled",
+          "type": "float",
+          "label": "Is Settled"
+        },
+        {
+          "name": "maxDynamicBodySpeed",
+          "type": "float",
+          "label": "Max Dynamic Speed (px/s)"
         }
       ],
       "parameters": [
@@ -8462,6 +9401,19 @@
           "min": 0,
           "max": 1,
           "step": 0.05
+        },
+        {
+          "key": "settleSpeedThreshold",
+          "label": "Settle Speed Threshold (px/s)",
+          "type": "float",
+          "min": 0,
+          "step": 0.1
+        },
+        {
+          "key": "settleFrameCount",
+          "label": "Settle Frame Count",
+          "type": "int",
+          "min": 1
         }
       ],
       "defaults": {
@@ -8469,7 +9421,9 @@
         "subSteps": 4,
         "paramGravityX": 0,
         "paramGravityY": 0,
-        "pauseBelowProgress": null
+        "pauseBelowProgress": null,
+        "settleSpeedThreshold": 1,
+        "settleFrameCount": 5
       },
       "dynamicPorts": false
     },
@@ -8671,6 +9625,26 @@
           "name": "id",
           "type": "float",
           "label": "Body ID"
+        },
+        {
+          "name": "centerX",
+          "type": "float",
+          "label": "Center X (px)"
+        },
+        {
+          "name": "topY",
+          "type": "float",
+          "label": "Top Y (px)"
+        },
+        {
+          "name": "bottomY",
+          "type": "float",
+          "label": "Bottom Y (px)"
+        },
+        {
+          "name": "mouthWidth",
+          "type": "float",
+          "label": "Mouth Width (px)"
         }
       ],
       "parameters": [
@@ -8752,6 +9726,26 @@
           "name": "progress",
           "type": "float",
           "label": "Progress"
+        },
+        {
+          "name": "targetCenterX",
+          "type": "float",
+          "label": "Target Center X (px)"
+        },
+        {
+          "name": "targetTopY",
+          "type": "float",
+          "label": "Target Top Y (px)"
+        },
+        {
+          "name": "targetTopOffset",
+          "type": "float",
+          "label": "Target Top Offset (px)"
+        },
+        {
+          "name": "targetMouthWidth",
+          "type": "float",
+          "label": "Target Mouth Width (px)"
         }
       ],
       "outputs": [
@@ -8872,6 +9866,15 @@
           "min": 0,
           "max": 1,
           "step": 0.05
+        },
+        {
+          "key": "spawnPattern",
+          "label": "Spawn Pattern",
+          "type": "enum",
+          "options": [
+            "explicit",
+            "fanFromMouth"
+          ]
         }
       ],
       "defaults": {
@@ -8897,7 +9900,8 @@
         "jitterX": 0,
         "jitterY": 0,
         "writeTransform": true,
-        "resetBelowProgress": null
+        "resetBelowProgress": null,
+        "spawnPattern": "explicit"
       },
       "dynamicPorts": false
     },
@@ -9251,7 +10255,7 @@
         {
           "key": "selector",
           "label": "Drag Surface Selector",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "stiffness",
@@ -9270,7 +10274,7 @@
         {
           "key": "pickElementsSelector",
           "label": "Pick Elements Selector",
-          "type": "string"
+          "type": "elementSelector"
         }
       ],
       "defaults": {
@@ -11515,7 +12519,7 @@
       "displayName": "Phase Shift",
       "category": "math",
       "context": "shared",
-      "description": "Per-clone phase shift of a shared 0..1 progress signal. Computes `(progress + index/count) % 1`, wrapping the result into [0, 1) so it can drive any node that consumes a normalized progress (staggerWrite, multiKeyframe, propertyAnimation). Replaces the inline `((node('progress') + ($index / node('count'))) % 1)` expression that recurs in any forEach-instanced template that needs each clone to ride a different phase of one shared clock.",
+      "description": "Per-clone phase shift of a shared 0..1 progress signal. Computes `(progress + index/count) % 1`, wrapping the result into [0, 1) so it can drive any node that consumes a normalized progress (staggerWrite, multiKeyframe, propertyAnimation). Replaces the inline `((node('progress') + (node('index') / node('count'))) % 1)` expression that recurs in any forEach-instanced template that needs each clone to ride a different phase of one shared clock.",
       "inputs": [
         {
           "name": "progress",
@@ -11832,12 +12836,19 @@
       ],
       "parameters": [
         {
+          "key": "index",
+          "label": "Index",
+          "type": "int",
+          "min": 0
+        },
+        {
           "key": "fallback",
           "label": "Fallback (empty array)",
           "type": "float"
         }
       ],
       "defaults": {
+        "index": 0,
         "fallback": 0
       },
       "dynamicPorts": false
@@ -11868,12 +12879,19 @@
       ],
       "parameters": [
         {
+          "key": "index",
+          "label": "Index",
+          "type": "int",
+          "min": 0
+        },
+        {
           "key": "fallback",
           "label": "Fallback (empty array)",
           "type": "string"
         }
       ],
       "defaults": {
+        "index": 0,
         "fallback": ""
       },
       "dynamicPorts": false
@@ -11904,12 +12922,19 @@
       ],
       "parameters": [
         {
+          "key": "index",
+          "label": "Index",
+          "type": "int",
+          "min": 0
+        },
+        {
           "key": "fallbackHex",
           "label": "Fallback (empty array)",
           "type": "string"
         }
       ],
       "defaults": {
+        "index": 0,
         "fallbackHex": "#ffffff"
       },
       "dynamicPorts": false
