@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-05-06",
+  "_generatedAt": "2026-05-07",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 271,
+  "_nodeCount": 273,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -60,6 +60,7 @@
         "dragInput",
         "scrollEvent",
         "scrollTrigger",
+        "virtualScroll",
         "wheelGesture",
         "clickPulse",
         "dragVelocity",
@@ -134,6 +135,7 @@
       "description": "Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.",
       "nodes": [
         "scrollTo",
+        "wiggleStringWrite",
         "boolTween",
         "timeline",
         "seamlessPlayhead",
@@ -2547,6 +2549,165 @@
         "mass": 1,
         "posterizeFps": 0,
         "compositionMode": "replace"
+      },
+      "dynamicPorts": false
+    },
+    "wiggleStringWrite": {
+      "displayName": "Wiggle String Write",
+      "category": "animation",
+      "context": "shared",
+      "description": "Damped-oscillation per-element writer — like plucking a guitar string with characters tied to it as beads. On each rising-edge `trigger`, every matched element traces its own damped sinusoid `A·e^(-decay·t)·sin(ω·t + i·phaseSpread)` where `i` is the element index. Adjacent elements oscillate slightly out of phase (controlled by `phaseSpread`), giving a \"chord struck\" feel — independent wiggle per char that stays loosely synchronised across the row. After `duration` seconds the node stops writing and chars return to rest. Use as a one-shot reaction to a hover/click pulse without any progress driver.",
+      "inputs": [
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        },
+        {
+          "name": "amplitudeInput",
+          "type": "float",
+          "label": "Amplitude"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "property",
+          "label": "Property",
+          "type": "cssProperty"
+        },
+        {
+          "key": "cssUnit",
+          "label": "Unit",
+          "type": "enum",
+          "options": [
+            "px",
+            "%",
+            "rem",
+            "em",
+            "deg",
+            "rad",
+            "none"
+          ]
+        },
+        {
+          "key": "amplitude",
+          "label": "Amplitude",
+          "type": "float",
+          "step": 1
+        },
+        {
+          "key": "frequency",
+          "label": "Frequency (Hz)",
+          "type": "float",
+          "min": 0.1,
+          "step": 0.5
+        },
+        {
+          "key": "decay",
+          "label": "Decay (1/s)",
+          "type": "float",
+          "min": 0.1,
+          "step": 0.5
+        },
+        {
+          "key": "phaseSpread",
+          "label": "Phase Spread (rad)",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "duration",
+          "label": "Duration (s)",
+          "type": "float",
+          "min": 0.1,
+          "step": 0.1
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "property": "translateY",
+        "cssUnit": "px",
+        "amplitude": 16,
+        "frequency": 5,
+        "decay": 6,
+        "phaseSpread": 0.4,
+        "duration": 1.2
+      },
+      "dynamicPorts": false
+    },
+    "virtualScroll": {
+      "displayName": "Virtual Scroll",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Continuous wheel/touch accumulator with eased follow. Replaces document scroll for infinite-loop carousels and patrickheng-style virtual scrollers — listens to wheel/touch on `selector` (or window), accumulates raw deltas into an unbounded `targetPos`, and lerps `position` toward it each frame using `smoothing`. `position` is monotonic and unbounded, so consumers can fract-wrap it (`carouselEffectAnimation` does this internally) for true forever-scroll without document-scroll runways. Optionally hides the native scrollbar by setting `overflow:hidden` on html+body during bind, restoring on dispose.",
+      "inputs": [
+        {
+          "name": "gateInput",
+          "type": "float",
+          "label": "Gate"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "position",
+          "type": "float",
+          "label": "Position"
+        },
+        {
+          "name": "velocity",
+          "type": "float",
+          "label": "Velocity"
+        },
+        {
+          "name": "direction",
+          "type": "float",
+          "label": "Direction"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Listen Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "axis",
+          "label": "Axis",
+          "type": "axisChooser"
+        },
+        {
+          "key": "sensitivity",
+          "label": "Sensitivity",
+          "type": "float",
+          "min": 0.01,
+          "step": 0.1
+        },
+        {
+          "key": "smoothing",
+          "label": "Smoothing",
+          "type": "float",
+          "min": 0,
+          "max": 0.99,
+          "step": 0.05
+        },
+        {
+          "key": "hideNativeScroll",
+          "label": "Hide Native Scrollbar",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "axis": "y",
+        "sensitivity": 1,
+        "smoothing": 0.1,
+        "hideNativeScroll": true
       },
       "dynamicPorts": false
     },
