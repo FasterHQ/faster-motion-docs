@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-05-07",
+  "_generatedAt": "2026-05-08",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 273,
+  "_nodeCount": 283,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -60,10 +60,14 @@
         "dragInput",
         "scrollEvent",
         "scrollTrigger",
+        "scrollTriggerEach",
         "virtualScroll",
         "wheelGesture",
         "clickPulse",
         "dragVelocity",
+        "scrollPosition",
+        "viewportObserver",
+        "gatedPulse",
         "slideRouter",
         "slideDeck",
         "pin",
@@ -135,7 +139,9 @@
       "description": "Core animation primitives: timelines for playback control, tweens for A→B interpolation, keyframes for multi-stop curves, and stagger for per-element timing.",
       "nodes": [
         "scrollTo",
+        "cursorProximityWrite",
         "wiggleStringWrite",
+        "velocityPluck",
         "boolTween",
         "timeline",
         "seamlessPlayhead",
@@ -153,6 +159,7 @@
         "scrollTween",
         "eventTween",
         "clipPathAnimation",
+        "carouselFanout",
         "carouselEffectAnimation",
         "slideSlotAnimation",
         "dockToAnimation",
@@ -179,7 +186,8 @@
         "stringEquals",
         "phaseShift",
         "floatArrayPick",
-        "colorArrayPick"
+        "colorArrayPick",
+        "thresholdMap"
       ]
     },
     "boundary": {
@@ -209,6 +217,8 @@
         "domPoseWrite",
         "domAttributeRead",
         "domStringArrayRead",
+        "domTemplateWrite",
+        "multiAttrRead",
         "additivePropertyWrite"
       ]
     },
@@ -693,7 +703,7 @@
       "displayName": "Drag Input",
       "category": "inputs",
       "context": "dom",
-      "description": "Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw.",
+      "description": "DEPRECATED for new authoring — prefer `dragVelocity` (passive sensor) wired into a `scrollPosition` or a translateX expression. `dragInput` wraps the internal Draggable utility, which physically translates the bound element via inline `transform` writes to drive its own progress reading. That hijacks the element: it can't coexist with a pinned section, an existing transform, or another node that needs the same DOM space. Kept as a stable boundary input for legacy `.fmtion` files; new graphs should not introduce it. Boundary input: binds pointer events to a DOM element and maps drag offset to 0-1 progress on the configured axis. Supports parent-bounded range and inertia throw.",
       "inputs": [
         {
           "name": "externalProgress",
@@ -737,12 +747,18 @@
           "key": "inertia",
           "label": "Inertia",
           "type": "bool"
+        },
+        {
+          "key": "accumulate",
+          "label": "Accumulate Across Drags",
+          "type": "bool"
         }
       ],
       "defaults": {
         "selector": "",
         "axis": "x",
-        "bounds": "parent"
+        "bounds": "parent",
+        "accumulate": false
       },
       "dynamicPorts": false
     },
@@ -2410,6 +2426,68 @@
       },
       "dynamicPorts": false
     },
+    "scrollTriggerEach": {
+      "displayName": "Scroll Trigger Each",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Per-element scroll progress fan-out. Same edge math as `scrollTrigger`, but resolves N matched elements at bind time and emits `progress`/`isInView` as arrays — each element's progress is computed against ITS OWN viewport position. Pairs with `staggerAnimate.progressArray` for \"fire each row when its row enters viewport\" patterns where one shared scrolltrigger range can't represent the per-element timing. Use when DOM-order interleaves columns (CSS grid) or rows scroll past at distinctly different viewport positions, and where same-row vs different-row stagger ordering would otherwise force per-tile triggers.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "progress",
+          "type": "floatArray",
+          "label": "Progress (per-element)"
+        },
+        {
+          "name": "unclampedProgress",
+          "type": "floatArray",
+          "label": "Unclamped Progress (per-element)"
+        },
+        {
+          "name": "isInView",
+          "type": "floatArray",
+          "label": "In View (per-element)"
+        },
+        {
+          "name": "count",
+          "type": "float",
+          "label": "Count"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "startEdge",
+          "label": "Start Edge",
+          "type": "scrollEdges"
+        },
+        {
+          "key": "endEdge",
+          "label": "End Edge",
+          "type": "scrollEdges"
+        },
+        {
+          "key": "scroller",
+          "label": "Custom Scroller",
+          "type": "string"
+        },
+        {
+          "key": "invert",
+          "label": "Invert",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "startEdge": "top bottom",
+        "endEdge": "top 50%"
+      },
+      "dynamicPorts": false
+    },
     "snapFloat": {
       "displayName": "Snap Float",
       "category": "math",
@@ -2552,6 +2630,80 @@
       },
       "dynamicPorts": false
     },
+    "cursorProximityWrite": {
+      "displayName": "Cursor Proximity Write",
+      "category": "animation",
+      "context": "shared",
+      "description": "DOM-side radial-push writer. Treats the cursor as a solid ball and shoves each matched element AWAY from it along the unit vector connecting them. Each char/icon/cell gets three CSS vars written every frame — `--cursor-shift` (horizontal push px), `--cursor-lift` (vertical push px), `--cursor-tilt` (signed rotation deg) — so author-side CSS can compose them into any transform recipe. Per-element damped-spring physics gives an elastic settle: chars bounce back when the cursor moves away. Captures rest centres ONCE at bind time relative to `scopeSelector` (when set) so per-frame work is one BCR read for the scope plus pure math per element. Off-screen scopes cull the entire write loop.",
+      "inputs": [
+        {
+          "name": "cursorX",
+          "type": "float",
+          "label": "Cursor X"
+        },
+        {
+          "name": "cursorY",
+          "type": "float",
+          "label": "Cursor Y"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "scopeSelector",
+          "label": "Scope Container",
+          "type": "elementSelector"
+        },
+        {
+          "key": "radius",
+          "label": "Radius (px)",
+          "type": "float",
+          "min": 1,
+          "step": 5
+        },
+        {
+          "key": "pushAmount",
+          "label": "Push (px)",
+          "type": "float",
+          "step": 1
+        },
+        {
+          "key": "tiltAmount",
+          "label": "Tilt (deg)",
+          "type": "float",
+          "step": 1
+        },
+        {
+          "key": "stiffness",
+          "label": "Stiffness",
+          "type": "float",
+          "min": 1,
+          "step": 5
+        },
+        {
+          "key": "damping",
+          "label": "Damping",
+          "type": "float",
+          "min": 0,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "scopeSelector": "",
+        "radius": 130,
+        "pushAmount": 55,
+        "tiltAmount": 18,
+        "stiffness": 220,
+        "damping": 18
+      },
+      "dynamicPorts": false
+    },
     "wiggleStringWrite": {
       "displayName": "Wiggle String Write",
       "category": "animation",
@@ -2645,7 +2797,7 @@
       "displayName": "Virtual Scroll",
       "category": "inputs",
       "context": "shared",
-      "description": "Continuous wheel/touch accumulator with eased follow. Replaces document scroll for infinite-loop carousels and patrickheng-style virtual scrollers — listens to wheel/touch on `selector` (or window), accumulates raw deltas into an unbounded `targetPos`, and lerps `position` toward it each frame using `smoothing`. `position` is monotonic and unbounded, so consumers can fract-wrap it (`carouselEffectAnimation` does this internally) for true forever-scroll without document-scroll runways. Optionally hides the native scrollbar by setting `overflow:hidden` on html+body during bind, restoring on dispose.",
+      "description": "Continuous wheel/touch accumulator with eased follow. Replaces document scroll for infinite-loop carousels and forever-scroll virtual scrollers — listens to wheel/touch on `selector` (or window), accumulates raw deltas into an unbounded `targetPos`, and lerps `position` toward it each frame using `smoothing`. `position` is monotonic and unbounded, so consumers can fract-wrap it (`carouselEffectAnimation` does this internally) for true forever-scroll without document-scroll runways. Optionally hides the native scrollbar by setting `overflow:hidden` on html+body during bind, restoring on dispose.",
       "inputs": [
         {
           "name": "gateInput",
@@ -2700,6 +2852,21 @@
           "key": "hideNativeScroll",
           "label": "Hide Native Scrollbar",
           "type": "bool"
+        },
+        {
+          "key": "inertia",
+          "label": "Inertia",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "step": 0.05
+        },
+        {
+          "key": "inertiaFriction",
+          "label": "Inertia Friction",
+          "type": "float",
+          "min": 0,
+          "step": 0.5
         }
       ],
       "defaults": {
@@ -2707,7 +2874,9 @@
         "axis": "y",
         "sensitivity": 1,
         "smoothing": 0.1,
-        "hideNativeScroll": true
+        "hideNativeScroll": true,
+        "inertia": 0,
+        "inertiaFriction": 4
       },
       "dynamicPorts": false
     },
@@ -2857,15 +3026,55 @@
       "displayName": "Drag Velocity",
       "category": "inputs",
       "context": "shared",
-      "description": "Pointer-drag gesture with continuous per-axis velocity output and post-release inertia. Emits px/sec velocity on each axis (smoothed across pointer samples), magnitude, and an `isDragging` gate. After the pointer is released, velocity decays exponentially over `releaseDecay` so consumers see a natural fling tail. Lighter than `dragInput`: no Draggable wrapper, no progress bounds — pure velocity primitive for fluid-carousel / drag-distortion idioms.",
+      "description": "Passive pointer-drag sensor: cumulative per-axis offset, per-frame raw delta, continuous velocity, optional post-release inertia. Emits px-cumulative offset (`offsetX`/`offsetY`), per-frame raw pointer delta (`frameDeltaX`/`frameDeltaY`), px/sec velocity (`dx`/`dy`), magnitude, and an `isDragging` gate. Never moves the bound element — pure pointer-event integration so the data can be composed into arbitrary downstream graph expressions (carousel pan, parallax pull, scrub-forever timelines, swipe-to-scroll via `scrollPosition`) without hijacking the listen target. After release, velocity decays exponentially over `releaseDecay`; with `inertia: true` that decaying velocity also integrates back into offset (and into `frameDelta*` so an inertia tail can flow into a downstream `scrollPosition`), respecting the optional clamp bounds.",
       "inputs": [
         {
           "name": "gateInput",
           "type": "float",
           "label": "Gate"
+        },
+        {
+          "name": "clampMinXInput",
+          "type": "float",
+          "label": "Clamp Min X (wired)"
+        },
+        {
+          "name": "clampMaxXInput",
+          "type": "float",
+          "label": "Clamp Max X (wired)"
+        },
+        {
+          "name": "clampMinYInput",
+          "type": "float",
+          "label": "Clamp Min Y (wired)"
+        },
+        {
+          "name": "clampMaxYInput",
+          "type": "float",
+          "label": "Clamp Max Y (wired)"
         }
       ],
       "outputs": [
+        {
+          "name": "offsetX",
+          "type": "float",
+          "label": "Offset X (px)"
+        },
+        {
+          "name": "frameDeltaX",
+          "type": "float",
+          "label": "Frame Delta X (px)"
+        },
+        {
+          "name": "frameDeltaY",
+          "type": "float",
+          "label": "Frame Delta Y (px)"
+        },
+        {
+          "name": "offsetY",
+          "type": "float",
+          "label": "Offset Y (px)"
+        },
         {
           "name": "dx",
           "type": "float",
@@ -2894,6 +3103,16 @@
           "type": "elementSelector"
         },
         {
+          "key": "accumulate",
+          "label": "Accumulate",
+          "type": "bool"
+        },
+        {
+          "key": "inertia",
+          "label": "Inertia",
+          "type": "bool"
+        },
+        {
           "key": "sampleSmoothing",
           "label": "Sample Smoothing",
           "type": "float",
@@ -2913,14 +3132,285 @@
           "key": "pointerCapture",
           "label": "Pointer Capture",
           "type": "bool"
+        },
+        {
+          "key": "axisLock",
+          "label": "Axis Lock",
+          "type": "string"
+        },
+        {
+          "key": "axisLockThreshold",
+          "label": "Axis Lock Threshold (px)",
+          "type": "float"
+        },
+        {
+          "key": "clampMinX",
+          "label": "Clamp Min X",
+          "type": "float"
+        },
+        {
+          "key": "clampMaxX",
+          "label": "Clamp Max X",
+          "type": "float"
+        },
+        {
+          "key": "clampMinY",
+          "label": "Clamp Min Y",
+          "type": "float"
+        },
+        {
+          "key": "clampMaxY",
+          "label": "Clamp Max Y",
+          "type": "float"
         }
       ],
       "defaults": {
         "selector": "",
         "sampleSmoothing": 0.7,
         "releaseDecay": 0.85,
-        "pointerCapture": true
+        "pointerCapture": true,
+        "accumulate": true,
+        "inertia": false,
+        "axisLock": "free",
+        "axisLockThreshold": 6
       },
+      "dynamicPorts": false
+    },
+    "scrollPosition": {
+      "displayName": "Scroll Position",
+      "category": "inputs",
+      "context": "shared",
+      "description": "Owns a scroller's scroll position behind typed graph ports. Reads the target's scrollTop / scrollLeft each frame and publishes them on `scrollX` / `scrollY`. When `addX` / `addY` ports carry non-zero deltas, integrates them (with sub-pixel residue carry across frames so cumulative scroll matches cumulative input) into the scroller — one DOM write per evaluate(), so high-frequency upstream sources don't trigger a synchronous reflow on every input sample. Pair with `dragVelocity.frameDeltaX/Y` for swipe-to-scroll: drag → port → scrollPosition → DOM, fully graph-native, no element side-channels. Other writers (button \"scroll to top\", parallax-driven scroll) compose into the same node.",
+      "inputs": [
+        {
+          "name": "addX",
+          "type": "float",
+          "label": "Add X (px)"
+        },
+        {
+          "name": "addY",
+          "type": "float",
+          "label": "Add Y (px)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "scrollX",
+          "type": "float",
+          "label": "scrollLeft (px)"
+        },
+        {
+          "name": "scrollY",
+          "type": "float",
+          "label": "scrollTop (px)"
+        },
+        {
+          "name": "positionX",
+          "type": "float",
+          "label": "Position X (sub-pixel)"
+        },
+        {
+          "name": "positionY",
+          "type": "float",
+          "label": "Position Y (sub-pixel)"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Scroll Target",
+          "type": "elementSelector"
+        },
+        {
+          "key": "axis",
+          "label": "Axis",
+          "type": "string"
+        }
+      ],
+      "defaults": {
+        "selector": "document",
+        "axis": "both"
+      },
+      "dynamicPorts": false
+    },
+    "viewportObserver": {
+      "displayName": "Viewport Observer",
+      "category": "inputs",
+      "context": "shared",
+      "description": "IntersectionObserver-backed visibility detector. Watches a single element (typically per-clone in a forEach template via `{ \"fromScope\": \"selector\" }`) and emits an `enterPulse` (single frame) when it becomes visible, an `exitPulse` when it leaves, plus a continuous `isVisible` gate and the raw `intersectionRatio` (0..1). Crucially this fires on transform-induced visibility changes too — a translateX-driven carousel (no document scroll) still triggers the pulses, which is what differentiates it from `scrollTrigger`'s scroll-event-driven progress. Use as the trigger for per-card pluck animations: each card's pluck fires the moment IT enters view, with parameters captured from a velocity signal at that exact moment via a `latch`.",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "enterPulse",
+          "type": "float",
+          "label": "Enter"
+        },
+        {
+          "name": "exitPulse",
+          "type": "float",
+          "label": "Exit"
+        },
+        {
+          "name": "isVisible",
+          "type": "float",
+          "label": "Visible"
+        },
+        {
+          "name": "intersectionRatio",
+          "type": "float",
+          "label": "Ratio"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Element",
+          "type": "elementSelector"
+        },
+        {
+          "key": "rootMargin",
+          "label": "Root Margin",
+          "type": "string"
+        },
+        {
+          "key": "threshold",
+          "label": "Threshold",
+          "type": "float",
+          "min": 0.01,
+          "max": 1,
+          "step": 0.05
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "rootMargin": "0px",
+        "threshold": 0.05
+      },
+      "dynamicPorts": false
+    },
+    "velocityPluck": {
+      "displayName": "Velocity Pluck",
+      "category": "animation",
+      "context": "shared",
+      "description": "Single-shot pendulum pluck with velocity-derived shape. On each rising-edge `trigger`, samples `velocity`, then runs a two-stage tween: stage 1 swings out 0 → -peakRot over `M = swingOutBase + swingOutVelTerm·e` seconds with power2.out ease; stage 2 elastic-returns -peakRot → 0 over `P = returnBase + returnVelTerm·e` seconds with elastic.out and period `periodBase - periodVelTerm·e`. Here e = clamp(|velocity| / normalisationVel, 0, 1) and peakRot interpolates from `peakRotMin` to `peakRotMax` by e. The signed `rotation` output (degrees) carries the velocity sign, so left-drag and right-drag produce opposite directions. Pair with `viewportObserver.enterPulse` for \"pluck on visibility entry\" patterns (e.g. carousel cards swing on the rod as they pan into view), or with any pulse source for one-shot reactive animations whose magnitude scales with input speed.",
+      "inputs": [
+        {
+          "name": "trigger",
+          "type": "float",
+          "label": "Trigger"
+        },
+        {
+          "name": "velocity",
+          "type": "float",
+          "label": "Velocity"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "rotation",
+          "type": "float",
+          "label": "Rotation (deg)"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "normalisationVel",
+          "label": "Normalisation Velocity",
+          "type": "float",
+          "min": 1,
+          "step": 100
+        },
+        {
+          "key": "peakRotMin",
+          "label": "Peak Rotation Min (deg)",
+          "type": "float",
+          "step": 0.5
+        },
+        {
+          "key": "peakRotMax",
+          "label": "Peak Rotation Max (deg)",
+          "type": "float",
+          "step": 0.5
+        },
+        {
+          "key": "swingOutBase",
+          "label": "Swing-Out Base (s)",
+          "type": "float",
+          "min": 0.01,
+          "step": 0.05
+        },
+        {
+          "key": "swingOutVelTerm",
+          "label": "Swing-Out Velocity Term (s)",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "returnBase",
+          "label": "Return Base (s)",
+          "type": "float",
+          "min": 0.01,
+          "step": 0.1
+        },
+        {
+          "key": "returnVelTerm",
+          "label": "Return Velocity Term (s)",
+          "type": "float",
+          "step": 0.1
+        },
+        {
+          "key": "periodBase",
+          "label": "Elastic Period Base",
+          "type": "float",
+          "min": 0.01,
+          "step": 0.05
+        },
+        {
+          "key": "periodVelTerm",
+          "label": "Elastic Period Velocity Term",
+          "type": "float",
+          "step": 0.05
+        }
+      ],
+      "defaults": {
+        "normalisationVel": 3000,
+        "peakRotMin": 1,
+        "peakRotMax": 9,
+        "swingOutBase": 0.25,
+        "swingOutVelTerm": 0.15,
+        "returnBase": 1,
+        "returnVelTerm": 5,
+        "periodBase": 0.4,
+        "periodVelTerm": 0.3
+      },
+      "dynamicPorts": false
+    },
+    "gatedPulse": {
+      "displayName": "Gated Pulse",
+      "category": "inputs",
+      "context": "shared",
+      "description": "AND-gate for pulses. Outputs `pulse=1` ONLY on a frame where the input `pulse` is rising AND `gate` is > 0.5. Replaces the `expression: pulse * gate` + `pulseOr` chain authors use to filter a pulse by a boolean state. Pure combinatorial logic with one frame of edge-detector memory.",
+      "inputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        },
+        {
+          "name": "gate",
+          "type": "float",
+          "label": "Gate"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pulse",
+          "type": "float",
+          "label": "Pulse"
+        }
+      ],
+      "parameters": [],
+      "defaults": {},
       "dynamicPorts": false
     },
     "meshAttractor": {
@@ -2988,7 +3478,7 @@
       "displayName": "Physics Blob",
       "category": "effects",
       "context": "shared",
-      "description": "Soft-body blob silhouette built on a Verlet mass-spring chain. N point particles arranged in a closed circular loop, each connected to its neighbour and skip-1 neighbour by stiff distance-springs, with rest-pose attraction so the shape always recovers. Cursor interaction is a per-particle Gaussian-falloff repulsion. Adjacent particles follow through the spring network, so the silhouette stays C¹-smooth no matter how hard the cursor pulls — no vertex-shader V-cusps. Rendered via Canvas2D as a closed Catmull-Rom curve (converted to cubic Bézier segments) filled with the channel colour. Use this when you want the patrickheng-style smooth-blob feel; use `meshAttractor` when you want fullscreen WebGL mesh distortion of arbitrary geometry.",
+      "description": "Soft-body blob silhouette built on a Verlet mass-spring chain. N point particles arranged in a closed circular loop, each connected to its neighbour and skip-1 neighbour by stiff distance-springs, with rest-pose attraction so the shape always recovers. Cursor interaction is a per-particle Gaussian-falloff repulsion. Adjacent particles follow through the spring network, so the silhouette stays C¹-smooth no matter how hard the cursor pulls — no vertex-shader V-cusps. Rendered via Canvas2D as a closed Catmull-Rom curve (converted to cubic Bézier segments) filled with the channel colour. Use this when you want a smooth soft-body blob silhouette; use `meshAttractor` when you want fullscreen WebGL mesh distortion of arbitrary geometry.",
       "inputs": [],
       "outputs": [],
       "parameters": [
@@ -3219,6 +3709,7 @@
             "hueShift",
             "duotone",
             "vignette",
+            "spotlight",
             "glitch",
             "rgbShift",
             "pixelate",
@@ -4028,7 +4519,7 @@
       "displayName": "DOM String Write",
       "category": "boundary",
       "context": "dom",
-      "description": "Write a string value to a DOM element (CSS, SVG attribute, textContent)",
+      "description": "Write a string value to one or more DOM elements — CSS style property (including custom properties like `--name`), HTML/SVG attribute, or `textContent`. String sibling of `domPropertyWrite` (which writes floats); `domPoseWrite` is the multi-property unified writer when you need both float + string + color in one batched write. Resolves the selector via querySelectorAll; comma-listed selectors write to every match.",
       "inputs": [
         {
           "name": "value",
@@ -4041,7 +4532,7 @@
         {
           "key": "selector",
           "label": "CSS Selector",
-          "type": "string"
+          "type": "elementSelector"
         },
         {
           "key": "propertyName",
@@ -4062,7 +4553,8 @@
       ],
       "defaults": {
         "selector": "",
-        "propertyName": "textContent"
+        "propertyName": "textContent",
+        "writeMode": ""
       },
       "dynamicPorts": false
     },
@@ -4273,6 +4765,15 @@
           "min": 0,
           "max": 0.99,
           "step": 0.05
+        },
+        {
+          "key": "space",
+          "label": "Coordinate Space",
+          "type": "enum",
+          "options": [
+            "element",
+            "viewport"
+          ]
         }
       ],
       "defaults": {
@@ -10017,8 +10518,13 @@
         },
         {
           "key": "writeTransform",
-          "label": "Write Transform to Element",
-          "type": "bool"
+          "label": "Write Mode",
+          "type": "enum",
+          "options": [
+            "transform",
+            "cssVar",
+            "none"
+          ]
         },
         {
           "key": "resetBelowProgress",
@@ -13141,6 +13647,153 @@
       },
       "dynamicPorts": false
     },
+    "domTemplateWrite": {
+      "displayName": "DOM Template Write",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Combines N float inputs into one CSS string via a `{name}` template, then writes that string to a DOM element's style / attribute / textContent. One node replaces the pattern of N propertyAnimation channels each writing its own CSS variable plus a CSS `var()` recipe in the renderer — the graph emits the fully formed string and the CSS just consumes it. Use when one CSS property takes multiple animated components in one string: `filter: blur(...) brightness(...)`, `clip-path: polygon(...)`, `mask-image`, `transform-origin`.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Target Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "propertyName",
+          "label": "CSS Property",
+          "type": "cssProperty"
+        },
+        {
+          "key": "template",
+          "label": "Template",
+          "type": "string"
+        },
+        {
+          "key": "inputs",
+          "label": "Inputs (port name → type)",
+          "type": "stringFloatMap"
+        },
+        {
+          "key": "writeMode",
+          "label": "Write Mode",
+          "type": "enum",
+          "options": [
+            "",
+            "style",
+            "attribute",
+            "textContent"
+          ]
+        },
+        {
+          "key": "precision",
+          "label": "Decimal Places",
+          "type": "int",
+          "min": 0,
+          "max": 8,
+          "step": 1
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "propertyName": "filter",
+        "template": "blur({blur}px) brightness({bright})",
+        "inputs": {
+          "blur": {
+            "type": "float"
+          },
+          "bright": {
+            "type": "float"
+          }
+        },
+        "writeMode": "",
+        "precision": 4
+      },
+      "dynamicPorts": true
+    },
+    "thresholdMap": {
+      "displayName": "Threshold Map",
+      "category": "math",
+      "context": "shared",
+      "description": "Continuous float-to-string mapping over a single threshold. Emits `above` when input ≥ threshold, `below` otherwise — every frame, not just on crossing. Replaces the 2-node `expression(node('p') > X ? 1 : 0) → stringArrayPick { values: [below, above] }` pattern that recurs whenever a latched CSS property (`pointer-events`, `display`, `visibility`, `cursor`) needs to flip on/off based on a scalar driver. Distinct from `thresholdPulse`, which fires a one-shot pulse on crossing and is meant for event consumers.",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "float",
+          "label": "Value"
+        },
+        {
+          "name": "threshold",
+          "type": "float",
+          "label": "Threshold (override)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "string",
+          "label": "Result"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "threshold",
+          "label": "Threshold",
+          "type": "float",
+          "step": 0.01
+        },
+        {
+          "key": "below",
+          "label": "Below",
+          "type": "string"
+        },
+        {
+          "key": "above",
+          "label": "Above",
+          "type": "string"
+        },
+        {
+          "key": "strict",
+          "label": "Strict (>)",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "threshold": 0.5,
+        "below": "",
+        "above": "",
+        "strict": false
+      },
+      "dynamicPorts": false
+    },
+    "multiAttrRead": {
+      "displayName": "Multi-Attribute Read",
+      "category": "boundary",
+      "context": "shared",
+      "description": "Reads N attributes from each element matching a selector in a single querySelectorAll pass, emits one stringArray output per attribute. Replaces N domStringArrayRead nodes that each re-query the same selector for one attribute (common in per-card metadata pipelines: title / camera / stock / location / year / type / overview, etc.). Output port names are author-chosen; the attribute strings can be data-attrs, HTML attrs, or `textContent` for the element's text. Static read at bind time; document-order matches.",
+      "inputs": [],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "CSS Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "attributes",
+          "label": "Attributes (output port → attribute name)",
+          "type": "attrMap"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "attributes": {
+          "title": "data-title"
+        }
+      },
+      "dynamicPorts": true
+    },
     "stringArrayConcat": {
       "displayName": "String Array Concat",
       "category": "text",
@@ -14998,11 +15651,11 @@
       },
       "dynamicPorts": false
     },
-    "carouselEffectAnimation": {
-      "displayName": "Carousel Effect Animation",
+    "carouselFanout": {
+      "displayName": "Carousel Fanout",
       "category": "animation",
       "context": "shared",
-      "description": "An entire seamlessPlayhead-driven carousel effect as one authoring node. Every slot shares the same animation template (channels) and the same slot-window size; only the slot's selector index and playhead-offset vary. Expands at load time into N `slideSlotAnimation` children (which further expand into `remap + mathUtil(fract) + multiKeyframe + domPoseWrite` primitives per slot). Use this when the carousel's N slots truly share one effect; if you need per-slot divergence, detach to individual `slideSlotAnimation` nodes. Compound: no runtime class.",
+      "description": "Runtime fan-out of a shared keyframe template across N DOM elements with phase-shifted local time. Resolves matching elements at bind time via `selector` and runs all N slot evaluations inside one node — replaces the legacy expansion-time fan-out (`carouselEffectAnimation` → N × `slideSlotAnimation` × 4 primitives) with a single runtime node. Preferred runtime shape; `carouselEffectAnimation` is the author-facing compound that emits one of these. Channels accept the simple `{cssUnit?, template?, keyframes}` shape and the composed `{template, channels: { sub: { keyframes } }}` shape that drives multi-input CSS strings (`filter: blur({blur}px) brightness({bright})`) without going through CSS variables.",
       "inputs": [
         {
           "name": "playhead",
@@ -15013,17 +15666,9 @@
       "outputs": [],
       "parameters": [
         {
-          "key": "selectorTemplate",
-          "label": "Selector Template",
-          "type": "string"
-        },
-        {
-          "key": "slotCount",
-          "label": "Slot Count",
-          "type": "int",
-          "min": 1,
-          "max": 100,
-          "step": 1
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
         },
         {
           "key": "slotStride",
@@ -15044,12 +15689,70 @@
           "step": 0.05
         },
         {
-          "key": "indexBase",
-          "label": "Selector Index Base",
-          "type": "int",
-          "min": 0,
-          "max": 1,
-          "step": 1
+          "key": "channels",
+          "label": "Channels (shared by every slot)",
+          "type": "propertyAnimationChannels"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "slotStride": 0.1,
+        "slotWindow": 1,
+        "slotOffsetBase": 0,
+        "channels": {
+          "opacity": {
+            "cssUnit": "none",
+            "keyframes": [
+              {
+                "time": 0,
+                "value": 0
+              },
+              {
+                "time": 1,
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "dynamicPorts": false
+    },
+    "carouselEffectAnimation": {
+      "displayName": "Carousel Effect Animation",
+      "category": "animation",
+      "context": "shared",
+      "description": "A whole seamlessPlayhead-driven carousel effect as one author node. Every slot element matched by `selector` runs the same channel template, phase-shifted by its document-order index times `slotStride`. Expands at load into a single `carouselFanout` runtime node — N is resolved at bind time from `selector`, so adding or removing cards requires no graph edits. If you need per-slot divergence, detach to individual `slideSlotAnimation` nodes.",
+      "inputs": [
+        {
+          "name": "playhead",
+          "type": "float",
+          "label": "Playhead"
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Selector",
+          "type": "elementSelector"
+        },
+        {
+          "key": "slotStride",
+          "label": "Slot Stride (playhead)",
+          "type": "float",
+          "step": 0.01
+        },
+        {
+          "key": "slotWindow",
+          "label": "Slot Window",
+          "type": "float",
+          "step": 0.05
+        },
+        {
+          "key": "slotOffsetBase",
+          "label": "Slot 0 Offset",
+          "type": "float",
+          "step": 0.05
         },
         {
           "key": "channels",
@@ -15058,12 +15761,10 @@
         }
       ],
       "defaults": {
-        "selectorTemplate": ".carousel-slide:nth-of-type({i})",
-        "slotCount": 6,
+        "selector": ".carousel-slide",
         "slotStride": 0.1,
         "slotWindow": 1,
         "slotOffsetBase": 0,
-        "indexBase": 1,
         "channels": {
           "opacity": {
             "cssUnit": "none",

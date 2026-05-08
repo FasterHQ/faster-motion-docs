@@ -29,4 +29,5 @@ _No inputs._
 |-----------|------|---------|-------------|
 | `selector` | elementSelector | `""` | Element |
 | `smoothing` | float | `—` | Smoothing (min: 0, max: 0.99) |
+| `space` | enum | `—` | Coordinate Space. Options: `element`, `viewport` |
 

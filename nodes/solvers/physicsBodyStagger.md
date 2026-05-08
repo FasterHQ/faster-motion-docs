@@ -46,7 +46,7 @@ Runtime-fanout compound — one node = N physicsBody instances + N DOM transform
 | `angularDamping` | float | `0` | Angular Damping (min: 0) |
 | `lockRotation` | bool | `false` | Lock Rotation |
 | `ccd` | bool | `false` | CCD |
-| `writeTransform` | bool | `true` | Write Transform to Element |
+| `writeTransform` | enum | `true` | Write Mode. Options: `transform`, `cssVar`, `none` |
 | `resetBelowProgress` | float | `null` | Reset Below Progress (min: 0, max: 1) |
 | `spawnPattern` | enum | `"explicit"` | Spawn Pattern. Options: `explicit`, `fanFromMouth` |
 

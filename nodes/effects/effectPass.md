@@ -21,7 +21,7 @@ _No outputs._
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `effect` | enum | `"vignette"` | Effect. Options: `sepia`, `grayscale`, `invert`, `brightness`, `contrast`, `saturation`, `hueShift`, `duotone`, `vignette`, `glitch`, `rgbShift`, `pixelate`, `wave`, `ripple`, `swirl`, `blur`, `radialBlur`, `motionBlur`, `scanlines`, `chromaticAberration`, `verticalSlice`, `filmGrain`, `neonGlow`, `chromakey`, `halftone`, `posterize`, `sharpen`, `emboss`, `edgeDetect` |
+| `effect` | enum | `"vignette"` | Effect. Options: `sepia`, `grayscale`, `invert`, `brightness`, `contrast`, `saturation`, `hueShift`, `duotone`, `vignette`, `spotlight`, `glitch`, `rgbShift`, `pixelate`, `wave`, `ripple`, `swirl`, `blur`, `radialBlur`, `motionBlur`, `scanlines`, `chromaticAberration`, `verticalSlice`, `filmGrain`, `neonGlow`, `chromakey`, `halftone`, `posterize`, `sharpen`, `emboss`, `edgeDetect` |
 | `selector` | elementSelector | `""` | Host Element |
 | `sourceSelector` | elementSelector | `""` | Source Element |
 
