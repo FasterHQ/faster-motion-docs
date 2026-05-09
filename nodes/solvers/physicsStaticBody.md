@@ -10,29 +10,72 @@ Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zo
 
 | Port | Type | Description |
 |------|------|-------------|
-| `world` | `any` | World |
+| `world` | `any` | Wire to the sibling `physicsWorld.world` output. |
 
 
 ## Outputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `id` | `float` | Body ID |
-| `centerX` | `float` | Center X (px) |
-| `topY` | `float` | Top Y (px) |
-| `bottomY` | `float` | Bottom Y (px) |
-| `mouthWidth` | `float` | Mouth Width (px) |
+| `id` | `float` | Engine handle. Wire to joint or collision-event nodes that filter by body. |
+| `centerX` | `float` | For `kind: arc`, the resolved center X in document px. Wire to `physicsBodyStagger.targetCenterX` to spawn dynamics centered on the cup mouth without hand-syncing two sets of viewport units. |
+| `topY` | `float` | For `kind: arc`, the Y of the upper opening edge in document px (the higher of the two arc endpoints in screen coords). Pair with `targetCenterX` for IK-style spawn-into-cup. |
+| `bottomY` | `float` | For `kind: arc`, the lowest point in document px (`cy + radius`). Useful for bottom-aligned spawning or measuring interior cup height. |
+| `mouthWidth` | `float` | Width of the shape's mouth/opening (chord between v0 and v(N-1) for open polylines, bbox width for closed shapes, chord between arc endpoints for `kind: arc`). Wire to `physicsBodyStagger.targetMouthWidth` + set spawnPattern: "fanFromMouth" to fan N balls evenly across the mouth without hand-tuning per-ball spacing. |
 
 
 ## Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `shape` | physicsShape | `{"kind":"box","width":100,"...` | Shape |
-| `x` | float | `0` | X (px) |
-| `y` | float | `0` | Y (px) |
-| `rotation` | float | `0` | Rotation (rad) |
-| `restitution` | float | `0.5` | Restitution (min: 0, max: 2) |
-| `friction` | float | `0.5` | Friction (min: 0, max: 2) |
-| `isSensor` | bool | `false` | Sensor (no contact response) |
+| `shape` | physicsShape | `{"kind":"box","width":100,"...` | Static collider shape — pick the kind (circle, box, polygon, edge, arc, polyline, fromSelector) and fill in the per-kind parameters. **Recommended for art-aligned colliders: `From Selector`** — derives the polyline from a live SVG element, resize-safe, no magic numbers. **For arbitrary shapes: `Polyline`** — vertex chain, same authoring story as clipPath. Use `arc` only when an analytic circular arc is needed without a backing element. |
+| `x` | float | `0` | World-space X position of the body in px. CSS units like "50vw" / "100px" also accepted; the loader resolves to px at bind time. Static bodies do not move under simulation; this is the fixed pose. |
+| `y` | float | `0` | World-space Y position of the body in px. CSS units accepted ("12vh", "200px"); resolved at bind. Static bodies do not move under simulation. |
+| `rotation` | float | `0` | Body orientation in radians. Static bodies hold this rotation forever. Use π/4 ≈ 0.785 for 45°, π ≈ 3.14159 for 180°. (step: 0.01) |
+| `restitution` | float | `0.5` | 0 = no bounce (dynamic bodies stick to this surface on impact), 1 = perfectly elastic (energy preserved), > 1 = energy-amplifying. Combined with the dynamic body's restitution per Rapier's blend mode. (min: 0, max: 2, step: 0.05) |
+| `friction` | float | `0.5` | Surface friction coefficient. 0 = ice (dynamic bodies slide forever), 1 = typical solid surface, > 1 = high friction. Combined with the dynamic body's friction. (min: 0, max: 2, step: 0.05) |
+| `isSensor` | bool | `false` | When true, the collider generates collision events but does not push other bodies. Use for trigger zones — pair with `physicsCollisionPulse` (v2) to detect entry/exit. |
 
+
+## See also
+
+- [Physics World](physicsWorld.md) — `physicsWorld`
+- [Physics Body](physicsBody.md) — `physicsBody`
+
+## Envelope
+
+Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.
+
+```json
+{
+  "id": "myUniqueNodeId",
+  "type": "<nodeType>",
+  "activeWhen": "(min-width: 768px)",
+  "_note": "Why this node exists.",
+  "params": { },
+  "connections": { "input": { "nodeId": "...", "port": "..." } }
+}
+```
+
+| Field | Type | Required | Summary |
+|-------|------|----------|---------|
+| `id` | string | yes | Stable, unique within the graph. Other nodes' `connections` reference it. |
+| `type` | string | yes | The node-type slug — the `Type:` line at the top of this page. |
+| `params` | object | no | Per-node parameters. Every key is a row in the **Parameters** table above. |
+| `connections` | object | no | Maps each input port (see **Inputs** above) to a `{ nodeId, port }` source. Use a `[…]` array of those for multi-wire inputs. |
+| `activeWhen` | `string \| string[] \| null` | no | CSS-media-query gate. The node is **dropped from the graph at load** when the query doesn't match — different from a per-frame `enabled` port (load-time topology mutation, not runtime gating). String = single query; array = AND'd queries; `"none"` or `null` = never active. |
+| `_note` | string | no | Free-text author comment. Preserved through the loader and visible in dev tools / inspector. The recommended place for "why" prose, since `.fmtion` JSON forbids real comments. |
+
+`activeWhen` examples:
+
+```json
+{ "activeWhen": "(min-width: 768px)" }
+{ "activeWhen": ["(min-width: 768px)", "(prefers-reduced-motion: no-preference)"] }
+{ "activeWhen": "none" }
+```
+
+`_note` example:
+
+```json
+{ "_note": "Drives hero parallax. Keep amp ≤ 0.4 to avoid layout shift at 1440px." }
+```

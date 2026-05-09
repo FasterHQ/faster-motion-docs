@@ -1,8 +1,50 @@
 # Node Reference
 
-All 283 graph node types available in Faster Motion.
+All 288 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
+
+> Adjacent indexes: [`compounds.md`](../compounds.md) for the 29 author-facing compound nodes (with the rule on not wiring into their internals). [`internal-nodes.md`](../internal-nodes.md) for the 42 loader-emitted nodes that surface in runtime errors but aren't author-facing.
+
+> Every per-node page below includes the same **Envelope** reference (`id`, `type`, `activeWhen`, `_note`, `params`, `connections`) — it's repeated verbatim on every node page so any single page is self-sufficient. The reference is also inlined immediately below for index browsing.
+
+## Envelope
+
+Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.
+
+```json
+{
+  "id": "myUniqueNodeId",
+  "type": "<nodeType>",
+  "activeWhen": "(min-width: 768px)",
+  "_note": "Why this node exists.",
+  "params": { },
+  "connections": { "input": { "nodeId": "...", "port": "..." } }
+}
+```
+
+| Field | Type | Required | Summary |
+|-------|------|----------|---------|
+| `id` | string | yes | Stable, unique within the graph. Other nodes' `connections` reference it. |
+| `type` | string | yes | The node-type slug — the `Type:` line at the top of this page. |
+| `params` | object | no | Per-node parameters. Every key is a row in the **Parameters** table above. |
+| `connections` | object | no | Maps each input port (see **Inputs** above) to a `{ nodeId, port }` source. Use a `[…]` array of those for multi-wire inputs. |
+| `activeWhen` | `string \| string[] \| null` | no | CSS-media-query gate. The node is **dropped from the graph at load** when the query doesn't match — different from a per-frame `enabled` port (load-time topology mutation, not runtime gating). String = single query; array = AND'd queries; `"none"` or `null` = never active. |
+| `_note` | string | no | Free-text author comment. Preserved through the loader and visible in dev tools / inspector. The recommended place for "why" prose, since `.fmtion` JSON forbids real comments. |
+
+`activeWhen` examples:
+
+```json
+{ "activeWhen": "(min-width: 768px)" }
+{ "activeWhen": ["(min-width: 768px)", "(prefers-reduced-motion: no-preference)"] }
+{ "activeWhen": "none" }
+```
+
+`_note` example:
+
+```json
+{ "_note": "Drives hero parallax. Keep amp ≤ 0.4 to avoid layout shift at 1440px." }
+```
 
 ## [Inputs](inputs/)
 
@@ -224,6 +266,29 @@ Pure compute nodes: remap ranges, math expressions, utility operations (abs, cla
 | [Color Array Pick](math/colorArrayPick.md) | `colorArrayPick` | shared | Pure picker — emits `array[floor(index)]` as a Color. Index is clamped to [0, length-1]. Hex-string `values` param is parsed to Color at load time (zero parse cost on hot path). Used to drive a current-color output from a per-variant palette; pair with textReveal\s sourceIndex or variantStagger\s per-child index. |
 | [Threshold Map](math/thresholdMap.md) | `thresholdMap` | shared | Continuous float-to-string mapping over a single threshold. Emits `above` when input ≥ threshold, `below` otherwise — every frame, not just on crossing. Replaces the 2-node `expression(node('p') > X ? 1 : 0) → stringArrayPick { values: [below, above] }` pattern that recurs whenever a latched CSS property (`pointer-events`, `display`, `visibility`, `cursor`) needs to flip on/off based on a scalar driver. Distinct from `thresholdPulse`, which fires a one-shot pulse on crossing and is meant for event consumers. |
 
+## [Solvers](solvers/)
+
+Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.
+
+| Node | Type | Context | Description |
+|------|------|---------|-------------|
+| [Mesh Solver](solvers/meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
+| [Constraint Solver](solvers/constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
+| [Physics World](solvers/physicsWorld.md) | `physicsWorld` | canvas | One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time). |
+| [Physics Body](solvers/physicsBody.md) | `physicsBody` | shared | One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param). Pose, velocity, and awake state are exposed as typed output ports — wire to `domPropertyWrite` for DOM consumers, to STN inputs for canvas consumers, or to `physicsBodyTransform` for fan-out to multiple consumers. |
+| [Physics Static Body](solvers/physicsStaticBody.md) | `physicsStaticBody` | shared | Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim. |
+| [Physics Body Stagger](solvers/physicsBodyStagger.md) | `physicsBodyStagger` | shared | Runtime-fanout compound — one node = N physicsBody instances + N DOM transform writes. Resolves N elements at bind time from a plain CSS selector and creates one body per element with shared params. Per-element radius via `shape.radiusFromCSS: "--bd"` reads each element's CSS variable (same convention `staggerAnimate` uses). Saves ~3N nodes for ball-drop / scatter patterns. For per-element heterogeneity beyond size (different bodyKind / restitution per element), drop down to primitive `physicsBody` + `domPoseWrite` pairs. |
+| [Physics Joint](solvers/physicsJoint.md) | `physicsJoint` | shared | F367 step 5 v2 — one constraint between two bodies. Backed by Rapier ImpulseJointSet. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger. |
+| [Physics Apply Force](solvers/physicsApplyForce.md) | `physicsApplyForce` | shared | F367 step 5 v2 — pulse-triggered continuous force on a body. On the rising edge of `trigger` (last frame ≤ 0, this frame > 0), the engine queues `force` for the next world step. Force in px/s². Held HIGH does NOT continuously apply — only the rising edge fires once. For continuous force, drive `trigger` with a `cycleClock` or rapid pulse train. |
+| [Physics Force Field](solvers/physicsForceField.md) | `physicsForceField` | shared | F379 — continuous force field acting on a fleet of bodies each frame, computed from each body's distance to a moving (or static) field centre. Replaces JS-spring CSS effects (e.g. `cursorProximityWrite`) when targets are physics-bound elements: keeps everything inside ONE physics simulation, so cursor pushes and ball impacts compose cleanly through Rapier instead of fighting at the CSS layer. |
+| [Physics Apply Impulse](solvers/physicsApplyImpulse.md) | `physicsApplyImpulse` | shared | F367 step 5 v2 — pulse-triggered instantaneous impulse on a body. Same shape as `physicsApplyForce` but applies an instantaneous velocity delta (Δv = impulse/mass) instead of a continuous force across one step. Use for explosions, kicks, projectiles — anything that should change a body's velocity discontinuously. |
+| [Physics Collision Pulse](solvers/physicsCollisionPulse.md) | `physicsCollisionPulse` | shared | F367 step 5 v2 — fires a one-frame `pulse: 1.0` on the frame a tracked body collides with another body. Filters by `bodyId` (required) and optionally `withBodyId` (specific second-body); set the `event` param to `start` (contact-begin) or `end` (separate). Composes 1:1 with `pulseTween`, state-machine triggers, and `expression` math for "ball lands → squash" or "two bodies meet → spawn". |
+| [Physics Body Lookup](solvers/physicsBodyLookup.md) | `physicsBodyLookup` | shared | Body-id-as-input pose source. Takes a `bodyId` input that may change every frame (typically wired from `physicsCollisionPulse.otherBodyId` or `physicsMouseDrag.pickedBodyId`), reads the live body pose from the engine, and publishes pose + velocity outputs. `x`/`y` are converted to viewport pixels using the world's frame element so consumers like `cursorProximityWrite` and `domVariablesWrite` can use them directly. `frameX`/`frameY` expose the raw frame-local pose for graph nodes operating in physics coords. |
+| [Physics Body Enable](solvers/physicsBodyEnable.md) | `physicsBodyEnable` | shared | Pure sink (no outputs) that toggles a body's solidness via `bodySetEnabled`. Wire any 0..1 signal into `enabled` to make the body intangible while the signal is below 0.5. Pattern: `physicsCollisionPulse → pulseTween → expression(1 − progress) → physicsBodyEnable.enabled` makes a static body act as a "trampoline that breaks after one bounce" — the bouncing body falls back through the body for the duration of the pulseTween, then the body becomes solid again. A separate sink node (rather than an `enabled` input on `physicsStaticBody`) keeps the scheduler's dependency graph acyclic when the gating signal is derived from collisions on the same body. |
+| [Physics Static Body (per element)](solvers/physicsStaticBodyEach.md) | `physicsStaticBodyEach` | shared | Multi-element static collider. Selector matches N DOM elements via `querySelectorAll`; spawns one static body per match, each tracking its element's live BCR. Per-frame translation-only resampling (translation-invariant — Rapier preserves contact pairs across pose changes). Use when N elements share the same physics tuning but each needs its own body — per-letter colliders driven by `splitText`, per-card colliders in a forEach layout, etc. |
+| [Physics Body Teleport](solvers/physicsBodyTeleport.md) | `physicsBodyTeleport` | shared | Pure sink. On the rising edge of `trigger`, calls bodySetPose on the wired body — instantaneous position write, not solver-mediated. Optional companion bodySetVelocity. Use for "bounce once + fall through" without a global solidness gate (each contact teleports the colliding body past the obstacle, leaving the obstacle solid for everyone else), portal-style entry/exit, or reset-to-spawn on state change. |
+| [Physics Mouse Drag](solvers/physicsMouseDrag.md) | `physicsMouseDrag` | shared | F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time. |
+
 ## [Skeleton](skeleton/)
 
 Bone and skeleton rigging: per-bone FK transforms, IK solvers, bone collectors, spring/jiggle bone physics, chain dynamics, and FK recomposition.
@@ -279,24 +344,6 @@ Visual effects: WASM/GPU filter chains, parametric shape generation, glitch comp
 | [Parametric Shape](effects/parametricShape.md) | `parametricShape` | canvas | WASM parametric shape generation with dynamic children. |
 | [Particle Emitter](effects/particleEmitter.md) | `particleEmitter` | canvas | Particle system — emit, advance, kill. Outputs per-particle data as AttributeBundle. |
 | [Particle Update](effects/particleUpdate.md) | `particleUpdate` | canvas | Particle update boundary — advances particle state from emitter output each frame. |
-
-## [Solvers](solvers/)
-
-Iterative solvers: value accumulation, mesh relaxation, distance constraint solving, rigid body physics (Planck.js/Box2D), and physics body readout.
-
-| Node | Type | Context | Description |
-|------|------|---------|-------------|
-| [Mesh Solver](solvers/meshSolver.md) | `meshSolver` | shared | Iterative mesh relaxation. Averages vertex positions toward neighbors. |
-| [Constraint Solver](solvers/constraintSolver.md) | `constraintSolver` | shared | Multi-pass distance constraint solving. Maintains rest lengths between connected points. |
-| [Physics World](solvers/physicsWorld.md) | `physicsWorld` | canvas | One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set the param), gate `paused` from a scroll-trigger threshold, and the world ticks every frame in play mode (skipped in seek). Bodies, static bodies, joints, and event listeners register with this world via their `world` connection — only ONE `physicsWorld` per scene. Lazy-loads the physics WASM module on first bind; scenes without any physicsWorld pay zero overhead. F236-compliant (reads ambient deltaTime; never an input port for time). |
-| [Physics Body](solvers/physicsBody.md) | `physicsBody` | shared | One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param). Pose, velocity, and awake state are exposed as typed output ports — wire to `domPropertyWrite` for DOM consumers, to STN inputs for canvas consumers, or to `physicsBodyTransform` for fan-out to multiple consumers. |
-| [Physics Static Body](solvers/physicsStaticBody.md) | `physicsStaticBody` | shared | Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim. |
-| [Physics Body Stagger](solvers/physicsBodyStagger.md) | `physicsBodyStagger` | shared | Runtime-fanout compound — one node = N physicsBody instances + N DOM transform writes. Resolves N elements at bind time from a plain CSS selector and creates one body per element with shared params. Per-element radius via `shape.radiusFromCSS: "--bd"` reads each element's CSS variable (same convention `staggerAnimate` uses). Saves ~3N nodes for ball-drop / scatter patterns. For per-element heterogeneity beyond size (different bodyKind / restitution per element), drop down to primitive `physicsBody` + `domPoseWrite` pairs. |
-| [Physics Joint](solvers/physicsJoint.md) | `physicsJoint` | shared | F367 step 5 v2 — one constraint between two bodies. Backed by Rapier ImpulseJointSet. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger. |
-| [Physics Apply Force](solvers/physicsApplyForce.md) | `physicsApplyForce` | shared | F367 step 5 v2 — pulse-triggered continuous force on a body. On the rising edge of `trigger` (last frame ≤ 0, this frame > 0), the engine queues `force` for the next world step. Force in px/s². Held HIGH does NOT continuously apply — only the rising edge fires once. For continuous force, drive `trigger` with a `cycleClock` or rapid pulse train. |
-| [Physics Apply Impulse](solvers/physicsApplyImpulse.md) | `physicsApplyImpulse` | shared | F367 step 5 v2 — pulse-triggered instantaneous impulse on a body. Same shape as `physicsApplyForce` but applies an instantaneous velocity delta (Δv = impulse/mass) instead of a continuous force across one step. Use for explosions, kicks, projectiles — anything that should change a body's velocity discontinuously. |
-| [Physics Collision Pulse](solvers/physicsCollisionPulse.md) | `physicsCollisionPulse` | shared | F367 step 5 v2 — fires a one-frame `pulse: 1.0` on the frame a tracked body collides with another body. Filters by `bodyId` (required) and optionally `withBodyId` (specific second-body); set the `event` param to `start` (contact-begin) or `end` (separate). Composes 1:1 with `pulseTween`, state-machine triggers, and `expression` math for "ball lands → squash" or "two bodies meet → spawn". |
-| [Physics Mouse Drag](solvers/physicsMouseDrag.md) | `physicsMouseDrag` | shared | F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time. |
 
 ## [Integration](integration/)
 

@@ -2,6 +2,8 @@
 
 The `.fmtion` format is the unified animation file format for Faster Motion. It's a JSON file that declares everything needed to run animations on a web page: parameters, inputs, DOM animations, canvas scenes with node graphs, and assets.
 
+> Adjacent references: [`port-types.md`](port-types.md) for the types that flow through `connections`. [`param-types.md`](param-types.md) for the JSON shape of every `params.<key>` value an author writes. [`easing.md`](easing.md) for `easingCurve` presets. [`debugging.md`](debugging.md) for `debug.validate()` and the warning-code catalog. [`authoring-features.md`](authoring-features.md) for cross-cutting features (`forEach`/`templates`, wireable selectors, multi-wire connections, feedback wires, parameter overrides).
+
 ## Root Structure
 
 ```typescript

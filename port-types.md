@@ -2,6 +2,8 @@
 
 Every graph node communicates through typed ports. Outputs produce data, inputs consume it. A wire connects one output to one input. Port types must be compatible for a wire to be valid.
 
+> Looking for the JSON shape of a `params.<key>` value? See [`param-types.md`](param-types.md). Param types describe what an author writes inside `params`; this page describes what flows through `connections`.
+
 ## Built-in Types
 
 ### `float`

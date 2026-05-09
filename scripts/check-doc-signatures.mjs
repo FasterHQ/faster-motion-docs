@@ -1,0 +1,236 @@
+#!/usr/bin/env node
+/**
+ * Drift-check for hand-authored docs against the FM source surface they
+ * describe. Each doc declares the source paths it tracks via an
+ * `@tracks` block at the top of the file:
+ *
+ *   <!-- @tracks
+ *     src/devtools/runtime/validate/
+ *     src/devtools/RuntimeDebugAPI.ts
+ *   -->
+ *
+ * This script hashes the listed paths (recursing into directories),
+ * compares the hash against a committed sidecar `signatures/<doc>.sig`,
+ * and warns when they differ. A drifted signature is the prompt to
+ * re-read the upstream source and decide whether the doc needs new
+ * prose. Once re-read, run with `--bless <doc>` to overwrite the sig.
+ *
+ * Usage:
+ *   node scripts/check-doc-signatures.mjs                # check all tracked docs
+ *   node scripts/check-doc-signatures.mjs --bless <doc>  # re-bless one doc
+ *   node scripts/check-doc-signatures.mjs --bless-all    # re-bless every doc
+ *
+ * Designed to be called from generate-docs.mjs — exits 0 on drift (warn,
+ * don't break the build) so docs can still regenerate. Wire into a CI
+ * gate separately if you want drift to be a hard fail.
+ */
+
+import {
+  readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync,
+} from 'fs';
+import { join, dirname, relative } from 'path';
+import { createHash } from 'crypto';
+
+const DOCS_ROOT = join(dirname(new URL(import.meta.url).pathname), '..');
+const FM_ROOT = join(DOCS_ROOT, '..', 'faster-motion');
+const SIG_DIR = join(DOCS_ROOT, 'signatures');
+
+// ── Doc discovery ─────────────────────────────────────────────────────────
+// Auto-discover any .md under DOCS_ROOT (excluding generated trees) that
+// contains an `@tracks` block. Authors drop a new hand-authored doc
+// anywhere with an @tracks header at the top and the drift checker
+// picks it up on the next run.
+
+function discoverTrackedDocs() {
+  const out = [];
+  const skipDirs = new Set(['nodes', 'node_modules', 'signatures', '.git']);
+  function walk(absDir, relPrefix) {
+    for (const name of readdirSync(absDir).sort()) {
+      if (skipDirs.has(name) || name.startsWith('.')) continue;
+      const abs = join(absDir, name);
+      const st = statSync(abs);
+      const rel = relPrefix ? `${relPrefix}/${name}` : name;
+      if (st.isDirectory()) {
+        walk(abs, rel);
+      } else if (st.isFile() && name.endsWith('.md')) {
+        if (readTracksBlock(abs)) out.push(rel);
+      }
+    }
+  }
+  walk(DOCS_ROOT, '');
+  return out.sort();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+function readTracksBlock(docPath) {
+  if (!existsSync(docPath)) return null;
+  const src = readFileSync(docPath, 'utf-8');
+  // Only accept @tracks blocks at the top of the file — before any
+  // markdown heading, code fence, or significant body content. This
+  // rules out prose mentions of `<!-- @tracks ... -->` deeper in the
+  // doc (e.g. CLAUDE.md's Drift-checks documentation section, which
+  // describes the format inside a code block).
+  const headerWindow = src.slice(0, 500);
+  const m = headerWindow.match(/^<!--\s*@tracks([\s\S]*?)-->/);
+  if (!m) return null;
+  return m[1]
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith('#'));
+}
+
+function listFilesRecursive(absPath) {
+  const out = [];
+  const stat = statSync(absPath);
+  if (stat.isFile()) {
+    out.push(absPath);
+    return out;
+  }
+  if (stat.isDirectory()) {
+    for (const name of readdirSync(absPath).sort()) {
+      // Skip hidden and node_modules. Hashes should be stable.
+      if (name.startsWith('.') || name === 'node_modules') continue;
+      out.push(...listFilesRecursive(join(absPath, name)));
+    }
+  }
+  return out;
+}
+
+function hashTrackedPaths(tracked) {
+  const h = createHash('sha256');
+  const inventory = [];
+  for (const rel of tracked) {
+    const abs = join(FM_ROOT, rel);
+    if (!existsSync(abs)) {
+      h.update(`MISSING:${rel}\n`);
+      inventory.push({ path: rel, status: 'missing' });
+      continue;
+    }
+    const files = listFilesRecursive(abs);
+    for (const f of files) {
+      const relFromFm = relative(FM_ROOT, f);
+      const content = readFileSync(f);
+      h.update(`PATH:${relFromFm}\n`);
+      h.update(content);
+      h.update('\n');
+    }
+    inventory.push({
+      path: rel,
+      status: 'tracked',
+      fileCount: files.length,
+    });
+  }
+  return { hash: h.digest('hex'), inventory };
+}
+
+function readSig(doc) {
+  const sigPath = join(SIG_DIR, `${doc}.sig`);
+  if (!existsSync(sigPath)) return null;
+  const raw = readFileSync(sigPath, 'utf-8');
+  const m = raw.match(/^hash:\s*([a-f0-9]+)/m);
+  return m ? m[1] : null;
+}
+
+function writeSig(doc, hash, inventory) {
+  if (!existsSync(SIG_DIR)) mkdirSync(SIG_DIR, { recursive: true });
+  const sigPath = join(SIG_DIR, `${doc}.sig`);
+  const parent = dirname(sigPath);
+  if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
+  const lines = [
+    `# Drift-check signature for ${doc}.`,
+    `# Generated by scripts/check-doc-signatures.mjs.`,
+    `# Re-bless via: node scripts/check-doc-signatures.mjs --bless ${doc}`,
+    `#`,
+    `hash: ${hash}`,
+    `blessedAt: ${new Date().toISOString().split('T')[0]}`,
+    `tracked:`,
+  ];
+  for (const item of inventory) {
+    lines.push(
+      item.status === 'tracked'
+        ? `  - ${item.path} (${item.fileCount} file${item.fileCount === 1 ? '' : 's'})`
+        : `  - ${item.path} (MISSING)`,
+    );
+  }
+  writeFileSync(sigPath, lines.join('\n') + '\n');
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────
+
+function checkOne(doc, { bless = false } = {}) {
+  const docPath = join(DOCS_ROOT, doc);
+  const tracked = readTracksBlock(docPath);
+  if (!tracked) {
+    return { doc, status: 'no-tracks', detail: 'No @tracks block in doc.' };
+  }
+  const { hash, inventory } = hashTrackedPaths(tracked);
+  const sigHash = readSig(doc);
+
+  if (bless) {
+    writeSig(doc, hash, inventory);
+    return { doc, status: 'blessed', detail: `New sig: ${hash.slice(0, 12)}` };
+  }
+
+  if (sigHash === null) {
+    return {
+      doc,
+      status: 'no-sig',
+      detail: `No prior signature. Run: node scripts/check-doc-signatures.mjs --bless ${doc}`,
+    };
+  }
+  if (sigHash !== hash) {
+    return {
+      doc,
+      status: 'drift',
+      detail:
+        `Tracked source changed since last bless.\n` +
+        `    Re-read these paths and decide whether ${doc} needs new prose:\n` +
+        inventory
+          .filter((i) => i.status === 'tracked')
+          .map((i) => `      ${i.path}`)
+          .join('\n') +
+        `\n    Re-bless after review: node scripts/check-doc-signatures.mjs --bless ${doc}`,
+    };
+  }
+  return { doc, status: 'ok', detail: `Signature current.` };
+}
+
+const args = process.argv.slice(2);
+const blessIdx = args.indexOf('--bless');
+const blessAll = args.includes('--bless-all');
+
+let exitCode = 0;
+const results = [];
+
+const trackedDocs = discoverTrackedDocs();
+
+if (blessAll) {
+  for (const doc of trackedDocs) results.push(checkOne(doc, { bless: true }));
+} else if (blessIdx >= 0) {
+  const target = args[blessIdx + 1];
+  if (!target) {
+    console.error('--bless requires a doc name (e.g. --bless debugging.md)');
+    process.exit(2);
+  }
+  results.push(checkOne(target, { bless: true }));
+} else {
+  for (const doc of trackedDocs) results.push(checkOne(doc));
+}
+
+for (const r of results) {
+  if (r.status === 'ok') {
+    console.log(`✓ ${r.doc} — signature current`);
+  } else if (r.status === 'blessed') {
+    console.log(`✓ ${r.doc} — ${r.detail}`);
+  } else if (r.status === 'no-sig' || r.status === 'no-tracks') {
+    console.warn(`⚠ ${r.doc} — ${r.detail}`);
+    exitCode = 1;
+  } else if (r.status === 'drift') {
+    console.warn(`⚠ ${r.doc} — DRIFT`);
+    console.warn(`    ${r.detail}\n`);
+    exitCode = 1;
+  }
+}
+
+process.exit(exitCode);
