@@ -6,11 +6,16 @@
 
 Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim.
 
+**F381 P2.2 — `shape.kind: 'fromGeometry'`** reads vertex data from a wired `glyphGeometry` / `shapeGeometry` / `softMesh` source via the `vertices` + `subpathStarts` + `ringSubpathCounts` typed input ports. One closed polyline body is created per OUTER ring (hole subpaths are skipped — balls land on top of an "o", not inside its counter). For multi-glyph text, this means N rigid colliders are created with `id` reporting the first one (sentinel; use `physicsStaticBodyEach` or `physicsBodyLookup` to enumerate). Pair with the SAME geometry source feeding a `softMesh` so visible mesh + collider stay aligned by construction.
+
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
 | `world` | `any` | Wire to the sibling `physicsWorld.world` output. |
+| `vertices` | `float32buffer` | Wire from `glyphGeometry.vertices` / `shapeGeometry.vertices` / `softMesh.vertices` when `shape.kind: 'fromGeometry'`. For static colliders that should track a stable rest pose, prefer wiring from `softMesh.restVertices`. Ignored for other shape kinds. |
+| `subpathStarts` | `uint16buffer` | Wire from the geometry source's `subpathStarts`. Ignored for other shape kinds. |
+| `ringSubpathCounts` | `uint16buffer` | Wire from the geometry source's `ringSubpathCounts`. Lets the body builder skip hole subpaths and emit one polyline per outer ring. Ignored for other shape kinds. |
 
 
 ## Outputs
@@ -32,7 +37,7 @@ Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zo
 | `x` | float | `0` | World-space X position of the body in px. CSS units like "50vw" / "100px" also accepted; the loader resolves to px at bind time. Static bodies do not move under simulation; this is the fixed pose. |
 | `y` | float | `0` | World-space Y position of the body in px. CSS units accepted ("12vh", "200px"); resolved at bind. Static bodies do not move under simulation. |
 | `rotation` | float | `0` | Body orientation in radians. Static bodies hold this rotation forever. Use π/4 ≈ 0.785 for 45°, π ≈ 3.14159 for 180°. (step: 0.01) |
-| `restitution` | float | `0.5` | 0 = no bounce (dynamic bodies stick to this surface on impact), 1 = perfectly elastic (energy preserved), > 1 = energy-amplifying. Combined with the dynamic body's restitution per Rapier's blend mode. (min: 0, max: 2, step: 0.05) |
+| `restitution` | float | `0.5` | 0 = no bounce (dynamic bodies stick to this surface on impact), 1 = perfectly elastic (energy preserved), > 1 = energy-amplifying. Combined with the dynamic body's restitution per the engine's blend mode. (min: 0, max: 2, step: 0.05) |
 | `friction` | float | `0.5` | Surface friction coefficient. 0 = ice (dynamic bodies slide forever), 1 = typical solid surface, > 1 = high friction. Combined with the dynamic body's friction. (min: 0, max: 2, step: 0.05) |
 | `isSensor` | bool | `false` | When true, the collider generates collision events but does not push other bodies. Use for trigger zones — pair with `physicsCollisionPulse` (v2) to detect entry/exit. |
 
@@ -41,6 +46,15 @@ Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zo
 
 - [Physics World](physicsWorld.md) — `physicsWorld`
 - [Physics Body](physicsBody.md) — `physicsBody`
+
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Fractional CTO | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-technology-advisory) · [`faster-claude/catalog/animations/scroll-animations/technology-advisory/technology-advisory.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/technology-advisory/) |
+| Studio Showreel | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-wheel-deck-blob) · [`faster-claude/catalog/animations/scroll-animations/wheel-deck-blob/wheel-deck-blob.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/wheel-deck-blob/) |
 
 ## Envelope
 

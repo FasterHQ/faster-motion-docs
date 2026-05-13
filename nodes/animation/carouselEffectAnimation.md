@@ -36,6 +36,25 @@ _No outputs._
 - `carouselWrapCounter` _(not in author-facing docs)_
 - [Seamless Playhead](seamlessPlayhead.md) — `seamlessPlayhead`
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Coverflow Features | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-coverflow-features) · [`faster-claude/catalog/animations/carousel-effects/coverflow-features/coverflow-features.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/coverflow-features/) |
+| Coverflow Gallery | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-coverflow-gallery) · [`faster-claude/catalog/animations/carousel-effects/coverflow-gallery/coverflow-gallery.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/coverflow-gallery/) |
+| Coverflow Scroll | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-coverflow-scroll) · [`faster-claude/catalog/animations/carousel-effects/coverflow-scroll/coverflow-scroll.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/coverflow-scroll/) |
+| Cube Gallery | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-cube-gallery) · [`faster-claude/catalog/animations/carousel-effects/cube-gallery/cube-gallery.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/cube-gallery/) |
+| Cube Onboarding | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-cube-onboarding) · [`faster-claude/catalog/animations/carousel-effects/cube-onboarding/cube-onboarding.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/cube-onboarding/) |
+| Fade Gallery | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-fade-gallery) · [`faster-claude/catalog/animations/carousel-effects/fade-gallery/fade-gallery.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/fade-gallery/) |
+| Fan Team | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-fan-team) · [`faster-claude/catalog/animations/carousel-effects/fan-team/fan-team.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/fan-team/) |
+| OBSCURA — Studio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-obscura-studio) · [`faster-claude/catalog/animations/advanced-orchestration/obscura-studio/obscura-studio.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/obscura-studio/) |
+| Slide Gallery | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-slide-gallery) · [`faster-claude/catalog/animations/carousel-effects/slide-gallery/slide-gallery.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/slide-gallery/) |
+| Slide Testimonials | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-slide-testimonials) · [`faster-claude/catalog/animations/carousel-effects/slide-testimonials/slide-testimonials.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/slide-testimonials/) |
+
+_…and 2 more in the catalog._
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

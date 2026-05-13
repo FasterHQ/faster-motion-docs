@@ -34,7 +34,7 @@ One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set th
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `pixelsPerMeter` | float | `100` | Default 100 (100 px = 1 m). Larger values make the engine treat the same pixel motion as smaller real-world distances; affects gravity feel + collision response. Tune only if your scene has very large/small bodies. (min: 1, max: 10000, step: 10) |
-| `subSteps` | int | `4` | Solver passes per frame. 4 = Rapier default (good for most scenes). 8+ = high-stack stability. Cost scales linearly. (min: 1, max: 16) |
+| `subSteps` | int | `4` | Solver passes per frame. 4 = engine default (good for most scenes). 8+ = high-stack stability. Cost scales linearly. (min: 1, max: 16) |
 | `paramGravityX` | float | `0` | Used when the `gravity` input port is not wired. Number = raw px/s². Strings accepted: "1g" / "2.5g" / "earth" → resolved at load relative to `pixelsPerMeter`. (step: 100) |
 | `paramGravityY` | float | `0` | Used when the `gravity` input port is not wired. Number = raw px/s² (earth-like for downward y at ppm=100: 2200). Strings accepted: "1g" / "2.5g" / "earth" → resolved at load relative to `pixelsPerMeter`. (step: 100) |
 | `pauseBelowProgress` | float | `null` | Convenience scroll-driven gate. Wire `progress` (typically from `scrollTrigger.progress`) and set this threshold. World pauses while `progress < threshold`, runs above. For "wait for an upstream signal to be stable" patterns prefer the `pauseUntilStable` input port. Leave blank to use only the `paused` port for gating. (min: 0, max: 1, step: 0.05) |
@@ -54,6 +54,15 @@ One rigid-body simulation world. Wire `gravity` from a `constantVec2` (or set th
 
 - [Physics Body](physicsBody.md) — `physicsBody`
 - [Physics Static Body](physicsStaticBody.md) — `physicsStaticBody`
+
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Fractional CTO | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-technology-advisory) · [`faster-claude/catalog/animations/scroll-animations/technology-advisory/technology-advisory.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/technology-advisory/) |
+| Studio Showreel | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-wheel-deck-blob) · [`faster-claude/catalog/animations/scroll-animations/wheel-deck-blob/wheel-deck-blob.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/wheel-deck-blob/) |
 
 ## Envelope
 

@@ -1,7 +1,7 @@
 {
-  "_generatedAt": "2026-05-09",
+  "_generatedAt": "2026-05-13",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
-  "_nodeCount": 288,
+  "_nodeCount": 292,
   "portTypes": {
     "float": {
       "description": "Numeric value",
@@ -241,7 +241,11 @@
       "description": "Visual effects: WASM/GPU filter chains, parametric shape generation, glitch computation, FLIP layout animation, and morph path interpolation.",
       "nodes": [
         "meshAttractor",
-        "physicsBlob",
+        "softMesh",
+        "softMeshRender",
+        "softMeshDebugRender",
+        "glyphGeometry",
+        "shapeGeometry",
         "texturedMeshTile",
         "effectPass",
         "fluidSim",
@@ -4124,74 +4128,247 @@
         "paletteLut"
       ]
     },
-    "physicsBlob": {
-      "displayName": "Physics Blob",
+    "softMesh": {
+      "displayName": "Soft Mesh",
       "category": "effects",
       "context": "shared",
-      "description": "Soft-body blob silhouette built on a Verlet mass-spring chain. N point particles arranged in a closed circular loop, each connected to its neighbour and skip-1 neighbour by stiff distance-springs, with rest-pose attraction so the shape always recovers. Cursor interaction is a per-particle Gaussian-falloff repulsion. Adjacent particles follow through the spring network, so the silhouette stays C¹-smooth no matter how hard the cursor pulls — no vertex-shader V-cusps. Rendered via Canvas2D as a closed Catmull-Rom curve (converted to cubic Bézier segments) filled with the channel colour. Use this when you want a smooth soft-body blob silhouette; use `meshAttractor` when you want fullscreen WebGL mesh distortion of arbitrary geometry.",
-      "inputs": [],
-      "outputs": [],
+      "description": "Sim-only soft-body mesh. F381 P1.1. Owns a verlet ring simulator (edge springs + position-anchored shape match + body wrap/dent + cursor Gaussian press) and emits the deformed mesh through typed graph ports — NOT a sim-handle reference. Renderers consume `vertices`, `subpathStarts`, `sharpFlags`, and `bodyCenterX/Y` to draw the mesh without ever touching the sim object directly (F311 graph-native data flow).\n\n**Geometry source** (param `geometrySource`) accepts every kind the meshAttractor catalogue does: `round` / `spike` / `blob` / `svgPath` / `textOutline` / `clipPath` / `rawVertices`. `textOutline` produces multi-glyph rings (one ring per character outer contour with hole topology preserved). All other kinds produce a single ring. Single node handles all rest-shape kinds.\n\n**Cursor force gate**: pushes balls within `mouseSigma` of cursor when (a) cursor is in the Gaussian zone of the rest pose AND (b) cursor is moving (smoothing-invariant 6-frame ring activity check, F381 P0.2). Frame walker honours the world's `frameSelector` directly (F381 P0.1) — no `[data-fm-physics-frame]` HTML attribute required.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "Physics World",
+          "tooltip": "Wire from `physicsWorld.world`. Provides the body coord frame + (optional) body coupling handle."
+        },
+        {
+          "name": "bodyIds",
+          "type": "floatArray",
+          "label": "Body IDs",
+          "tooltip": "Optional. Engine body handles to test for ball↔mesh contact. Wire from `physicsBodyStagger.bodyIds` for ball-on-mesh interaction. Empty = no body coupling, mesh is purely a cursor-driven visual."
+        },
+        {
+          "name": "mouseX",
+          "type": "float",
+          "label": "Mouse X",
+          "tooltip": "Cursor X in viewport pixels (from `pointer` with `space: viewport`). Triggers Gaussian press on the rings. Unset / NaN = no cursor effect."
+        },
+        {
+          "name": "mouseY",
+          "type": "float",
+          "label": "Mouse Y",
+          "tooltip": "Cursor Y in viewport pixels."
+        },
+        {
+          "name": "geomVertices",
+          "type": "float32buffer",
+          "label": "Geom Vertices",
+          "tooltip": "F381 P2.3 — wire from a shared `glyphGeometry` / `shapeGeometry` source to share rest pose with sibling consumers (e.g. `physicsStaticBody{kind:fromGeometry}`). When wired, softMesh uses these buffers instead of building its own from the inline `geometrySource` param — visible mesh + rigid collider are aligned by construction. Wire ALL three buffer inputs + `geomBodyCenterX/Y` together; partial wiring throws."
+        },
+        {
+          "name": "geomSubpathStarts",
+          "type": "uint16buffer",
+          "label": "Geom Subpath Starts",
+          "tooltip": "Wire from the geometry source's `subpathStarts`. Required when `geomVertices` is wired."
+        },
+        {
+          "name": "geomRingSubpathCounts",
+          "type": "uint16buffer",
+          "label": "Geom Ring Subpath Counts",
+          "tooltip": "Wire from the geometry source's `ringSubpathCounts`. Required when `geomVertices` is wired."
+        },
+        {
+          "name": "geomBodyCenterX",
+          "type": "float",
+          "label": "Geom Body Centre X",
+          "tooltip": "Wire from the geometry source's `bodyCenterX`. Defines the cursor / render anchor — must match the geometry source's frame of reference. Required when `geomVertices` is wired."
+        },
+        {
+          "name": "geomBodyCenterY",
+          "type": "float",
+          "label": "Geom Body Centre Y",
+          "tooltip": "Wire from the geometry source's `bodyCenterY`. Required when `geomVertices` is wired."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "type": "float32buffer",
+          "label": "Vertices",
+          "tooltip": "Live concatenated vertex buffer in body coords [x0,y0,x1,y1,...]. Includes EVERY subpath — outer rings AND holes — in traversal order. Wire into `softMeshRender.vertices`. Allocated once at init, mutated in place per frame (no GC churn)."
+        },
+        {
+          "name": "restVertices",
+          "type": "float32buffer",
+          "label": "Rest Vertices",
+          "tooltip": "REST-pose vertex buffer in body coords (same layout as `vertices` — same subpathStarts + sharpFlags apply). Static; written once at init and never mutated. Wire into `softMeshDebugRender.restVertices` for a rest-pose ghost overlay, or any consumer that needs to compare live deformation against the original silhouette."
+        },
+        {
+          "name": "subpathStarts",
+          "type": "uint16buffer",
+          "label": "Subpath Starts",
+          "tooltip": "Vertex-pair start index of each subpath (outer rings + holes, flat in traversal order). Wire into `softMeshRender.subpathStarts`. Length = total subpath count."
+        },
+        {
+          "name": "ringSubpathCounts",
+          "type": "uint16buffer",
+          "label": "Ring Subpath Counts",
+          "tooltip": "Entry i = number of subpaths in ring i (1 outer + N holes). First subpath per ring is outer; remaining are holes. Lets consumers like `physicsStaticBody{kind:fromGeometry}` (P2.2) skip hole subpaths when building rigid colliders."
+        },
+        {
+          "name": "sharpFlags",
+          "type": "uint16buffer",
+          "label": "Sharp Flags",
+          "tooltip": "Sharp-corner flag per vertex (1 = sharp `lineTo`, 0 = smooth `quadraticCurveTo`). Wire into `softMeshRender.sharpFlags`."
+        },
+        {
+          "name": "bodyCenterX",
+          "type": "float",
+          "label": "Body Centre X",
+          "tooltip": "Snapshot body-coord X of the rest pose centroid. Renderers translate so this maps to the live host centre — keeps the visual glued to the host element even when the physics frame moves independently (scroll-deck layouts). Wire into `softMeshRender.bodyCenterX`."
+        },
+        {
+          "name": "bodyCenterY",
+          "type": "float",
+          "label": "Body Centre Y",
+          "tooltip": "Snapshot body-coord Y of the rest pose centroid. Wire into `softMeshRender.bodyCenterY`."
+        }
+      ],
       "parameters": [
         {
           "key": "selector",
           "label": "Host Element",
-          "type": "elementSelector"
+          "type": "elementSelector",
+          "tooltip": "CSS selector for the host element. Used to size the rest pose (auto radius) and resolve the physics frame for cursor coord conversion."
         },
         {
           "key": "geometrySource",
-          "label": "Rest Shape",
+          "label": "Geometry Source",
           "type": "meshGeometrySource",
-          "tooltip": "Pick any geometry source — round / spike / blob / svgPath / textOutline / clipPath / rawVertices. The vertex array becomes the rest layout for the spring chain. Same picker as meshAttractor."
+          "tooltip": "Pick any geometry kind: round / spike / blob / svgPath / textOutline / clipPath / rawVertices. textOutline produces multi-glyph rings (one ring per character)."
         },
         {
           "key": "radius",
-          "label": "Radius (px)",
+          "label": "Refit Radius (px)",
           "type": "float",
-          "tooltip": "Used by radial generators (round / spike / blob). -1 = auto (~40% of min host dimension)."
+          "tooltip": "-1 = auto (~40% of min host dimension). For multi-glyph text, the whole word is refit to fit `2 * radius`."
         },
         {
-          "key": "stiffness",
-          "label": "Stiffness",
+          "key": "edgeStiffness",
+          "label": "Edge Stiffness",
           "type": "float",
-          "tooltip": "Spring stiffness 0..1. Higher = blob holds shape more rigidly. Lower = jelly-like deformation.",
-          "min": 0.05,
+          "tooltip": "Per-pass edge-spring relaxation strength.",
+          "min": 0,
           "max": 1,
           "step": 0.05
+        },
+        {
+          "key": "constraintIterations",
+          "label": "Iterations",
+          "type": "int",
+          "tooltip": "Edge-spring + shape-match passes per frame.",
+          "min": 1,
+          "max": 16
+        },
+        {
+          "key": "restShapeStrength",
+          "label": "Rest Shape Strength",
+          "type": "float",
+          "tooltip": "Position-anchored shape match. 0 = no recovery (mesh can collapse); 1 = rigid (no deformation). 0.05–0.2 = wobble + readable recovery.",
+          "min": 0,
+          "max": 1,
+          "step": 0.01
         },
         {
           "key": "damping",
           "label": "Damping",
           "type": "float",
-          "tooltip": "Air friction per frame. Higher = settles faster.",
+          "tooltip": "Verlet damping per step.",
           "min": 0,
           "max": 0.3,
           "step": 0.01
         },
         {
-          "key": "iterations",
-          "label": "Iterations",
-          "type": "int",
-          "tooltip": "Constraint relaxation passes per frame. More = stiffer / less stretchy. 6 is balanced.",
-          "min": 1,
-          "max": 16
-        },
-        {
-          "key": "centreX",
-          "label": "Centre X",
+          "key": "gravityScale",
+          "label": "Gravity Scale",
           "type": "float",
-          "tooltip": "-1 = auto (host centre)."
+          "tooltip": "0 = mesh floats; 1 = falls under world gravity."
         },
         {
-          "key": "centreY",
-          "label": "Centre Y",
+          "key": "bodyRadius",
+          "label": "Body Radius (px)",
           "type": "float",
-          "tooltip": "-1 = auto."
+          "tooltip": "Treat all incoming bodies as circles of this radius for impulse coupling."
         },
         {
-          "key": "channels",
-          "label": "Channel Values",
-          "type": "meshAttractorChannels",
-          "tooltip": "F375 — same channel-config shape as meshAttractor. Each channel can be a literal value, a wireable port, or a port with inspector default."
+          "key": "deformZone",
+          "label": "Deform Zone (px)",
+          "type": "float",
+          "tooltip": "Soft-contact distance from ball centre. Verts within this distance get pulled to the ball surface (curved dent). Should be slightly larger than bodyRadius. -1 = auto."
+        },
+        {
+          "key": "mouseSigma",
+          "label": "Cursor Sigma (px)",
+          "type": "float",
+          "tooltip": "Gaussian falloff sigma for cursor displacement."
+        },
+        {
+          "key": "mouseJump",
+          "label": "Cursor Jump (px)",
+          "type": "float",
+          "tooltip": "Peak cursor displacement at the cursor location. 0 = no cursor effect."
+        },
+        {
+          "key": "wrapStrength",
+          "label": "Wrap Strength",
+          "type": "float",
+          "tooltip": "Per-pass conform aggression. 0 = no wrap (ball appears to float); 1 = instant snap.",
+          "min": 0,
+          "max": 1,
+          "step": 0.05
+        },
+        {
+          "key": "cursorForceScale",
+          "label": "Cursor Force on Bodies",
+          "type": "float",
+          "tooltip": "How strongly the cursor drags in-cursor-zone balls.",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "bodyImpulseScale",
+          "label": "Body Impulse Scale",
+          "type": "float",
+          "tooltip": "How aggressively the soft ring kicks balls back on impact. 0 (default) = OFF (rigid colliders handle bounce). Per-pass capped internally so high values don't exceed the engine's CCD budget.",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "impactDentScale",
+          "label": "Impact Dent Scale",
+          "type": "float",
+          "tooltip": "Velocity-scaled extra dent on impact. 0 = thrown ball deforms same as settled ball. 0.5 = visible squish, recovers via shape match.",
+          "min": 0,
+          "max": 2,
+          "step": 0.05
+        },
+        {
+          "key": "impactDentMax",
+          "label": "Impact Dent Max (px)",
+          "type": "float",
+          "tooltip": "Cap on velocity-driven dent depth.",
+          "min": 0,
+          "step": 1
+        },
+        {
+          "key": "cornerSharpnessDeg",
+          "label": "Corner Sharpness (°)",
+          "type": "float",
+          "tooltip": "Rest-pose interior turn-angle threshold for sharp corners. 25° works for Inter Black; lower = chunkier silhouette, higher = rounder.",
+          "min": 0,
+          "max": 90,
+          "step": 5
         }
       ],
       "defaults": {
@@ -4201,23 +4378,466 @@
           "segmentCount": 32
         },
         "radius": -1,
-        "stiffness": 0.9,
-        "damping": 0.06,
-        "iterations": 6,
-        "centreX": -1,
-        "centreY": -1,
-        "channels": {}
+        "edgeStiffness": 1,
+        "constraintIterations": 6,
+        "restShapeStrength": 0.1,
+        "damping": 0.04,
+        "gravityScale": 0,
+        "bodyRadius": 14,
+        "deformZone": -1,
+        "mouseSigma": 80,
+        "mouseJump": 30,
+        "wrapStrength": 0.25,
+        "cursorForceScale": 0.5,
+        "bodyImpulseScale": 0,
+        "impactDentScale": 0.5,
+        "impactDentMax": 14,
+        "cornerSharpnessDeg": 25
       },
-      "dynamicPorts": true,
+      "dynamicPorts": false,
       "compound": false,
       "useCases": [
-        "Cursor-reactive section blob — drop one per `.blob` host with `mouseX/mouseY` from `pointer`, leave defaults for jump/dist; the blob gently pushes away from the cursor and settles back.",
-        "Title-band background — host a `physicsBlob` on the title strip with a low jump for subtle wobble; particles redistribute around the cursor without breaking the silhouette.",
-        "Hover button — small blob with high stiffness so it returns fast, low jump for a subtle press-back effect."
+        "Soft-body letter row — `geometrySource: textOutline` + `softMeshRender`. Cursor presses letters smoothly; balls (via `bodyIds`) dent text on impact.",
+        "Cursor-reactive blob silhouette — `geometrySource: round/blob/spike` + `softMeshRender`. The cursor presses a deformable blob; no body coupling needed.",
+        "Logotype micro-interaction — `geometrySource: svgPath` of a logo path + `softMeshRender`. Cursor warps the logo silhouette."
       ],
       "seeAlso": [
-        "meshAttractor",
+        "softMeshRender",
+        "physicsBodyStagger",
         "pointer"
+      ]
+    },
+    "softMeshRender": {
+      "displayName": "Soft Mesh Render",
+      "category": "effects",
+      "context": "shared",
+      "description": "Canvas2D overlay renderer for a softMesh. F381 P1.2. Consumes the mesh through typed input ports — `vertices`, `subpathStarts`, `sharpFlags`, and `bodyCenterX/Y`, all wired from the linked `softMesh` outputs. No sim-handle / DOM-ref side channels: this node never touches the sim object directly (F311 graph-native data flow).\n\nMounts a `<canvas>` overlay inside the host resolved from this node's `selector` param (required — set it to the same selector as the linked softMesh). Translates body coords to host-local px by anchoring `bodyCenterX/Y` to the live host centre, so the rendered mesh stays glued to the host even when the underlying physics world frame moves independently (scroll-deck layouts where the world frame lives off-screen while the host scrolls into view). Draws closed subpaths with mixed `lineTo` (sharp corners) / `quadraticCurveTo` (smooth curves through edge midpoints), filled with the author's colour.\n\n**Multiple renderers can wire to one softMesh** — e.g. a main fill plus a debug ghost overlay with different opacity / colour / selector. The simulator computes once; renderers each draw their own canvas.",
+      "inputs": [
+        {
+          "name": "vertices",
+          "type": "float32buffer",
+          "label": "Vertices",
+          "tooltip": "Wire from `softMesh.vertices`. Live concatenated vertex buffer in body coords."
+        },
+        {
+          "name": "subpathStarts",
+          "type": "uint16buffer",
+          "label": "Subpath Starts",
+          "tooltip": "Wire from `softMesh.subpathStarts`. Vertex-pair start index of each subpath."
+        },
+        {
+          "name": "sharpFlags",
+          "type": "uint16buffer",
+          "label": "Sharp Flags",
+          "tooltip": "Wire from `softMesh.sharpFlags`. Sharp-corner flag per vertex."
+        },
+        {
+          "name": "bodyCenterX",
+          "type": "float",
+          "label": "Body Centre X",
+          "tooltip": "Wire from `softMesh.bodyCenterX`. Snapshot rest centroid in body coords."
+        },
+        {
+          "name": "bodyCenterY",
+          "type": "float",
+          "label": "Body Centre Y",
+          "tooltip": "Wire from `softMesh.bodyCenterY`. Snapshot rest centroid in body coords."
+        },
+        {
+          "name": "opacity",
+          "type": "float",
+          "label": "Opacity",
+          "tooltip": "Fill opacity 0..1.",
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Mount Element",
+          "type": "elementSelector",
+          "tooltip": "Required. CSS selector for the host element the canvas mounts inside. Match the linked softMesh's `selector` so the visual is anchored to the same DOM element the sim was sized to."
+        },
+        {
+          "key": "colour",
+          "label": "Fill Colour",
+          "type": "colorString"
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "colour": "#1a1a1a"
+      },
+      "dynamicPorts": false,
+      "compound": false,
+      "useCases": [
+        "Visible mesh — wire `softMesh.vertices/subpathStarts/sharpFlags/bodyCenterX/bodyCenterY` to the matching inputs, set `selector` + `colour`. Standard pairing.",
+        "Debug ghost overlay — second softMeshRender wired to the same softMesh with `opacity: 0.3` and a contrasting colour, mounted on a different selector for side-by-side."
+      ],
+      "seeAlso": [
+        "softMesh"
+      ]
+    },
+    "softMeshDebugRender": {
+      "displayName": "Soft Mesh Debug Render",
+      "category": "effects",
+      "context": "shared",
+      "description": "Second renderer type for softMesh — F381 P1.5. Proves the typed-port output of `softMesh` is renderer-agnostic by consuming the IDENTICAL set of typed ports as `softMeshRender` (vertices, subpathStarts, sharpFlags, bodyCenterX/Y) but rendering a STROKED outline instead of a filled subpath. Also consumes `restVertices` for an optional rest-pose ghost overlay underneath the live outline — useful as a debug aid to see how far the live silhouette has drifted from its rest pose.\n\nWire one softMesh into both renderers (softMeshRender for fill, softMeshDebugRender for outline / rest ghost) and you have a fill + wireframe debug view from a single sim, demonstrating that swapping renderers requires zero changes to the sim.",
+      "inputs": [
+        {
+          "name": "vertices",
+          "type": "float32buffer",
+          "label": "Vertices",
+          "tooltip": "Wire from `softMesh.vertices`. Live concatenated vertex buffer in body coords."
+        },
+        {
+          "name": "restVertices",
+          "type": "float32buffer",
+          "label": "Rest Vertices",
+          "tooltip": "Wire from `softMesh.restVertices` for the rest-pose ghost. Optional — set `restOpacity: 0` if unwired."
+        },
+        {
+          "name": "subpathStarts",
+          "type": "uint16buffer",
+          "label": "Subpath Starts",
+          "tooltip": "Wire from `softMesh.subpathStarts`. Same layout for both vertices and restVertices."
+        },
+        {
+          "name": "sharpFlags",
+          "type": "uint16buffer",
+          "label": "Sharp Flags",
+          "tooltip": "Wire from `softMesh.sharpFlags`. Sharp-corner flag per vertex."
+        },
+        {
+          "name": "bodyCenterX",
+          "type": "float",
+          "label": "Body Centre X",
+          "tooltip": "Wire from `softMesh.bodyCenterX`."
+        },
+        {
+          "name": "bodyCenterY",
+          "type": "float",
+          "label": "Body Centre Y",
+          "tooltip": "Wire from `softMesh.bodyCenterY`."
+        },
+        {
+          "name": "opacity",
+          "type": "float",
+          "label": "Live Outline Opacity",
+          "tooltip": "Stroke opacity for the live outline, 0..1.",
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Mount Element",
+          "type": "elementSelector",
+          "tooltip": "Required. Match the linked softMesh's `selector`."
+        },
+        {
+          "key": "colour",
+          "label": "Live Outline Colour",
+          "type": "colorString"
+        },
+        {
+          "key": "restColour",
+          "label": "Rest Ghost Colour",
+          "type": "colorString"
+        },
+        {
+          "key": "restOpacity",
+          "label": "Rest Ghost Opacity",
+          "type": "float",
+          "tooltip": "0 = hide rest ghost (live outline only). 0.3-0.5 = visible ghost beneath live deformation.",
+          "min": 0,
+          "max": 1,
+          "step": 0.05
+        },
+        {
+          "key": "strokeWidth",
+          "label": "Stroke Width (px)",
+          "type": "float",
+          "min": 0.5,
+          "max": 10,
+          "step": 0.5
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "colour": "#1a1a1a",
+        "restColour": "#888888",
+        "restOpacity": 0.4,
+        "strokeWidth": 1.5
+      },
+      "dynamicPorts": false,
+      "compound": false,
+      "useCases": [
+        "Fill + outline debug overlay — pair with `softMeshRender` on the same softMesh; fill renders the silhouette, debug renders the stroked outline.",
+        "Rest-pose ghost — wire `softMesh.restVertices` into `restVertices`; set `restOpacity: 0.4`. Shows the original rest silhouette ghosted under the live deformation.",
+        "Wireframe-only view — set `restOpacity: 0` and omit the fill renderer to render only the deforming outline."
+      ],
+      "seeAlso": [
+        "softMesh",
+        "softMeshRender"
+      ]
+    },
+    "glyphGeometry": {
+      "displayName": "Glyph Geometry",
+      "category": "effects",
+      "context": "shared",
+      "description": "Shared text-outline geometry source. F381 P2.1. Emits typed vertex buffers + bbox + bodyCenter from `text + fontFamily + fontSize + fontWeight` once at init (static). Wire the outputs into BOTH `softMesh.geometrySource` (visible deformable mesh, P2.3) AND `physicsStaticBody{kind:fromGeometry}` (rigid collider, P2.2) so the visible mesh and rigid collider are aligned by construction — kills the entire class of \"physicsTextOutline.radius drifted from physicsSoftText.radius\" bugs that the legacy paired-node pattern required authors to avoid by hand.\n\nUses the same WASM glyph extractor pipeline as the legacy nodes (rustybuzz + ttf-parser → earcut), so geometry is bit-identical to what a softMesh with `geometrySource:textOutline` would produce.",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "Physics World",
+          "tooltip": "Optional. When wired from `physicsWorld.world`, the geometry node uses the world's `frameSelector` to compute body-coord origin. Without a wire, host element acts as its own frame."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "type": "float32buffer",
+          "label": "Vertices",
+          "tooltip": "Rest-pose vertex buffer in body coords. Wire into consumers' `geometrySource` ports."
+        },
+        {
+          "name": "subpathStarts",
+          "type": "uint16buffer",
+          "label": "Subpath Starts",
+          "tooltip": "Vertex-pair start index of each subpath. Glyph outer + counter holes flat in traversal order."
+        },
+        {
+          "name": "ringSubpathCounts",
+          "type": "uint16buffer",
+          "label": "Ring Subpath Counts",
+          "tooltip": "Entry i = number of subpaths in glyph i (1 outer + N counter holes — e.g. P/R/O/d/e have 1 hole each, H/Y/S/I/C have 0). First subpath per glyph is outer; remaining are holes. Lets `physicsStaticBody{kind:fromGeometry}` build colliders only for letter silhouettes (balls land on top of an \"o\", not inside its counter)."
+        },
+        {
+          "name": "sharpFlags",
+          "type": "uint16buffer",
+          "label": "Sharp Flags",
+          "tooltip": "Sharp-corner flag per vertex."
+        },
+        {
+          "name": "bboxMinX",
+          "type": "float",
+          "label": "BBox Min X"
+        },
+        {
+          "name": "bboxMinY",
+          "type": "float",
+          "label": "BBox Min Y"
+        },
+        {
+          "name": "bboxMaxX",
+          "type": "float",
+          "label": "BBox Max X"
+        },
+        {
+          "name": "bboxMaxY",
+          "type": "float",
+          "label": "BBox Max Y"
+        },
+        {
+          "name": "bodyCenterX",
+          "type": "float",
+          "label": "Body Centre X",
+          "tooltip": "Snapshot rest centroid in body coords."
+        },
+        {
+          "name": "bodyCenterY",
+          "type": "float",
+          "label": "Body Centre Y"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector",
+          "tooltip": "CSS selector for the host element. Used for sizing (auto-radius fallback) and resolving the physics frame."
+        },
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "string"
+        },
+        {
+          "key": "fontFamily",
+          "label": "Font Family",
+          "type": "string"
+        },
+        {
+          "key": "fontSize",
+          "label": "Font Size (px)",
+          "type": "float"
+        },
+        {
+          "key": "fontWeight",
+          "label": "Font Weight",
+          "type": "string",
+          "tooltip": "CSS weight string. Must match a loaded `FontFace`."
+        },
+        {
+          "key": "radius",
+          "label": "Refit Radius (px)",
+          "type": "float",
+          "tooltip": "-1 = auto: `min(hostW, hostH) * 0.4`. The whole word is refit to fit `2 * radius`."
+        },
+        {
+          "key": "cornerSharpnessDeg",
+          "label": "Corner Sharpness (°)",
+          "type": "float",
+          "min": 0,
+          "max": 90,
+          "step": 5
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "text": "Text",
+        "fontFamily": "sans-serif",
+        "fontSize": 220,
+        "fontWeight": "400",
+        "radius": -1,
+        "cornerSharpnessDeg": 25
+      },
+      "dynamicPorts": false,
+      "compound": false,
+      "useCases": [
+        "Balls-on-text — one `glyphGeometry` feeds a `softMesh` (visible deformable letters) AND a `physicsStaticBody{fromGeometry}` (rigid collider). Balls bounce off the actual letter shapes, no manual radius drift.",
+        "Logotype cursor warp — `glyphGeometry` feeds a `softMesh` + `softMeshRender`. No physics body needed; geometry node simply provides the rest pose."
+      ],
+      "seeAlso": [
+        "shapeGeometry",
+        "softMesh",
+        "physicsStaticBody"
+      ]
+    },
+    "shapeGeometry": {
+      "displayName": "Shape Geometry",
+      "category": "effects",
+      "context": "shared",
+      "description": "Shared non-text geometry source. F381 P2.1. Companion to `glyphGeometry` — emits the same typed-port output shape from any non-text `geometrySource` kind: `round` / `spike` / `blob` / `svgPath` / `clipPath` / `rawVertices`. Use the same generators as `meshAttractor`'s geometrySource param.\n\nPair its outputs with `softMesh.geometrySource` + `physicsStaticBody{kind:fromGeometry}` so visible blob silhouette + rigid bowl collider stay aligned by construction (kills the legacy `physicsBlob` + `physicsBowlFromBlob` drift bug class).",
+      "inputs": [
+        {
+          "name": "world",
+          "type": "any",
+          "label": "Physics World",
+          "tooltip": "Optional. When wired from `physicsWorld.world`, the geometry node uses the world's `frameSelector` to compute body-coord origin."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "type": "float32buffer",
+          "label": "Vertices",
+          "tooltip": "Rest-pose vertex buffer in body coords."
+        },
+        {
+          "name": "subpathStarts",
+          "type": "uint16buffer",
+          "label": "Subpath Starts"
+        },
+        {
+          "name": "ringSubpathCounts",
+          "type": "uint16buffer",
+          "label": "Ring Subpath Counts",
+          "tooltip": "Entry i = number of subpaths in ring i (1 outer + N holes). First subpath per ring is outer; remaining are holes. Critical for collider/renderer consumers that need to distinguish outer silhouettes from interior holes."
+        },
+        {
+          "name": "sharpFlags",
+          "type": "uint16buffer",
+          "label": "Sharp Flags"
+        },
+        {
+          "name": "bboxMinX",
+          "type": "float",
+          "label": "BBox Min X"
+        },
+        {
+          "name": "bboxMinY",
+          "type": "float",
+          "label": "BBox Min Y"
+        },
+        {
+          "name": "bboxMaxX",
+          "type": "float",
+          "label": "BBox Max X"
+        },
+        {
+          "name": "bboxMaxY",
+          "type": "float",
+          "label": "BBox Max Y"
+        },
+        {
+          "name": "bodyCenterX",
+          "type": "float",
+          "label": "Body Centre X"
+        },
+        {
+          "name": "bodyCenterY",
+          "type": "float",
+          "label": "Body Centre Y"
+        }
+      ],
+      "parameters": [
+        {
+          "key": "selector",
+          "label": "Host Element",
+          "type": "elementSelector",
+          "tooltip": "CSS selector for the host element. Used for sizing (auto-radius fallback) and resolving the physics frame."
+        },
+        {
+          "key": "geometrySource",
+          "label": "Geometry Source",
+          "type": "meshGeometrySource",
+          "tooltip": "Pick a geometry kind: round / spike / blob / svgPath / clipPath / rawVertices. `textOutline` is rejected here — use `glyphGeometry` for text."
+        },
+        {
+          "key": "radius",
+          "label": "Refit Radius (px)",
+          "type": "float",
+          "tooltip": "-1 = auto (~40% of min host dimension)."
+        },
+        {
+          "key": "cornerSharpnessDeg",
+          "label": "Corner Sharpness (°)",
+          "type": "float",
+          "min": 0,
+          "max": 90,
+          "step": 5
+        }
+      ],
+      "defaults": {
+        "selector": "",
+        "geometrySource": {
+          "kind": "round",
+          "segmentCount": 32
+        },
+        "radius": -1,
+        "cornerSharpnessDeg": 25
+      },
+      "dynamicPorts": false,
+      "compound": false,
+      "useCases": [
+        "Soft-walled ball pit — one `shapeGeometry{kind:round}` feeds a `softMesh` (visible deformable bowl) AND a `physicsStaticBody{fromGeometry}` (rigid collider). Balls collide with the visibly deforming bowl, no per-frame vertex re-derivation.",
+        "Cursor-reactive logo — `shapeGeometry{kind:svgPath}` feeds a `softMesh` + `softMeshRender`. Cursor warps the logo silhouette."
+      ],
+      "seeAlso": [
+        "glyphGeometry",
+        "softMesh",
+        "physicsStaticBody"
       ]
     },
     "texturedMeshTile": {
@@ -11799,7 +12419,7 @@
           "key": "subSteps",
           "label": "Sub-Steps per Frame",
           "type": "int",
-          "tooltip": "Solver passes per frame. 4 = Rapier default (good for most scenes). 8+ = high-stack stability. Cost scales linearly.",
+          "tooltip": "Solver passes per frame. 4 = engine default (good for most scenes). 8+ = high-stack stability. Cost scales linearly.",
           "min": 1,
           "max": 16
         },
@@ -11952,7 +12572,7 @@
           "name": "awake",
           "type": "float",
           "label": "Awake",
-          "tooltip": "1 = simulating, 0 = sleeping (Rapier auto-sleeps low-velocity bodies). Wire into a `thresholdPulse` to fire \"settled\" effects.",
+          "tooltip": "1 = simulating, 0 = sleeping (engine auto-sleeps low-velocity bodies). Wire into a `thresholdPulse` to fire \"settled\" effects.",
           "range": [
             0,
             1
@@ -12056,7 +12676,7 @@
           "key": "friction",
           "label": "Friction",
           "type": "float",
-          "tooltip": "Surface friction coefficient. 0 = frictionless (slides forever), 1 = typical solid contact, > 1 = sticky. Combined with the touched body's friction per Rapier's blend mode.",
+          "tooltip": "Surface friction coefficient. 0 = frictionless (slides forever), 1 = typical solid contact, > 1 = sticky. Combined with the touched body's friction per the engine's blend mode.",
           "min": 0,
           "max": 2,
           "step": 0.05
@@ -12088,6 +12708,12 @@
           "label": "Continuous Collision (CCD)",
           "type": "bool",
           "tooltip": "Enables tunnelling-prevention for fast-moving small bodies. Costs slightly more CPU."
+        },
+        {
+          "key": "canSleep",
+          "label": "Auto-sleep",
+          "type": "bool",
+          "tooltip": "When true (default), the engine auto-sleeps the body once velocity drops below an internal threshold — gravity, forces, and joint corrections stop applying. Correct for most UI animations (settled balls SHOULD stop simulating). Set false for precision tests / pendulums where the small offset between \"asleep at near-equilibrium\" vs \"exactly at equilibrium\" matters, OR when a slept body should still be re-pulled by a wired force/joint that activates after the sleep."
         }
       ],
       "defaults": {
@@ -12109,6 +12735,7 @@
         "angularDamping": 0,
         "lockRotation": false,
         "ccd": false,
+        "canSleep": true,
         "frameSelector": ""
       },
       "dynamicPorts": false,
@@ -12124,13 +12751,31 @@
       "displayName": "Physics Static Body",
       "category": "solvers",
       "context": "shared",
-      "description": "Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim.",
+      "description": "Immovable static collider — walls, floors, arc-shaped bowls, sensor trigger zones. No pose outputs (it never moves), only an `id: float` for joints + event listeners. The `arc` shape is parameterised as a circular segment of N edge-chain segments, used for the dental ball-drop cup brim.\n\n**F381 P2.2 — `shape.kind: 'fromGeometry'`** reads vertex data from a wired `glyphGeometry` / `shapeGeometry` / `softMesh` source via the `vertices` + `subpathStarts` + `ringSubpathCounts` typed input ports. One closed polyline body is created per OUTER ring (hole subpaths are skipped — balls land on top of an \"o\", not inside its counter). For multi-glyph text, this means N rigid colliders are created with `id` reporting the first one (sentinel; use `physicsStaticBodyEach` or `physicsBodyLookup` to enumerate). Pair with the SAME geometry source feeding a `softMesh` so visible mesh + collider stay aligned by construction.",
       "inputs": [
         {
           "name": "world",
           "type": "any",
           "label": "World",
           "tooltip": "Wire to the sibling `physicsWorld.world` output."
+        },
+        {
+          "name": "vertices",
+          "type": "float32buffer",
+          "label": "Vertices (fromGeometry)",
+          "tooltip": "Wire from `glyphGeometry.vertices` / `shapeGeometry.vertices` / `softMesh.vertices` when `shape.kind: 'fromGeometry'`. For static colliders that should track a stable rest pose, prefer wiring from `softMesh.restVertices`. Ignored for other shape kinds."
+        },
+        {
+          "name": "subpathStarts",
+          "type": "uint16buffer",
+          "label": "Subpath Starts (fromGeometry)",
+          "tooltip": "Wire from the geometry source's `subpathStarts`. Ignored for other shape kinds."
+        },
+        {
+          "name": "ringSubpathCounts",
+          "type": "uint16buffer",
+          "label": "Ring Subpath Counts (fromGeometry)",
+          "tooltip": "Wire from the geometry source's `ringSubpathCounts`. Lets the body builder skip hole subpaths and emit one polyline per outer ring. Ignored for other shape kinds."
         }
       ],
       "outputs": [
@@ -12195,7 +12840,7 @@
           "key": "restitution",
           "label": "Restitution",
           "type": "float",
-          "tooltip": "0 = no bounce (dynamic bodies stick to this surface on impact), 1 = perfectly elastic (energy preserved), > 1 = energy-amplifying. Combined with the dynamic body's restitution per Rapier's blend mode.",
+          "tooltip": "0 = no bounce (dynamic bodies stick to this surface on impact), 1 = perfectly elastic (energy preserved), > 1 = energy-amplifying. Combined with the dynamic body's restitution per the engine's blend mode.",
           "min": 0,
           "max": 2,
           "step": 0.05
@@ -12492,7 +13137,7 @@
       "displayName": "Physics Joint",
       "category": "solvers",
       "context": "shared",
-      "description": "F367 step 5 v2 — one constraint between two bodies. Backed by Rapier ImpulseJointSet. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger.",
+      "description": "F367 step 5 v2 — one constraint between two bodies. Backed by the engine's impulse-joint set. Four kinds: `distance` (rope-like, fixed length between anchors), `revolute` (pin joint, free rotation around anchor), `prismatic` (slider along axis), `weld` (fully fixed pose). Wire `bodyA` / `bodyB` from `physicsBody.id` outputs OR from indexed entries of `physicsBodyStagger.bodyIds` to address bodies inside a stagger.",
       "inputs": [
         {
           "name": "world",
@@ -12715,7 +13360,7 @@
       "displayName": "Physics Force Field",
       "category": "solvers",
       "context": "shared",
-      "description": "F379 — continuous force field acting on a fleet of bodies each frame, computed from each body's distance to a moving (or static) field centre. Replaces JS-spring CSS effects (e.g. `cursorProximityWrite`) when targets are physics-bound elements: keeps everything inside ONE physics simulation, so cursor pushes and ball impacts compose cleanly through Rapier instead of fighting at the CSS layer.",
+      "description": "F379 — continuous force field acting on a fleet of bodies each frame, computed from each body's distance to a moving (or static) field centre. Replaces JS-spring CSS effects (e.g. `cursorProximityWrite`) when targets are physics-bound elements: keeps everything inside ONE physics simulation, so cursor pushes and ball impacts compose cleanly through the engine instead of fighting at the CSS layer.",
       "inputs": [
         {
           "name": "world",
@@ -12791,6 +13436,14 @@
           "label": "Frame Selector",
           "type": "string",
           "tooltip": "Optional CSS selector for viewport→body coord transform on `centerX/Y`. Set when wiring raw `pointer.x/y` so the field centre tracks the visible cursor in the world's coord space. Leave empty when `centerX/Y` are sourced from another physics body or already in body coords."
+        },
+        {
+          "key": "motionGateMinSpeed",
+          "label": "Motion Gate Min Speed (px/s)",
+          "type": "float",
+          "tooltip": "When > 0, the field stops applying force whenever the centre's frame-to-frame speed drops below this threshold. Mitigates iterative-solver creep — sustained force on a stack of bodies pinned against a corner will eventually squeeze them through walls; gating on cursor motion lets the user stop creeping by simply holding still. 0 = always-on (original behaviour, fine for non-stacked scenes). 50 px/s = \"broom\" feel: silent when cursor is held, alive when it moves. Use 0 if the field is a magnet on a static scene where you want force even when the cursor is parked.",
+          "min": 0,
+          "step": 10
         }
       ],
       "defaults": {
@@ -12798,7 +13451,8 @@
         "radius": 200,
         "strength": 50,
         "falloff": "linear",
-        "frameSelector": ""
+        "frameSelector": "",
+        "motionGateMinSpeed": 0
       },
       "dynamicPorts": false,
       "compound": false,
@@ -13101,7 +13755,7 @@
       "displayName": "Physics Static Body (per element)",
       "category": "solvers",
       "context": "shared",
-      "description": "Multi-element static collider. Selector matches N DOM elements via `querySelectorAll`; spawns one static body per match, each tracking its element's live BCR. Per-frame translation-only resampling (translation-invariant — Rapier preserves contact pairs across pose changes). Use when N elements share the same physics tuning but each needs its own body — per-letter colliders driven by `splitText`, per-card colliders in a forEach layout, etc.",
+      "description": "Multi-element static collider. Selector matches N DOM elements via `querySelectorAll`; spawns one static body per match, each tracking its element's live BCR. Per-frame translation-only resampling (translation-invariant — the engine preserves contact pairs across pose changes). Use when N elements share the same physics tuning but each needs its own body — per-letter colliders driven by `splitText`, per-card colliders in a forEach layout, etc.",
       "inputs": [
         {
           "name": "world",
@@ -13299,7 +13953,7 @@
       "displayName": "Physics Mouse Drag",
       "category": "solvers",
       "context": "shared",
-      "description": "F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time.",
+      "description": "Pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`). The body stays DYNAMIC throughout the drag — the engine applies a per-substep force `F = stiffness × clamp(cursor − body, maxStretch) − damping × body_velocity` toward the cursor. Static walls stop the dragged body via the engine's normal contact resolution; the spring just pushes harder when the cursor goes past a wall. `pointermove` updates the cursor target; `pointerup` releases and exposes residual velocity (computed from the user's last ~80ms of pointer motion, applied to the body so flick-to-throw lands cleanly).",
       "inputs": [
         {
           "name": "world",
@@ -13371,17 +14025,25 @@
         },
         {
           "key": "stiffness",
-          "label": "Spring Stiffness",
+          "label": "Spring Stiffness (N/m)",
           "type": "float",
-          "tooltip": "Spring constant of the kinematic-anchor → body joint. Higher = body snaps tightly to the cursor (responsive but jittery on fast motion). Lower = body lags behind the cursor (slingshot feel). Default 80 is balanced for typical 100px/m px-per-meter scenes.",
+          "tooltip": "Spring constant in N/m. Force pulling the body toward the cursor scales linearly with cursor-to-body separation up to `maxStretch`. Default 1500 with default damping 15 and maxStretch 40 px gives terminal velocity ~4000 px/s — body keeps up with normal-to-fast cursor motion. Lower (200) feels rubber-bandy/heavy; higher (5000+) feels rigid but risks wall penetration if maxStretch is not lowered accordingly.",
           "min": 0,
-          "step": 50
+          "step": 100
         },
         {
           "key": "damping",
-          "label": "Spring Damping",
+          "label": "Spring Damping (N·s/m)",
           "type": "float",
-          "tooltip": "Damping coefficient on the spring. Higher = body settles faster after a release / direction change (heavier feel). Lower = body oscillates around the cursor (springier / more elastic feel). Default 12 critically-damps the default stiffness.",
+          "tooltip": "Velocity-opposing coefficient in N·s/m. Determines the body's terminal velocity (≈ stiffness · maxStretch / damping) when chasing the cursor. Default 15 is sub-critical (~0.4× critical for a typical 0.3 kg body at k=1500), giving small follow-through overshoot — natural draggable feel. Raise toward 2·sqrt(k·m) for over-damped / sluggish.",
+          "min": 0,
+          "step": 1
+        },
+        {
+          "key": "maxStretch",
+          "label": "Max Stretch (px)",
+          "type": "float",
+          "tooltip": "Cap on cursor-to-body separation that contributes to spring force. Bounds peak force = stiffness × maxStretch so an arbitrarily-far cursor (e.g. user drags way past a wall) can't drive force past the engine's contact-correction budget — what keeps the dragged body inside walls under sustained pull. 40 px is comfortable; smaller = tighter wall containment but more cursor lag at speed; larger = body keeps up better but contact penetration depth grows.",
           "min": 0,
           "step": 5
         },
@@ -13394,8 +14056,9 @@
       ],
       "defaults": {
         "selector": "body",
-        "stiffness": 80,
-        "damping": 12,
+        "stiffness": 1500,
+        "damping": 15,
+        "maxStretch": 40,
         "pickElementsSelector": ""
       },
       "dynamicPorts": false,
@@ -15276,28 +15939,51 @@
       "displayName": "Path Vertex Anim",
       "category": "paths",
       "context": "shared",
-      "description": "Animates per-vertex offsets along a path over time.",
+      "description": "Publishes a path-vertex AttributeBundle consumed by SceneRenderNode (via registerPathVertexAnim). Accepts either per-vertex scalar ports (vertexX_n / vertexY_n / handle ports) or a bulk Float32 vertexBuffer ([x0,y0,x1,y1,...]) for sim-driven flows. Node id convention: `vertex-anim-${objectId}`.",
       "inputs": [
         {
-          "name": "path",
-          "type": "path",
-          "label": "Path"
+          "name": "vertexBuffer",
+          "type": "float32buffer",
+          "label": "Vertex Buffer",
+          "tooltip": "Bulk vertex source. Flat [x0,y0,x1,y1,...] Float32Array of length vertexCount*2. When wired, takes precedence over per-vertex ports."
         },
         {
-          "name": "time",
-          "type": "float",
-          "label": "Time"
+          "name": "smWritesDone",
+          "type": "any",
+          "label": "SM Sync",
+          "tooltip": "Ordering input — wire from state-machine writes to ensure SM property writes complete before this node re-publishes the bundle."
         }
       ],
       "outputs": [
         {
-          "name": "path",
-          "type": "path",
-          "label": "Path"
+          "name": "points",
+          "type": "attributeBundle",
+          "label": "Points"
+        },
+        {
+          "name": "closed",
+          "type": "bool",
+          "label": "Closed"
         }
       ],
-      "parameters": [],
-      "defaults": {},
+      "parameters": [
+        {
+          "key": "vertexCount",
+          "label": "Vertex Count",
+          "type": "float",
+          "min": 1,
+          "step": 1
+        },
+        {
+          "key": "closed",
+          "label": "Closed Path",
+          "type": "bool"
+        }
+      ],
+      "defaults": {
+        "vertexCount": 0,
+        "closed": true
+      },
       "dynamicPorts": false,
       "compound": false,
       "useCases": [],

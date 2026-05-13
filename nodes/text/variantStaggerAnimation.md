@@ -27,6 +27,19 @@ _No outputs._
 | `variants` | variantStaggerTable | `[{"index":1,"values":{"tran...` | Variants |
 
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| 3D Tilt Parallax Card | hover-interactions | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/hover-interactions-tilt-parallax-card) · [`faster-claude/catalog/animations/hover-interactions/tilt-parallax-card/tilt-parallax-card.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/hover-interactions/tilt-parallax-card/) |
+| Course Catalog | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-course-catalog) · [`faster-claude/catalog/animations/advanced-orchestration/course-catalog/course-catalog.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/course-catalog/) |
+| Product Story | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-product-story) · [`faster-claude/catalog/animations/scroll-layouts/product-story/product-story.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/product-story/) |
+| Reactive Grid | hover-interactions | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/hover-interactions-reactive-grid) · [`faster-claude/catalog/animations/hover-interactions/reactive-grid/reactive-grid.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/hover-interactions/reactive-grid/) |
+| Scrollytelling | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-scrollytelling) · [`faster-claude/catalog/animations/scroll-layouts/scrollytelling/scrollytelling.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/scrollytelling/) |
+| Text Dispersion | hover-interactions | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/hover-interactions-text-dispersion) · [`faster-claude/catalog/animations/hover-interactions/text-dispersion/text-dispersion.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/hover-interactions/text-dispersion/) |
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

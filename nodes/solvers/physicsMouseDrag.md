@@ -4,7 +4,7 @@
 **Category:** solvers  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`) and creates a kinematic anchor + spring joint. `pointermove` follows the cursor, `pointerup` releases and exposes residual velocity. The spring is rope-jointed (zero rest length) with `stiffness` / `damping` tuning the snappiness. Soft-throw natural fall through gravity / collisions are unchanged because the body remains dynamic the whole time.
+Pointer-driven drag-to-throw. On `pointerdown` within `selector`, picks a body (either `bodyId` directly or by hit-testing `pickedBodyIds` against `pickElementsSelector`). The body stays DYNAMIC throughout the drag — the engine applies a per-substep force `F = stiffness × clamp(cursor − body, maxStretch) − damping × body_velocity` toward the cursor. Static walls stop the dragged body via the engine's normal contact resolution; the spring just pushes harder when the cursor goes past a wall. `pointermove` updates the cursor target; `pointerup` releases and exposes residual velocity (computed from the user's last ~80ms of pointer motion, applied to the body so flick-to-throw lands cleanly).
 
 ## Inputs
 
@@ -31,8 +31,9 @@ F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `select
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `selector` | elementSelector | `"body"` | CSS selector for the element that receives `pointerdown` to start a drag. Move + up are listened on `window` so the drag continues even when the cursor leaves the surface. Default `body` covers full-page drag. |
-| `stiffness` | float | `80` | Spring constant of the kinematic-anchor → body joint. Higher = body snaps tightly to the cursor (responsive but jittery on fast motion). Lower = body lags behind the cursor (slingshot feel). Default 80 is balanced for typical 100px/m px-per-meter scenes. (min: 0, step: 50) |
-| `damping` | float | `12` | Damping coefficient on the spring. Higher = body settles faster after a release / direction change (heavier feel). Lower = body oscillates around the cursor (springier / more elastic feel). Default 12 critically-damps the default stiffness. (min: 0, step: 5) |
+| `stiffness` | float | `1500` | Spring constant in N/m. Force pulling the body toward the cursor scales linearly with cursor-to-body separation up to `maxStretch`. Default 1500 with default damping 15 and maxStretch 40 px gives terminal velocity ~4000 px/s — body keeps up with normal-to-fast cursor motion. Lower (200) feels rubber-bandy/heavy; higher (5000+) feels rigid but risks wall penetration if maxStretch is not lowered accordingly. (min: 0, step: 100) |
+| `damping` | float | `15` | Velocity-opposing coefficient in N·s/m. Determines the body's terminal velocity (≈ stiffness · maxStretch / damping) when chasing the cursor. Default 15 is sub-critical (~0.4× critical for a typical 0.3 kg body at k=1500), giving small follow-through overshoot — natural draggable feel. Raise toward 2·sqrt(k·m) for over-damped / sluggish. (min: 0, step: 1) |
+| `maxStretch` | float | `40` | Cap on cursor-to-body separation that contributes to spring force. Bounds peak force = stiffness × maxStretch so an arbitrarily-far cursor (e.g. user drags way past a wall) can't drive force past the engine's contact-correction budget — what keeps the dragged body inside walls under sustained pull. 40 px is comfortable; smaller = tighter wall containment but more cursor lag at speed; larger = body keeps up better but contact penetration depth grows. (min: 0, step: 5) |
 | `pickElementsSelector` | elementSelector | `""` | CSS selector matching the DOM elements that map to `pickedBodyIds` (in document order). On pointerdown, the topmost element matched by this selector under the pointer is hit-tested against pickedBodyIds to identify the grabbed body. Required when `bodyId` is unset (-1) and pickedBodyIds is wired. |
 
 
@@ -47,6 +48,15 @@ F367 step 5 v2 — pointer-driven drag-to-throw. On `pointerdown` within `select
 - [Physics Body](physicsBody.md) — `physicsBody`
 - [Physics Body Stagger](physicsBodyStagger.md) — `physicsBodyStagger`
 - [Physics Apply Impulse](physicsApplyImpulse.md) — `physicsApplyImpulse`
+
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Fractional CTO | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-technology-advisory) · [`faster-claude/catalog/animations/scroll-animations/technology-advisory/technology-advisory.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/technology-advisory/) |
+| Studio Showreel | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-wheel-deck-blob) · [`faster-claude/catalog/animations/scroll-animations/wheel-deck-blob/wheel-deck-blob.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/wheel-deck-blob/) |
 
 ## Envelope
 

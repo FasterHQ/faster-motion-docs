@@ -4,7 +4,7 @@
 **Category:** solvers  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Multi-element static collider. Selector matches N DOM elements via `querySelectorAll`; spawns one static body per match, each tracking its element's live BCR. Per-frame translation-only resampling (translation-invariant — Rapier preserves contact pairs across pose changes). Use when N elements share the same physics tuning but each needs its own body — per-letter colliders driven by `splitText`, per-card colliders in a forEach layout, etc.
+Multi-element static collider. Selector matches N DOM elements via `querySelectorAll`; spawns one static body per match, each tracking its element's live BCR. Per-frame translation-only resampling (translation-invariant — the engine preserves contact pairs across pose changes). Use when N elements share the same physics tuning but each needs its own body — per-letter colliders driven by `splitText`, per-card colliders in a forEach layout, etc.
 
 ## Inputs
 
@@ -46,6 +46,14 @@ Multi-element static collider. Selector matches N DOM elements via `querySelecto
 - [Physics Static Body](physicsStaticBody.md) — `physicsStaticBody`
 - [Physics Body Stagger](physicsBodyStagger.md) — `physicsBodyStagger`
 - [Split Text](../text/splitText.md) — `splitText`
+
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Studio Showreel | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-wheel-deck-blob) · [`faster-claude/catalog/animations/scroll-animations/wheel-deck-blob/wheel-deck-blob.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/wheel-deck-blob/) |
 
 ## Envelope
 

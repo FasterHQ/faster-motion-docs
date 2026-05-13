@@ -35,6 +35,14 @@ _No outputs._
 - Carousel page dot — active-dot pill snaps to whichever dot corresponds to current slide via `progress` from the carousel's `scrollTrigger`.
 - Scanning highlight — a colored bar walks through items in a list as scroll advances (combine with a `pulseDelay` to slow the walk).
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Typewriter Effect | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-typewriter) · [`faster-claude/catalog/animations/text-effects/typewriter/typewriter.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/typewriter/) |
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

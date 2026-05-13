@@ -29,6 +29,18 @@ _No inputs._
 | `smooth` | float | `0` | Smoothing (min: 0, max: 1, step: 0.05) |
 
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Neural Constellation | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-neural-constellation) · [`faster-claude/catalog/animations/distance-proximity/neural-constellation/neural-constellation.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/neural-constellation/) |
+| Platform Demo | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-platform-demo) · [`faster-claude/catalog/animations/advanced-orchestration/platform-demo/platform-demo.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/platform-demo/) |
+| Product DNA | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-product-dna) · [`faster-claude/catalog/animations/distance-proximity/product-dna/product-dna.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/product-dna/) |
+| Proximity Spotlight | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-proximity-spotlight) · [`faster-claude/catalog/animations/distance-proximity/proximity-spotlight/proximity-spotlight.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/proximity-spotlight/) |
+| SVG Proximity Field | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-rect-proximity-field) · [`faster-claude/catalog/animations/distance-proximity/rect-proximity-field/rect-proximity-field.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/rect-proximity-field/) |
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

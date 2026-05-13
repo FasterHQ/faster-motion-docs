@@ -4,26 +4,31 @@
 **Category:** paths  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-Animates per-vertex offsets along a path over time.
+Publishes a path-vertex AttributeBundle consumed by SceneRenderNode (via registerPathVertexAnim). Accepts either per-vertex scalar ports (vertexX_n / vertexY_n / handle ports) or a bulk Float32 vertexBuffer ([x0,y0,x1,y1,...]) for sim-driven flows. Node id convention: `vertex-anim-${objectId}`.
 
 ## Inputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `path` | `path` | Path |
-| `time` | `float` | Time |
+| `vertexBuffer` | `float32buffer` | Bulk vertex source. Flat [x0,y0,x1,y1,...] Float32Array of length vertexCount*2. When wired, takes precedence over per-vertex ports. |
+| `smWritesDone` | `any` | Ordering input — wire from state-machine writes to ensure SM property writes complete before this node re-publishes the bundle. |
 
 
 ## Outputs
 
 | Port | Type | Description |
 |------|------|-------------|
-| `path` | `path` | Path |
+| `points` | `attributeBundle` | Points |
+| `closed` | `bool` | Closed |
 
 
 ## Parameters
 
-_No configurable parameters._
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `vertexCount` | float | `0` | Vertex Count (min: 1, step: 1) |
+| `closed` | bool | `true` | Closed Path |
+
 
 ## Envelope
 

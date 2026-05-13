@@ -16,7 +16,7 @@ When you see one of these in a runtime message, this page is the lookup: it tell
 | Type | Description |
 |------|-------------|
 | `additivePoseBlend` | Multi-clip pose combiner — emitted by `deriveAnimationSubgraphModule` when a non-SM scene has ≥2 animations. Combines N pose bundles by summing their deltas from a rest baseline. Loader-emitted runtime plumbing — never user-authored at the node level. |
-| `animatedParameter` | Joystick-input runtime helper — emitted by the rive-ts converter when a `.riv` file uses joystick parameter animation. Samples a keyframe track at a progress input and drives a ParameterStoreNode writer port each frame. Loader-emitted; never user-authored. |
+| `animatedParameter` | Joystick-input runtime helper — emitted by the .fmtion converter when a source file uses joystick parameter animation. Samples a keyframe track at a progress input and drives a ParameterStoreNode writer port each frame. Loader-emitted; never user-authored. |
 | `gradientDecompose` | Per-OPE color/gradient decomposer — materialised by `startGradientDecomposeAuthoring` reactor. Decomposes gradient/color FillValues into RGBA + per-stop float channels for the object pose bundle. Loader-emitted — never user-authored. |
 | `layerAdvance` | Per-layer state machine solver — materialised inside `stateMachine` compound expansion. Evaluates conditions, advances transitions, outputs current/previous state progress and weights. |
 | `listenerAction` | SM listener action router — materialised inside `stateMachine` compound expansion. Routes listener actions into parameter writes (for SMParameterStore) and side-effect actions (for audio/callback nodes). |
@@ -43,14 +43,14 @@ When you see one of these in a runtime message, this page is the lookup: it tell
 
 | Type | Description |
 |------|-------------|
-| `boneClipEval` | Per-animation bone-pose evaluator (F342) — emitted by the rive-ts converter / `deriveOpes` reactor for skeletal scenes. Evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Loader-emitted; never user-authored. |
+| `boneClipEval` | Per-animation bone-pose evaluator (F342) — emitted by the .fmtion converter / `deriveOpes` reactor for skeletal scenes. Evaluates an AnimationClip's bone tracks at progress and outputs an absolute pose AttributeBundle. Loader-emitted; never user-authored. |
 | `carouselAutoplay` | Time-driven slideOffset for carousel auto-advancement. Pauses on hover (optional) and respects prefers-reduced-motion. |
 | `carouselKeyboardNav` | Edge-triggered ArrowLeft/ArrowRight → cumulative iteration offset. Wire into SeamlessPlayhead.iteration to enable keyboard slide stepping. |
 | `carouselSlideLocalTime` | Per-slide local-time for carousel tween semantics. slideProgress = clamp((playhead - slideIndex*spacing) mod loopDuration / duration, 0, 1). |
 | `carouselWrapCounter` | Half-plane wrap detection with cooldown + 3-sample direction majority. Emits cumulative iteration for seamless carousel loops. |
 | `clipRegistry` | Singleton scene-level publisher of AnimationClip references — emitted by `deriveOpes` reactor / FM Phase 12. One dynamic output port per clip (clip_${id}) carries the live AnimationClip reference. Replaces imperative TPN/OPE bind(clip) seams with port-routed clip identity. Never user-authored. |
 | `objectClipEval` | Per-animation pose evaluator (non-SM path) — emitted by `deriveOpes` reactor, one per AnimationNode. Evaluates an AnimationClip's object tracks at progress and outputs an absolute pose AttributeBundle. Reads clip + rest from typed ports. Loader-emitted — never user-authored. |
-| `seekRemap` | Joystick parameter→progress remapper — emitted by the rive-ts converter for `.riv` files using joystick seek bindings. Maps a raw parameter value into [0,1] progress for OPE/clip seek inputs. Loader-emitted; never user-authored. |
+| `seekRemap` | Joystick parameter→progress remapper — emitted by the .fmtion converter for source files using joystick seek bindings. Maps a raw parameter value into [0,1] progress for OPE/clip seek inputs. Loader-emitted; never user-authored. |
 | `stateAnimEval` | F345: evaluates a single SM animation state's clip at progress and outputs a transforms map. Reads clip from a wired ClipRegistry port. The downstream StateTransformsMux selects the active state's output by currentStateId. Materialised inside `stateMachine` compound expansion (per state per role). |
 | `stateTransformsMux` | F345: selects an SM layer's active state's transforms by id. Reads currentStateId from LayerAdvanceNode + per-state transforms from dynamic transforms_${stateId} input ports wired from per-state evaluator nodes; outputs the active state's transforms. Materialised inside `stateMachine` compound expansion (per layer per role). |
 

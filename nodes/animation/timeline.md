@@ -46,6 +46,25 @@ Playback clock that emits a 0..1 `progress` over `duration` seconds. Self-advanc
 - Externally driven clock — wire `progress` input from `scrollTrigger` for scroll-bound playback, or from a parameter for app-driven sequencing.
 - Looping & ping-pong — set `iterations: 0` for infinite loop, enable `pingPong` for back-and-forth playback.
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Loop Animation | keyframe-sequences | beginner | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/keyframe-sequences-loop-animation) · [`faster-claude/catalog/animations/keyframe-sequences/loop-animation/loop-animation.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/keyframe-sequences/loop-animation/) |
+| Agency Portfolio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-agency-portfolio) · [`faster-claude/catalog/animations/advanced-orchestration/agency-portfolio/agency-portfolio.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/agency-portfolio/) |
+| Breathing Hero | time-auto-loops | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/time-auto-loops-breathing-hero) · [`faster-claude/catalog/animations/time-auto-loops/breathing-hero/breathing-hero.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/time-auto-loops/breathing-hero/) |
+| Course Catalog | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-course-catalog) · [`faster-claude/catalog/animations/advanced-orchestration/course-catalog/course-catalog.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/course-catalog/) |
+| Dashboard Story | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-dashboard-story) · [`faster-claude/catalog/animations/scroll-layouts/dashboard-story/dashboard-story.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/dashboard-story/) |
+| Editorial Portfolio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-obscura) · [`faster-claude/catalog/animations/advanced-orchestration/obscura/obscura.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/obscura/) |
+| Gravitational Orbit | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-gravitational-orbit) · [`faster-claude/catalog/animations/distance-proximity/gravitational-orbit/gravitational-orbit.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/gravitational-orbit/) |
+| Loading States | time-auto-loops | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/time-auto-loops-loading-states) · [`faster-claude/catalog/animations/time-auto-loops/loading-states/loading-states.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/time-auto-loops/loading-states/) |
+| Neon Grid | time-auto-loops | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/time-auto-loops-neon-grid) · [`faster-claude/catalog/animations/time-auto-loops/neon-grid/neon-grid.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/time-auto-loops/neon-grid/) |
+| Neural Constellation | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-neural-constellation) · [`faster-claude/catalog/animations/distance-proximity/neural-constellation/neural-constellation.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/neural-constellation/) |
+
+_…and 7 more in the catalog._
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

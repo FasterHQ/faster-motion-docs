@@ -4,7 +4,7 @@
 **Category:** solvers  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-F379 — continuous force field acting on a fleet of bodies each frame, computed from each body's distance to a moving (or static) field centre. Replaces JS-spring CSS effects (e.g. `cursorProximityWrite`) when targets are physics-bound elements: keeps everything inside ONE physics simulation, so cursor pushes and ball impacts compose cleanly through Rapier instead of fighting at the CSS layer.
+F379 — continuous force field acting on a fleet of bodies each frame, computed from each body's distance to a moving (or static) field centre. Replaces JS-spring CSS effects (e.g. `cursorProximityWrite`) when targets are physics-bound elements: keeps everything inside ONE physics simulation, so cursor pushes and ball impacts compose cleanly through the engine instead of fighting at the CSS layer.
 
 ## Inputs
 
@@ -30,6 +30,7 @@ _No outputs._
 | `strength` | float | `50` | Peak force magnitude at the centre. Decays to 0 at the radius edge per `falloff`. Tune with respect to body density × mass. (step: 5) |
 | `falloff` | enum | `"linear"` | Falloff. Options: `linear`, `inverse`, `inverseSquare` |
 | `frameSelector` | string | `""` | Optional CSS selector for viewport→body coord transform on `centerX/Y`. Set when wiring raw `pointer.x/y` so the field centre tracks the visible cursor in the world's coord space. Leave empty when `centerX/Y` are sourced from another physics body or already in body coords. |
+| `motionGateMinSpeed` | float | `0` | When > 0, the field stops applying force whenever the centre's frame-to-frame speed drops below this threshold. Mitigates iterative-solver creep — sustained force on a stack of bodies pinned against a corner will eventually squeeze them through walls; gating on cursor motion lets the user stop creeping by simply holding still. 0 = always-on (original behaviour, fine for non-stacked scenes). 50 px/s = "broom" feel: silent when cursor is held, alive when it moves. Use 0 if the field is a magnet on a static scene where you want force even when the cursor is parked. (min: 0, step: 10) |
 
 
 ## Use cases

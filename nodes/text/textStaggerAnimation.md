@@ -48,6 +48,25 @@ _No outputs._
 - [Text Reveal](textRevealAnimation.md) — `textRevealAnimation`
 - [Pulse Tween](../animation/pulseTween.md) — `pulseTween`
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Word Stagger Animation | text-effects | beginner | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-word-stagger) · [`faster-claude/catalog/animations/text-effects/word-stagger/word-stagger.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/word-stagger/) |
+| Character Cascade | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-char-cascade) · [`faster-claude/catalog/animations/text-effects/char-cascade/char-cascade.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/char-cascade/) |
+| Color Fill Text | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-color-fill) · [`faster-claude/catalog/animations/text-effects/color-fill/color-fill.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/color-fill/) |
+| Course Catalog | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-course-catalog) · [`faster-claude/catalog/animations/advanced-orchestration/course-catalog/course-catalog.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/course-catalog/) |
+| Mara Quill — Pinned Linear Pan | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-mara-quill) · [`faster-claude/catalog/animations/carousel-effects/mara-quill/mara-quill.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/mara-quill/) |
+| Otis Roan — Pinned Linear Pan (Mint) | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-otis-roan) · [`faster-claude/catalog/animations/carousel-effects/otis-roan/otis-roan.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/otis-roan/) |
+| Scrollytelling | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-scrollytelling) · [`faster-claude/catalog/animations/scroll-layouts/scrollytelling/scrollytelling.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/scrollytelling/) |
+| Typewriter Effect | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-typewriter) · [`faster-claude/catalog/animations/text-effects/typewriter/typewriter.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/typewriter/) |
+| 3D Flip Words | text-effects | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-flip-words) · [`faster-claude/catalog/animations/text-effects/flip-words/flip-words.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/flip-words/) |
+| Blur Focus Reveal | text-effects | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-blur-focus) · [`faster-claude/catalog/animations/text-effects/blur-focus/blur-focus.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/blur-focus/) |
+
+_…and 3 more in the catalog._
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

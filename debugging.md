@@ -148,6 +148,9 @@ All codes are **stable** — once published they never change semantics. New che
 | `PHYSICS_MOUSE_DRAG_NO_MATCH` | error | A `physicsMouseDrag` is wired but its target body / selector resolves to nothing. | Verify the selector / bodyId source. |
 | `PHYSICS_JOINT_BODY_DISABLED` | error | A joint references a body that exists in the graph but has been gated off (e.g. by `activeWhen`). The joint is orphaned. | Either gate the joint with the same condition, or unwire the joint when bodies are inactive. |
 | `PHYSICS_BOUND_DOUBLE_WRITER` | error | Two writers target the same physics body's transform. Same family of issue as `MULTIPLE_TRANSFORM_WRITERS_SAME_COMPONENT` but on the physics side. | Pick one owner of the physics body's pose. |
+| `PHYSICS_STAGGER_OUT_OF_FRAME` | error | A `physicsBodyStagger` selector matches elements that live **outside** the world's `frameSelector`. Those elements still become physics bodies — usually the cause of phantom bodies that collide with the real fleet mid-air. | Tighten the selector — use an attribute (`[data-physics-x]`) or scope it through the frame (`<frame> <stagger>`). |
+| `PHYSICS_STAGGER_GROSSLY_MISSIZED` | warning | Some elements matched by `physicsBodyStagger` have a visible BCR area dramatically off from the authored shape. Collider becomes the authored size; visual stays the BCR size — they don't line up. | Tighten the selector to exclude the off-size elements (legend swatches, icons, etc.), or accept the visual mismatch if intentional. |
+| `PHYSICS_STAGGER_NO_FRAME_NO_GUARD` | warning | A single-class `physicsBodyStagger` selector with no `frameSelector` on the world to scope it. Any future DOM addition matching that class becomes a phantom physics body. | Set `frameSelector` on the `physicsWorld`, OR switch the stagger selector to an attribute (`[data-physics-…]`) / a scoped descendant. |
 
 ### `activeWhen` — `activeWhenChecks.ts` (loader-time)
 

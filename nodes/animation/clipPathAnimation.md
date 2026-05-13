@@ -32,6 +32,15 @@ _No outputs._
 - [Property Animation](propertyAnimation.md) — `propertyAnimation`
 - [DOM Property Write](../boundary/domPropertyWrite.md) — `domPropertyWrite`
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Clip-Path Morph | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-clip-path-morph) · [`faster-claude/catalog/animations/scroll-animations/clip-path-morph/clip-path-morph.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/clip-path-morph/) |
+| Fractional CTO | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-technology-advisory) · [`faster-claude/catalog/animations/scroll-animations/technology-advisory/technology-advisory.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/technology-advisory/) |
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

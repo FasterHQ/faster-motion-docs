@@ -40,6 +40,25 @@ Per-frame pointer velocity. One node emits five outputs in parallel — wire whi
 - Directional parallax / tilt — `valueX` and `valueY` drop into a 3-stop progress (left / center / right) for subtle motion-aware depth.
 - Distance-since-last-spawn — feed `magnitude` into `accumulatePulse` for spawn rates proportional to cursor speed (cursor trail, image trail).
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Agency Portfolio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-agency-portfolio) · [`faster-claude/catalog/animations/advanced-orchestration/agency-portfolio/agency-portfolio.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/agency-portfolio/) |
+| Course Catalog | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-course-catalog) · [`faster-claude/catalog/animations/advanced-orchestration/course-catalog/course-catalog.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/course-catalog/) |
+| Momentum Wave | velocity-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/velocity-effects-momentum-wave) · [`faster-claude/catalog/animations/velocity-effects/momentum-wave/momentum-wave.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/velocity-effects/momentum-wave/) |
+| Neural Constellation | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-neural-constellation) · [`faster-claude/catalog/animations/distance-proximity/neural-constellation/neural-constellation.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/neural-constellation/) |
+| Platform Demo | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-platform-demo) · [`faster-claude/catalog/animations/advanced-orchestration/platform-demo/platform-demo.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/platform-demo/) |
+| Product DNA | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-product-dna) · [`faster-claude/catalog/animations/distance-proximity/product-dna/product-dna.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/product-dna/) |
+| Product Launch | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-product-launch) · [`faster-claude/catalog/animations/advanced-orchestration/product-launch/product-launch.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/product-launch/) |
+| Product Story | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-product-story) · [`faster-claude/catalog/animations/scroll-layouts/product-story/product-story.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/product-story/) |
+| SaaS Metrics Showcase | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-saas-metrics) · [`faster-claude/catalog/animations/scroll-layouts/saas-metrics/saas-metrics.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/saas-metrics/) |
+| Velocity Blur | velocity-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/velocity-effects-velocity-blur) · [`faster-claude/catalog/animations/velocity-effects/velocity-blur/velocity-blur.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/velocity-effects/velocity-blur/) |
+
+_…and 1 more in the catalog._
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

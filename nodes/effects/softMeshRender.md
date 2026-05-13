@@ -1,29 +1,47 @@
-# Hover
+# Soft Mesh Render
 
-**Type:** `hover`  
-**Category:** inputs  
+**Type:** `softMeshRender`  
+**Category:** effects  
 **Context:** Shared — works in both DOM and canvas graphs  
 
-mouseenter/mouseleave with smooth 0→1 transition over duration.
+Canvas2D overlay renderer for a softMesh. F381 P1.2. Consumes the mesh through typed input ports — `vertices`, `subpathStarts`, `sharpFlags`, and `bodyCenterX/Y`, all wired from the linked `softMesh` outputs. No sim-handle / DOM-ref side channels: this node never touches the sim object directly (F311 graph-native data flow).
+
+Mounts a `<canvas>` overlay inside the host resolved from this node's `selector` param (required — set it to the same selector as the linked softMesh). Translates body coords to host-local px by anchoring `bodyCenterX/Y` to the live host centre, so the rendered mesh stays glued to the host even when the underlying physics world frame moves independently (scroll-deck layouts where the world frame lives off-screen while the host scrolls into view). Draws closed subpaths with mixed `lineTo` (sharp corners) / `quadraticCurveTo` (smooth curves through edge midpoints), filled with the author's colour.
+
+**Multiple renderers can wire to one softMesh** — e.g. a main fill plus a debug ghost overlay with different opacity / colour / selector. The simulator computes once; renderers each draw their own canvas.
 
 ## Inputs
 
-_No inputs._
+| Port | Type | Description |
+|------|------|-------------|
+| `vertices` | `float32buffer` | Wire from `softMesh.vertices`. Live concatenated vertex buffer in body coords. |
+| `subpathStarts` | `uint16buffer` | Wire from `softMesh.subpathStarts`. Vertex-pair start index of each subpath. |
+| `sharpFlags` | `uint16buffer` | Wire from `softMesh.sharpFlags`. Sharp-corner flag per vertex. |
+| `bodyCenterX` | `float` | Wire from `softMesh.bodyCenterX`. Snapshot rest centroid in body coords. |
+| `bodyCenterY` | `float` | Wire from `softMesh.bodyCenterY`. Snapshot rest centroid in body coords. |
+| `opacity` | `float` | Fill opacity 0..1. _(range: 0..1)_ |
+
 
 ## Outputs
 
-| Port | Type | Description |
-|------|------|-------------|
-| `hover` | `float` | Smooth 0..1 hover gate. Multiply by an angle / pixel range with a mathUtil before driving degree-typed or pixel-typed inputs. _(range: 0..1, unit: gate)_ |
-
+_No outputs._
 
 ## Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `selector` | string | `""` | Selector |
-| `duration` | float | `250` | Duration (ms) (min: 0, step: 50) |
+| `selector` | elementSelector | `""` | Required. CSS selector for the host element the canvas mounts inside. Match the linked softMesh's `selector` so the visual is anchored to the same DOM element the sim was sized to. |
+| `colour` | colorString | `"#1a1a1a"` | Fill Colour |
 
+
+## Use cases
+
+- Visible mesh — wire `softMesh.vertices/subpathStarts/sharpFlags/bodyCenterX/bodyCenterY` to the matching inputs, set `selector` + `colour`. Standard pairing.
+- Debug ghost overlay — second softMeshRender wired to the same softMesh with `opacity: 0.3` and a contrasting colour, mounted on a different selector for side-by-side.
+
+## See also
+
+- [Soft Mesh](softMesh.md) — `softMesh`
 
 ## Used in
 
@@ -31,8 +49,6 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 
 | Animation | Category | Complexity | Sources |
 |-----------|----------|------------|---------|
-| Editorial Portfolio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-obscura) · [`faster-claude/catalog/animations/advanced-orchestration/obscura/obscura.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/obscura/) |
-| Fractional CTO | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-technology-advisory) · [`faster-claude/catalog/animations/scroll-animations/technology-advisory/technology-advisory.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/technology-advisory/) |
 | Studio Showreel | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-wheel-deck-blob) · [`faster-claude/catalog/animations/scroll-animations/wheel-deck-blob/wheel-deck-blob.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/wheel-deck-blob/) |
 
 ## Envelope

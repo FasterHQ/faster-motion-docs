@@ -25,7 +25,7 @@ One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param)
 | `rotation` | `float` | Rotation _(unit: radians)_ |
 | `linearVelocity` | `vec2` | In px/s. Useful for impact pulses, parallax intensity, secondary-motion drivers. |
 | `angularVelocity` | `float` | Angular Velocity _(unit: rad/s)_ |
-| `awake` | `float` | 1 = simulating, 0 = sleeping (Rapier auto-sleeps low-velocity bodies). Wire into a `thresholdPulse` to fire "settled" effects. _(range: 0..1, unit: bool)_ |
+| `awake` | `float` | 1 = simulating, 0 = sleeping (engine auto-sleeps low-velocity bodies). Wire into a `thresholdPulse` to fire "settled" effects. _(range: 0..1, unit: bool)_ |
 | `x` | `float` | Convenience: just position.x. Wire into `domPoseWrite.translateX` to drive a single component. |
 | `y` | `float` | Convenience: just position.y. |
 | `speed` | `float` | Convenience: \|linearVelocity\|. Useful for impact intensity, parallax intensity, secondary-motion drivers. |
@@ -46,11 +46,12 @@ One rigid body in the wired physicsWorld. Dynamic (default) or kinematic (param)
 | `initialAngularVelocity` | float | `0` | Initial spin in radians/second at body creation. Pair with low angular damping for sustained tumble. (step: 0.01) |
 | `density` | float | `1` | Mass per unit area. 0 is reserved for static bodies — use bodyKind: "kinematic" or `physicsStaticBody` instead. (min: 0.001, step: 0.1) |
 | `restitution` | float | `0.5` | 0 = no bounce, 1 = perfectly elastic, > 1 = energy-amplifying (super-bouncy). (min: 0, max: 2, step: 0.05) |
-| `friction` | float | `0.5` | Surface friction coefficient. 0 = frictionless (slides forever), 1 = typical solid contact, > 1 = sticky. Combined with the touched body's friction per Rapier's blend mode. (min: 0, max: 2, step: 0.05) |
+| `friction` | float | `0.5` | Surface friction coefficient. 0 = frictionless (slides forever), 1 = typical solid contact, > 1 = sticky. Combined with the touched body's friction per the engine's blend mode. (min: 0, max: 2, step: 0.05) |
 | `linearDamping` | float | `0` | Per-second exponential damping on linear velocity. Higher = settles faster. (min: 0, step: 0.05) |
 | `angularDamping` | float | `0` | Per-second exponential damping on angular velocity. 0 = body keeps spinning forever; raise to bleed off rotation over time. (min: 0, step: 0.05) |
 | `lockRotation` | bool | `false` | When true, body cannot rotate (locks angular DOF). Useful for upright character bodies. |
 | `ccd` | bool | `false` | Enables tunnelling-prevention for fast-moving small bodies. Costs slightly more CPU. |
+| `canSleep` | bool | `true` | When true (default), the engine auto-sleeps the body once velocity drops below an internal threshold — gravity, forces, and joint corrections stop applying. Correct for most UI animations (settled balls SHOULD stop simulating). Set false for precision tests / pendulums where the small offset between "asleep at near-equilibrium" vs "exactly at equilibrium" matters, OR when a slept body should still be re-pulled by a wired force/joint that activates after the sleep. |
 
 
 ## See also

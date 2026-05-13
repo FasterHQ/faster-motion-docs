@@ -26,6 +26,16 @@ _No outputs._
 | `toPath` | string | `""` | Target Path (d) |
 
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Morph Feature | svg-animations | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/svg-animations-morph-feature) · [`faster-claude/catalog/animations/svg-animations/morph-feature/morph-feature.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/svg-animations/morph-feature/) |
+| Morph Shapes | svg-animations | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/svg-animations-morph-shapes) · [`faster-claude/catalog/animations/svg-animations/morph-shapes/morph-shapes.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/svg-animations/morph-shapes/) |
+| Platform Demo | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-platform-demo) · [`faster-claude/catalog/animations/advanced-orchestration/platform-demo/platform-demo.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/platform-demo/) |
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

@@ -209,6 +209,8 @@ const WARNING_CODES_DOCUMENTED = new Set([
   'PHYSICS_NO_WORLD', 'PHYSICS_MULTIPLE_WORLDS', 'PHYSICS_BODY_REF_MISSING',
   'PHYSICS_PPM_INVALID', 'PHYSICS_ARC_DEGENERATE', 'PHYSICS_MOUSE_DRAG_NO_MATCH',
   'PHYSICS_JOINT_BODY_DISABLED', 'PHYSICS_BOUND_DOUBLE_WRITER',
+  'PHYSICS_STAGGER_OUT_OF_FRAME', 'PHYSICS_STAGGER_GROSSLY_MISSIZED',
+  'PHYSICS_STAGGER_NO_FRAME_NO_GUARD',
   // Loader-time anchors
   'ACTIVE_WHEN_INVALID_QUERY',
   'OVERRIDE_INVALID_WHEN', 'OVERRIDE_INVALID_SET', 'OVERRIDE_PATH_INVALID',
@@ -515,6 +517,128 @@ for (const field of ENVELOPE_FIELDS) {
   }
 }
 
+// ── "Used in" — demo links from faster-claude catalog mirror ──────────────
+// faster-claude/catalog/animations/marketplace.meta.json is the curated
+// list of QA'd, shipped animations (the ready-list filter from
+// faster-motion's extract-animations pipeline). We walk it once, parse
+// each .fmtion, and build an inverse index Map<nodeType, demoEntry[]>.
+// Per-node MDs render that index as a "Used in" section so agents see
+// every shipped animation that wires the node — with preview URL + the
+// on-disk path inside the local faster-claude mirror they already have
+// read access to.
+
+const FASTER_CLAUDE_CATALOG = join(DOCS_ROOT, '..', 'faster-claude', 'catalog', 'animations');
+const MARKETPLACE_META_PATH = join(FASTER_CLAUDE_CATALOG, 'marketplace.meta.json');
+
+const usedInIndex = new Map(); // nodeType → Array<{name, slug, category, subcategory, complexity, description, fmtionPath, gitea, preview}>
+
+function walkGraphNodes(parsed, visit) {
+  const dom = parsed?.domGraph?.nodes;
+  if (Array.isArray(dom)) for (const n of dom) visit(n);
+  // Templates body — same loader treats their type field as the runtime
+  // type, so include their refs too. Otherwise nodes that only ever
+  // appear inside templates would have zero "Used in" entries.
+  const tpls = parsed?.domGraph?.templates;
+  if (tpls && typeof tpls === 'object') {
+    for (const tpl of Object.values(tpls)) {
+      if (Array.isArray(tpl?.nodes)) for (const n of tpl.nodes) visit(n);
+    }
+  }
+  // Canvas graphs — second authoring surface for canvas-context nodes.
+  const canvas = parsed?.canvas;
+  if (Array.isArray(canvas)) {
+    for (const area of canvas) {
+      const ng = area?.graph?.nodes;
+      if (Array.isArray(ng)) for (const n of ng) visit(n);
+    }
+  }
+}
+
+if (existsSync(MARKETPLACE_META_PATH)) {
+  try {
+    const manifest = JSON.parse(readFileSync(MARKETPLACE_META_PATH, 'utf-8'));
+    const items = Array.isArray(manifest?.items) ? manifest.items : [];
+    let scannedCount = 0;
+    let parseFailures = 0;
+    for (const item of items) {
+      const fmtionRel = item?.preview?.config?.fmtion_file;
+      if (typeof fmtionRel !== 'string') continue;
+      const absPath = join(FASTER_CLAUDE_CATALOG, fmtionRel);
+      if (!existsSync(absPath)) continue;
+      let parsed;
+      try {
+        parsed = JSON.parse(readFileSync(absPath, 'utf-8'));
+      } catch (_) {
+        parseFailures += 1;
+        continue;
+      }
+      scannedCount += 1;
+      const seenTypes = new Set();
+      walkGraphNodes(parsed, (n) => {
+        if (typeof n?.type === 'string') seenTypes.add(n.type);
+      });
+      const entry = {
+        name: item.name,
+        slug: item.slug,
+        category: item.category,
+        subcategory: item.subcategory,
+        complexity: item.complexity || 'unknown',
+        description: (item.description || '').replace(/\s+/g, ' ').trim(),
+        fmtionPath: `faster-claude/catalog/animations/${fmtionRel}`,
+        // Public Gitea browse URL — humans + agents can both read.
+        gitea: `https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/${fmtionRel.split('/').slice(0, -1).join('/')}/`,
+        // Backend preview endpoint — returns a runnable HTML page that
+        // wraps the .fmtion in the FM runtime. Same view the chat
+        // modal serves on click.
+        preview: `https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/${item.slug}`,
+      };
+      for (const t of seenTypes) {
+        if (!usedInIndex.has(t)) usedInIndex.set(t, []);
+        usedInIndex.get(t).push(entry);
+      }
+    }
+    console.log(`Scanned ${scannedCount} animations from faster-claude catalog (${parseFailures} parse failures)`);
+  } catch (e) {
+    console.warn(`Could not read faster-claude catalog manifest: ${e.message}`);
+  }
+} else {
+  console.warn(`faster-claude catalog not found at ${MARKETPLACE_META_PATH} — skipping "Used in" section emission.`);
+}
+
+const COMPLEXITY_RANK = { beginner: 0, moderate: 1, advanced: 2, unknown: 3 };
+
+function formatUsedIn(type) {
+  const entries = usedInIndex.get(type);
+  if (!entries || entries.length === 0) return '';
+  // Order: easiest first (so agents land on approachable examples), then
+  // alphabetical by name for stable output. Cap visible at 10; everything
+  // else collapsed into a "+N more" trailing line so the section doesn't
+  // dominate pages where a node is heavily used.
+  const sorted = [...entries].sort((a, b) => {
+    const cmp = (COMPLEXITY_RANK[a.complexity] ?? 9) - (COMPLEXITY_RANK[b.complexity] ?? 9);
+    return cmp !== 0 ? cmp : a.name.localeCompare(b.name);
+  });
+  const visible = sorted.slice(0, 10);
+  const overflow = sorted.length - visible.length;
+
+  let md = `## Used in\n\n`;
+  md += `Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. `;
+  md += `Each entry runs in production and is the QA'd reference for the pattern.\n\n`;
+  md += `| Animation | Category | Complexity | Sources |\n`;
+  md += `|-----------|----------|------------|---------|\n`;
+  for (const e of visible) {
+    const sources =
+      `[preview](${e.preview}) · [\`${e.fmtionPath}\`](${e.gitea})`;
+    const cat = [e.category, e.subcategory].filter(Boolean).filter((v, i, arr) => i === 0 || v !== arr[i - 1]).join(' / ');
+    md += `| ${e.name} | ${cat} | ${e.complexity} | ${sources} |\n`;
+  }
+  if (overflow > 0) {
+    md += `\n_…and ${overflow} more in the catalog._\n`;
+  }
+  md += '\n';
+  return md;
+}
+
 // Hand-authored per-node supplement loader. Drop a file at
 // `supplements/<type>.md` and the generator inlines it after the
 // auto-generated sections, before the envelope. Useful for nodes whose
@@ -557,6 +681,8 @@ function generateNodeMd(node, typeIndex) {
 
   md += formatUseCases(node.useCases);
   md += formatSeeAlso(node.seeAlso, node.category, typeIndex);
+
+  md += formatUsedIn(node.type);
 
   md += readSupplement(node.type);
 
@@ -739,6 +865,7 @@ let masterMd = `# Node Reference\n\n`;
 masterMd += `All ${nodes.length} graph node types available in Faster Motion.\n\n`;
 masterMd += `For machine-readable data, see [\`node-registry.json\`](../node-registry.json).\n\n`;
 masterMd += `> Adjacent indexes: [\`compounds.md\`](../compounds.md) for the ${compoundNodes.length} author-facing compound nodes (with the rule on not wiring into their internals). [\`internal-nodes.md\`](../internal-nodes.md) for the ${internalNodes.length} loader-emitted nodes that surface in runtime errors but aren't author-facing.\n\n`;
+masterMd += `> Most node pages carry a **Used in** section listing the shipped animations (\`faster-claude/catalog/animations/marketplace.meta.json\` — currently ${usedInIndex.size > 0 ? Math.max(...[...usedInIndex.values()].map(a => a.length)) : 0} max per node) that wire the node, with preview URLs and on-disk paths.\n\n`;
 masterMd += `> Every per-node page below includes the same **Envelope** reference (\`id\`, \`type\`, \`activeWhen\`, \`_note\`, \`params\`, \`connections\`) — it's repeated verbatim on every node page so any single page is self-sufficient. The reference is also inlined immediately below for index browsing.\n\n`;
 masterMd += ENVELOPE_SECTION + '\n';
 

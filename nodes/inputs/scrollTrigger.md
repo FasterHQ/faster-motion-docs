@@ -59,6 +59,25 @@ Track an element's position relative to the scroll viewport — outputs progress
 - [Velocity](../math/velocity.md) — `velocity`
 - [Scroll To](../animation/scrollTo.md) — `scrollTo`
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Fade Reveal on Scroll | scroll-animations | beginner | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-fade-reveal) · [`faster-claude/catalog/animations/scroll-animations/fade-reveal/fade-reveal.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/fade-reveal/) |
+| Scrub Progress Indicator | scroll-animations | beginner | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-scrub-progress) · [`faster-claude/catalog/animations/scroll-animations/scrub-progress/scrub-progress.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/scrub-progress/) |
+| Word Stagger Animation | text-effects | beginner | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-word-stagger) · [`faster-claude/catalog/animations/text-effects/word-stagger/word-stagger.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/word-stagger/) |
+| Agency Portfolio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-agency-portfolio) · [`faster-claude/catalog/animations/advanced-orchestration/agency-portfolio/agency-portfolio.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/agency-portfolio/) |
+| Animated Infographic | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-animated-infographic) · [`faster-claude/catalog/animations/advanced-orchestration/animated-infographic/animated-infographic.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/animated-infographic/) |
+| Card Spread | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-card-spread) · [`faster-claude/catalog/animations/scroll-layouts/card-spread/card-spread.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/card-spread/) |
+| Chapter Book | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-chapter-book) · [`faster-claude/catalog/animations/advanced-orchestration/chapter-book/chapter-book.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/chapter-book/) |
+| Character Cascade | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-char-cascade) · [`faster-claude/catalog/animations/text-effects/char-cascade/char-cascade.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/char-cascade/) |
+| Color Fill Text | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-color-fill) · [`faster-claude/catalog/animations/text-effects/color-fill/color-fill.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/color-fill/) |
+| Contra-Flow Columns | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-contra-columns) · [`faster-claude/catalog/animations/scroll-layouts/contra-columns/contra-columns.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/contra-columns/) |
+
+_…and 74 more in the catalog._
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

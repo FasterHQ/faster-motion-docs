@@ -32,6 +32,15 @@ _No outputs._
 - Hover gate driving theme variables — `hover.hover` (0..1) → `--accent-hue`, `--accent-sat`, `--shadow-elev` with per-variable ranges and easing, no remap noise in the graph.
 - Pose-style writes for non-transform properties — when you want to drive 3+ CSS variables coherently from one input, packing them into one node beats the visual clutter of N separate remap+write pairs.
 
+## Used in
+
+Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
+
+| Animation | Category | Complexity | Sources |
+|-----------|----------|------------|---------|
+| Fractional CTO | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-technology-advisory) · [`faster-claude/catalog/animations/scroll-animations/technology-advisory/technology-advisory.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/technology-advisory/) |
+| Bento FLIP | scroll-animations | intermediate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-bento-flip) · [`faster-claude/catalog/animations/scroll-animations/bento-flip/bento-flip.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/bento-flip/) |
+
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.
