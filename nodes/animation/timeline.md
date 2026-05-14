@@ -63,7 +63,7 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 | Neon Grid | time-auto-loops | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/time-auto-loops-neon-grid) · [`faster-claude/catalog/animations/time-auto-loops/neon-grid/neon-grid.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/time-auto-loops/neon-grid/) |
 | Neural Constellation | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-neural-constellation) · [`faster-claude/catalog/animations/distance-proximity/neural-constellation/neural-constellation.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/neural-constellation/) |
 
-_…and 7 more in the catalog._
+_…and 6 more in the catalog._
 
 ## Envelope
 

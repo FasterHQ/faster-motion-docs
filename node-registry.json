@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-05-13",
+  "_generatedAt": "2026-05-14",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
   "_nodeCount": 292,
   "portTypes": {
@@ -5889,6 +5889,12 @@
           "label": "Raw Progress (unclamped)"
         },
         {
+          "name": "scrolledPx",
+          "type": "float",
+          "label": "Scrolled Px (from trigger)",
+          "tooltip": "Auto-wired by the loader from the sibling ScrollTriggerNode's `scrolledPx` output. Lets the pin recover the trigger's ideal startPos scrollY as `currentScrollY - scrolledPx`, so the engage-time captured position matches what `transitionAfter` computes post-release regardless of which frame the engage transition fires on."
+        },
+        {
           "name": "topOverride",
           "type": "float",
           "label": "Top Override"
@@ -5908,7 +5914,14 @@
         {
           "name": "isEngaged",
           "type": "float",
-          "label": "Is Engaged"
+          "label": "Is Engaged",
+          "tooltip": "1 while in the PINNED phase, 0 in BEFORE or AFTER. Use to drive ancillary effects (z-index swaps, classes, opacity reveals) that should toggle on engagement."
+        },
+        {
+          "name": "phase",
+          "type": "float",
+          "label": "Phase",
+          "tooltip": "Numeric lifecycle phase: 0 = BEFORE (pre-engage), 1 = PINNED (engaged), 2 = AFTER (post-release). Flips on the same frame as the state transition, so downstream remappers stay aligned with the DOM-flow change."
         },
         {
           "name": "rectTop",

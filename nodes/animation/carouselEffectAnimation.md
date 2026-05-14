@@ -49,11 +49,11 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 | Cube Onboarding | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-cube-onboarding) · [`faster-claude/catalog/animations/carousel-effects/cube-onboarding/cube-onboarding.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/cube-onboarding/) |
 | Fade Gallery | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-fade-gallery) · [`faster-claude/catalog/animations/carousel-effects/fade-gallery/fade-gallery.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/fade-gallery/) |
 | Fan Team | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-fan-team) · [`faster-claude/catalog/animations/carousel-effects/fan-team/fan-team.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/fan-team/) |
-| OBSCURA — Studio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-obscura-studio) · [`faster-claude/catalog/animations/advanced-orchestration/obscura-studio/obscura-studio.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/obscura-studio/) |
 | Slide Gallery | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-slide-gallery) · [`faster-claude/catalog/animations/carousel-effects/slide-gallery/slide-gallery.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/slide-gallery/) |
 | Slide Testimonials | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-slide-testimonials) · [`faster-claude/catalog/animations/carousel-effects/slide-testimonials/slide-testimonials.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/slide-testimonials/) |
+| Stack Notifications | carousel-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/carousel-effects-stack-notifications) · [`faster-claude/catalog/animations/carousel-effects/stack-notifications/stack-notifications.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/carousel-effects/stack-notifications/) |
 
-_…and 2 more in the catalog._
+_…and 1 more in the catalog._
 
 ## Envelope
 

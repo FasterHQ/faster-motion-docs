@@ -76,7 +76,7 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 | Color Fill Text | text-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/text-effects-color-fill) · [`faster-claude/catalog/animations/text-effects/color-fill/color-fill.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/text-effects/color-fill/) |
 | Contra-Flow Columns | scroll-layouts | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-layouts-contra-columns) · [`faster-claude/catalog/animations/scroll-layouts/contra-columns/contra-columns.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-layouts/contra-columns/) |
 
-_…and 74 more in the catalog._
+_…and 73 more in the catalog._
 
 ## Envelope
 

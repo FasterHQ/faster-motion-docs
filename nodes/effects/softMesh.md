@@ -74,14 +74,6 @@ Sim-only soft-body mesh. F381 P1.1. Owns a verlet ring simulator (edge springs +
 - [Physics Body Stagger](../solvers/physicsBodyStagger.md) — `physicsBodyStagger`
 - [Pointer](../inputs/pointer.md) — `pointer`
 
-## Used in
-
-Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
-
-| Animation | Category | Complexity | Sources |
-|-----------|----------|------------|---------|
-| Studio Showreel | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-wheel-deck-blob) · [`faster-claude/catalog/animations/scroll-animations/wheel-deck-blob/wheel-deck-blob.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/wheel-deck-blob/) |
-
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

@@ -6,7 +6,7 @@ For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
 > Adjacent indexes: [`compounds.md`](../compounds.md) for the 29 author-facing compound nodes (with the rule on not wiring into their internals). [`internal-nodes.md`](../internal-nodes.md) for the 42 loader-emitted nodes that surface in runtime errors but aren't author-facing.
 
-> Most node pages carry a **Used in** section listing the shipped animations (`faster-claude/catalog/animations/marketplace.meta.json` — currently 102 max per node) that wire the node, with preview URLs and on-disk paths.
+> Most node pages carry a **Used in** section listing the shipped animations (`faster-claude/catalog/animations/marketplace.meta.json` — currently 101 max per node) that wire the node, with preview URLs and on-disk paths.
 
 > Every per-node page below includes the same **Envelope** reference (`id`, `type`, `activeWhen`, `_note`, `params`, `connections`) — it's repeated verbatim on every node page so any single page is self-sufficient. The reference is also inlined immediately below for index browsing.
 

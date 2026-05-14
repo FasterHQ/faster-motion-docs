@@ -44,14 +44,6 @@ Continuous float-to-string mapping over a single threshold. Emits `above` when i
 - [String Array Pick](../text/stringArrayPick.md) — `stringArrayPick`
 - [String Keyframe](../animation/stringKeyframe.md) — `stringKeyframe`
 
-## Used in
-
-Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
-
-| Animation | Category | Complexity | Sources |
-|-----------|----------|------------|---------|
-| OBSCURA — Studio | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-obscura-studio) · [`faster-claude/catalog/animations/advanced-orchestration/obscura-studio/obscura-studio.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/obscura-studio/) |
-
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.

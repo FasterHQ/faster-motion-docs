@@ -51,7 +51,7 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 | Animated Infographic | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-animated-infographic) · [`faster-claude/catalog/animations/advanced-orchestration/animated-infographic/animated-infographic.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/animated-infographic/) |
 | Breathing Hero | time-auto-loops | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/time-auto-loops-breathing-hero) · [`faster-claude/catalog/animations/time-auto-loops/breathing-hero/breathing-hero.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/time-auto-loops/breathing-hero/) |
 
-_…and 92 more in the catalog._
+_…and 91 more in the catalog._
 
 ## Envelope
 

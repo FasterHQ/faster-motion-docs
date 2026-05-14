@@ -13,6 +13,7 @@ F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnc
 | `handle` | `any` | Pin Handle |
 | `progress` | `float` | Progress |
 | `rawProgress` | `float` | Raw Progress (unclamped) |
+| `scrolledPx` | `float` | Auto-wired by the loader from the sibling ScrollTriggerNode's `scrolledPx` output. Lets the pin recover the trigger's ideal startPos scrollY as `currentScrollY - scrolledPx`, so the engage-time captured position matches what `transitionAfter` computes post-release regardless of which frame the engage transition fires on. |
 | `topOverride` | `float` | Top Override |
 | `leftOverride` | `float` | Left Override |
 | `widthOverride` | `float` | Width Override |
@@ -22,7 +23,8 @@ F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnc
 
 | Port | Type | Description |
 |------|------|-------------|
-| `isEngaged` | `float` | Is Engaged |
+| `isEngaged` | `float` | 1 while in the PINNED phase, 0 in BEFORE or AFTER. Use to drive ancillary effects (z-index swaps, classes, opacity reveals) that should toggle on engagement. |
+| `phase` | `float` | Numeric lifecycle phase: 0 = BEFORE (pre-engage), 1 = PINNED (engaged), 2 = AFTER (post-release). Flips on the same frame as the state transition, so downstream remappers stay aligned with the DOM-flow change. |
 | `rectTop` | `float` | Rect Top |
 | `rectLeft` | `float` | Rect Left |
 | `rectWidth` | `float` | Rect Width |

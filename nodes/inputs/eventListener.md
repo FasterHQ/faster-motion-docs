@@ -59,7 +59,7 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 | Interactive Showcase | advanced-orchestration | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/advanced-orchestration-interactive-showcase) · [`faster-claude/catalog/animations/advanced-orchestration/interactive-showcase/interactive-showcase.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/advanced-orchestration/interactive-showcase/) |
 | Magnetic Button | hover-interactions | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/hover-interactions-magnetic-button) · [`faster-claude/catalog/animations/hover-interactions/magnetic-button/magnetic-button.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/hover-interactions/magnetic-button/) |
 
-_…and 17 more in the catalog._
+_…and 16 more in the catalog._
 
 ## Envelope
 

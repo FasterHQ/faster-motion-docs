@@ -55,7 +55,7 @@ Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-mark
 | Magnetic Grid | distance-proximity | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/distance-proximity-magnetic-grid) · [`faster-claude/catalog/animations/distance-proximity/magnetic-grid/magnetic-grid.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/distance-proximity/magnetic-grid/) |
 | Momentum Wave | velocity-effects | moderate | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/velocity-effects-momentum-wave) · [`faster-claude/catalog/animations/velocity-effects/momentum-wave/momentum-wave.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/velocity-effects/momentum-wave/) |
 
-_…and 18 more in the catalog._
+_…and 16 more in the catalog._
 
 ## Envelope
 

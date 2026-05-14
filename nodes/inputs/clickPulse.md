@@ -49,14 +49,6 @@ DOM pointer-event listener that emits a single-frame `pulse` per fire on `select
 - [Pulse Router](pulseRouter.md) — `pulseRouter`
 - [Threshold Pulse](thresholdPulse.md) — `thresholdPulse`
 
-## Used in
-
-Animations from the [faster-claude catalog](https://git.fasterhq.com/faster-marketplace/animations) that wire this node. Each entry runs in production and is the QA'd reference for the pattern.
-
-| Animation | Category | Complexity | Sources |
-|-----------|----------|------------|---------|
-| Editorial Lookbook | scroll-animations | advanced | [preview](https://app.fasterhq.com/studio/marketplace/catalog/animation-preview/scroll-animations-editorial-lookbook) · [`faster-claude/catalog/animations/scroll-animations/editorial-lookbook/editorial-lookbook.fmtion`](https://git.fasterhq.com/faster-marketplace/animations/src/branch/main/scroll-animations/editorial-lookbook/) |
-
 ## Envelope
 
 Every node in a `.fmtion` file shares the same envelope shape. The per-node sections above describe the contents of `params` and the wires that go into `connections`; the fields here apply to **every** node, including this one.
