@@ -14,6 +14,7 @@ F330/F340 pin engagement state machine. Reads engine handle (from sibling PinAnc
 | `progress` | `float` | Progress |
 | `rawProgress` | `float` | Raw Progress (unclamped) |
 | `scrolledPx` | `float` | Auto-wired by the loader from the sibling ScrollTriggerNode's `scrolledPx` output. Lets the pin recover the trigger's ideal startPos scrollY as `currentScrollY - scrolledPx`, so the engage-time captured position matches what `transitionAfter` computes post-release regardless of which frame the engage transition fires on. |
+| `refreshGeneration` | `float` | Auto-wired by the loader from the sibling PinAnchorNode's `refreshGeneration` output. Bumps every time the anchor's debounced refresh runs (resize / window.load / fonts.ready). When it changes mid-engagement, this node re-fires its current-state transition so cached engage coordinates pick up the new layout — graph-native dirty propagation instead of polling shared handle state. |
 | `topOverride` | `float` | Top Override |
 | `leftOverride` | `float` | Left Override |
 | `widthOverride` | `float` | Width Override |

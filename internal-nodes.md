@@ -1,6 +1,6 @@
 # Internal nodes
 
-These 42 node types are **loader-emitted** — you do NOT author them in `.fmtion` files. They're filtered from the authoring picker and the per-node MD tree, but they DO appear in:
+These 43 node types are **loader-emitted** — you do NOT author them in `.fmtion` files. They're filtered from the authoring picker and the per-node MD tree, but they DO appear in:
 
 - Runtime error stacks (`[graphWire] Module 'foo' references internal node 'maskClip-bar' …`)
 - `debug.validate()` output
@@ -65,11 +65,12 @@ When you see one of these in a runtime message, this page is the lookup: it tell
 | `sceneTransform` | Per-object transform — reads from objectPose bundle by index, computes world matrix, writes to HeadlessObject |
 | `staggerAnimate` | Runtime per-element keyframe-with-stagger writer. Resolves N elements at bind time from a plain CSS selector and applies a multi-channel keyframe template per element. Two driving modes: (1) shared scalar `progress` + `stagger * effectiveIndex(i)` translation (default — same model as the `staggerAnimation` compound), or (2) `progressArray` per-element fan-in (when wired, each element pulls its own progress directly — pair with `scrollTriggerEach` for "fire each element when ITS row enters viewport"). Out-of-range per-element progress holds first/last keyframe. Per-keyframe `valueFromCSS` / `colorFromCSS` reads each element's computed CSS custom property at bind time, so authors give different end values to different chars/items via per-element `--end-color` (etc.) without per-element node duplication. |
 
-## Inputs (1)
+## Inputs (2)
 
 | Type | Description |
 |------|-------------|
 | `pinAnchor` | F340 spacer + engine-handle owner. Sits topologically upstream of both ScrollTriggerNode and PinNode in the loader-emitted DAG. Binds the element, creates the spacer (PinEngine.setupIdle), publishes spacer flow position (flowTop/flowLeft/flowWidth/flowHeight) and the live engine handle. Anchor reads nothing back from trigger or pin — that's what breaks the scroll-trigger ↔ pin scheduler cycle. Loader-emitted; not authored directly. Filtered from the picker (`internal: true`) but visible in the graph view as a sibling of the trigger that emitted it. To wire FROM its outputs (e.g. `pinTargetFlowTop`, `pinTargetFlowBottom`, `scrollDistance`), reference it by its loader-emitted id `<scrollTriggerId>__pinAnchor` — e.g. a `scrollTrigger` with `id: "svcPin"` produces an anchor with `id: "svcPin__pinAnchor"`. |
+| `refreshSignal` | Page-wide layout-refresh ticker. Loader-emitted singleton (id `__refreshSignal`) materialised when at least one node in the graph carries `invalidateOnRefresh: true`. Listens for `window.resize`, `document.fonts.ready`, and `window.load` — coalesces the three signals through a debounced timer (100ms) and bumps `refreshGeneration` once per tick. Consumers wire from this output and compare against their last-seen value to invalidate cached state (e.g. `valueFromCSS` keyframe reads in `staggerAnimate`). Authors never wire this manually — the loader handles emission + wiring based on consumer opt-in flags. |
 
 ## Attributes (1)
 

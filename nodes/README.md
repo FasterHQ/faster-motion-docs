@@ -4,7 +4,7 @@ All 292 graph node types available in Faster Motion.
 
 For machine-readable data, see [`node-registry.json`](../node-registry.json).
 
-> Adjacent indexes: [`compounds.md`](../compounds.md) for the 29 author-facing compound nodes (with the rule on not wiring into their internals). [`internal-nodes.md`](../internal-nodes.md) for the 42 loader-emitted nodes that surface in runtime errors but aren't author-facing.
+> Adjacent indexes: [`compounds.md`](../compounds.md) for the 29 author-facing compound nodes (with the rule on not wiring into their internals). [`internal-nodes.md`](../internal-nodes.md) for the 43 loader-emitted nodes that surface in runtime errors but aren't author-facing.
 
 > Most node pages carry a **Used in** section listing the shipped animations (`faster-claude/catalog/animations/marketplace.meta.json` — currently 101 max per node) that wire the node, with preview URLs and on-disk paths.
 

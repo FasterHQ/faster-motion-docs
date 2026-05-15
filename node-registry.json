@@ -1,5 +1,5 @@
 {
-  "_generatedAt": "2026-05-14",
+  "_generatedAt": "2026-05-15",
   "_source": "faster-motion/src/core/NodeMetadata.ts",
   "_nodeCount": 292,
   "portTypes": {
@@ -2701,6 +2701,15 @@
           "label": "Pin Z-Index",
           "type": "string",
           "tooltip": "CSS z-index applied while pin is engaged. Empty string defers to the default (\"1000\"). Use to stack one pin above another when their fixed ranges overlap on the page (sibling pins) — replaces ad-hoc `z-index: ... !important` overrides on the pinned element."
+        },
+        {
+          "key": "anticipatePin",
+          "label": "Anticipate Pin",
+          "type": "float",
+          "tooltip": "Pre-engage layer warmup. Set to `1` to ask the browser to promote the pin target to its own compositor layer BEFORE scroll first crosses the start edge — eliminates the one-frame paint jitter when `position: fixed` first takes effect. The hint is binary in practice (1 = on, 0 = off); larger numbers are no stronger. Internally applies `will-change: transform` on the pin target at bind and restores the original on release.",
+          "min": 0,
+          "max": 1,
+          "step": 1
         }
       ],
       "defaults": {
@@ -2712,7 +2721,8 @@
         "pinSpacing": true,
         "pinTarget": "",
         "pinZIndex": "",
-        "scroller": ""
+        "scroller": "",
+        "anticipatePin": 0
       },
       "dynamicPorts": false,
       "compound": false,
@@ -5893,6 +5903,12 @@
           "type": "float",
           "label": "Scrolled Px (from trigger)",
           "tooltip": "Auto-wired by the loader from the sibling ScrollTriggerNode's `scrolledPx` output. Lets the pin recover the trigger's ideal startPos scrollY as `currentScrollY - scrolledPx`, so the engage-time captured position matches what `transitionAfter` computes post-release regardless of which frame the engage transition fires on."
+        },
+        {
+          "name": "refreshGeneration",
+          "type": "float",
+          "label": "Refresh Generation (from anchor)",
+          "tooltip": "Auto-wired by the loader from the sibling PinAnchorNode's `refreshGeneration` output. Bumps every time the anchor's debounced refresh runs (resize / window.load / fonts.ready). When it changes mid-engagement, this node re-fires its current-state transition so cached engage coordinates pick up the new layout — graph-native dirty propagation instead of polling shared handle state."
         },
         {
           "name": "topOverride",
@@ -19926,6 +19942,12 @@
           "step": 0.01
         },
         {
+          "key": "invalidateOnRefresh",
+          "label": "Invalidate On Refresh",
+          "type": "bool",
+          "tooltip": "When `true`, the runtime re-resolves elements and re-reads every `valueFromCSS` / `colorFromCSS` keyframe whenever a page-wide layout refresh fires (window resize, fonts.ready, window.load). Lets per-element CSS variable values survive media-query swaps, theme toggles, and post-font-load reflows without an explicit re-bind. The loader emits a singleton `refreshSignal` node and wires it automatically; no manual wiring required. Default `false` — opt-in because the recompile is non-trivial for large element counts."
+        },
+        {
           "key": "each",
           "label": "Inner Animation",
           "type": "staggerInnerTemplate",
@@ -19937,6 +19959,7 @@
         "stagger": 0.05,
         "staggerFrom": "start",
         "delayOffset": 0,
+        "invalidateOnRefresh": false,
         "each": {
           "type": "propertyAnimation",
           "params": {
